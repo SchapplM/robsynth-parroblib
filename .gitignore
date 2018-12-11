@@ -1,0 +1,6 @@
+*.mex*
+*~
+slprj
+codegen
+*.mat
+.~lock.*.csv#
