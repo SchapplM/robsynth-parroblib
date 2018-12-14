@@ -1,0 +1,6 @@
+% Diese Datei ist eine Vorlage für die Verknüpfung zur HybrDyn-Toolbox
+% aus https://phabricator.imes.uni-hannover.de/source/robot_dynamics-hybriddyn/
+% Diese Toolbox muss heruntergeladen werden und der Pfad hier an den tatsächlichen
+% Pfad auf dem Rechner angepasst werden.
+function maplerepo_path = maplerepo_path()
+maplerepo_path = '/home/schappler/IMES/REPO/maple';
