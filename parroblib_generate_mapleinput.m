@@ -27,6 +27,7 @@ for i = 1:length(Names)
   expression = 'P(\d)([RP]+)(\d+)A(\d+)'; % Format "P3RRR1A1"
   [tokens, ~] = regexp(n,expression,'tokens','match');
   res = tokens{1};
+
   PName_Kin = ['P', res{1}, res{2}, res{3}];
   %% Maple-Toolbox-Eingabe erzeugen
   % Zur Definition des Formats der Eingabedatei; siehe HybrDyn-Repo
@@ -69,5 +70,14 @@ for i = 1:length(Names)
     end
   end
   fprintf(fid, ', xyz]):\n');
+  
+  % Generierung der Dynamik nur für erstes Aktuierungs-Modell jeder PKM:
+  % Die Dynamik in Plattform-Koordinaten ist immer gleich und die
+  % Dynamik-Berechnung in Antriebs-Koordinaten wird numerisch mit Jacobi
+  % berechnet. Nur die Jacobi wird dann noch neu berechnet
+  % Hier wird die Generierung standardmäßig deaktiviert und in
+  % parroblib_generate_code.m einmal aktiviert und mit Kennung "A0"
+  % gespeichert.
+  fprintf(fid, 'codeexport_invdyn := false:\n');
   fclose(fid);
 end

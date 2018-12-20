@@ -46,7 +46,7 @@ end
 res = tokens{1};
 NLEG = str2double(res{1});
 PName_Kin = ['P', res{1}, res{2}, res{3}];
-ActNr = str2double(res{3});
+ActNr = str2double(res{4});
 %% csv-Tabelle öffnen: Kinematik
 % Ergebnis: Tabellenzeile csvline_kin für den gesuchten Roboter
 kintabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), sprintf('sym%dleg_list.csv', NLEG));

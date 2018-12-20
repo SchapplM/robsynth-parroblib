@@ -32,16 +32,25 @@ end
 repopath=fileparts(which('parroblib_path_init.m'));
 %% Roboterstrukturen durchgehen
 for i = 1:length(Names)
+  
+  %% Vorbereitung
   n = Names{i};
 
   % Daten über den Roboter zusammenstellen
-  [NLEG, LEG_Names, ~, ActNr] = parroblib_load_robot(n);
+  [NLEG, LEG_Names, Actuation, ActNr] = parroblib_load_robot(n);
   % Robotereigenschaften aus dem Namen auslesen.
   % TODO: Einbindung nicht-symmetrischer PKM
   expression = 'P(\d)([RP]+)(\d+)A(\d+)'; % Format "P3RRR1A1"
   [tokens, ~] = regexp(n,expression,'tokens','match');
   res = tokens{1};
   PName_Kin = ['P', res{1}, res{2}, res{3}];
+  
+  % Prüfen, ob der Roboter modelliert werden kann
+  for kk = 1:length(Actuation)
+    if any(Actuation{kk} == NLEG)
+      error('Der Roboter %s kann nicht modelliert werden. Aktuierte Plattform-Koppelgelenke werden noch nicht unterstützt', n);
+    end
+  end
   
   % Pfad zur Maple-Dynamik-Toolbox (muss im Repo abgelegt werden; s.o.)
   mrp = maplerepo_path();
@@ -64,6 +73,7 @@ for i = 1:length(Names)
     continue
   end
   
+  %% Code-Generierung serielle Beinkette
   % Code-Erstellung für serielle Beinkette starten, falls diese nicht
   % vorliegt
   for k = 1:length(LEG_Names)
@@ -75,19 +85,67 @@ for i = 1:length(Names)
     end
     % Generiere diese Beinkette neu (ohne Rückkopieren der
     % Matlab-Funktionen ins SerRobLib-Repo)
+    % TODO: Matlab-Funktionen für die serielle Beinkette nicht neu
+    % exportieren, werden sowieso nicht benutzt.
     serroblib_generate_code({LEG_Names{k}}, true, true)  
   end
-  
+
+  %% Code-Generierung für allgemeine PKM dieses Kinematik-Typs
+  % Code-Erstellung für Dynamik nur einmal durchführen, da die Dynamik in
+  % Plattformkoordinaten unabhängig von der Aktuierung ist
+  n_A0 = [PName_Kin,'A0'];
+  if ActNr == 1
+    % Roboternamen, Datei- und Ordnernamen für allgemeinen Fall definieren
+    mapleinputfile_A0=fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Kin, ...
+      'hd_A0', sprintf('robot_env_par_%s', n_A0));
+    outputdir_tb_par_A0 = fullfile(mrp, 'codeexport', n_A0, 'matlabfcn'); % Verzeichnis in der Maple-Toolbox
+    outputdir_local_A0 = fileparts(mapleinputfile_A0);
+    
+    % Namen des Roboters in A0-Definition nachbearbeiten
+    mkdirs(fileparts(mapleinputfile_A0));
+    copyfile(mapleinputfile, mapleinputfile_A0);
+    % Allgemeiner Fall heißt "A0", ursprünglich eingegebener Fall heißt "A1"
+    system(sprintf('sed -i "s/%s/%s/g" %s', n, n_A0, mapleinputfile_A0 ));
+    % aktiviere den Export der Dynamik-Funktionen
+    system(sprintf('sed -i "s/codeexport_invdyn := false:/codeexport_invdyn := true:/g" %s', ...
+      mapleinputfile_A0 ));
+    
+    % Definition kopieren und Code-Erstellung starten. Alle Tests für PKM
+    % dort durchführen
+    copyfile(mapleinputfile_A0, fullfile(mrp, 'robot_codegen_definitions', 'robot_env_par') );
+    fprintf('Starte Dynamik-Code-Generierung %d/%d für %s\n', i, length(Names), n_A0);
+    system( sprintf('cd %s && ./robot_codegen_start.sh --fixb_only --parrob --not_gen_serial', mrp) );
+    
+    % generierten Code zurückkopieren (alle .m-Dateien)
+    for f = dir(fullfile(outputdir_tb_par_A0, '*.m'))'
+      copyfile(fullfile(outputdir_tb_par_A0, f.name), fullfile(outputdir_local_A0, f.name));
+    end
+  end
+
+  %% Code-Generierung dieser PKM (Berücksichtigung der Aktuierung)
   % Eingabedatei für parallelen Roboter kopieren
   copyfile( mapleinputfile, fullfile(mrp, 'robot_codegen_definitions', 'robot_env_par') );
   
   % Code-Erstellung für parallelen Roboter starten (ohne Generierung der
-  % Beinketten; das wurde oben schon gemacht).
-  fprintf('Starte Code-Generierung %d/%d für %s\n', i, length(Names), n);
-  system( sprintf('cd %s && ./robot_codegen_start.sh --fixb_only --notest --parrob --not_gen_serial', mrp) ); %  > /dev/null
+  % Beinketten; das wurde oben schon gemacht). Daher auch Tests
+  % deaktivieren (die Dynamik wird für diesen Roboter nicht generiert)
+  fprintf('Starte Kinematik Code-Generierung %d/%d für %s\n', i, length(Names), n);
+  system( sprintf('cd %s && ./robot_codegen_start.sh --fixb_only --parrob --not_gen_serial --notest', mrp) );
   
   % generierten Code zurückkopieren (alle .m-Dateien)
   for f = dir(fullfile(outputdir_tb_par, '*.m'))'
     copyfile(fullfile(outputdir_tb_par, f.name), fullfile(outputdir_local, f.name));
   end
+  %% Zurückkopierten Code nachverarbeiten
+  % Die Dynamik wird symbolisch im "A0"-Modell gespeichert.
+  % Für die verschiedenen Aktuierungen wird die Dynamik dann nur noch
+  % aufgerufen. Ändere die Funktionsaufrufe in den Funktionsdateien
+  for f = dir(fullfile(outputdir_local, '*.m'))'
+    % Funktionsaufruf der inversen Dynamik auf A0 beziehen
+    system(sprintf('sed -i "s/%s_invdyn_para_pf/%s_invdyn_para_pf/g" %s', ...
+      n, n_A0, fullfile(outputdir_local, f.name) ));
+  end
+  % Dateien löschen, die für alle Aktuierungsvarianten gleich sind, aber
+  % trotzdem doppelt erzeugt werden.
+  delete(fullfile(outputdir_local, [n, '_minimal_parameter_para.m']));
 end

@@ -157,13 +157,13 @@ while ischar(tline)
   if isempty(csvline) || strcmp(csvline{1}, '')
     continue
   end
-  expression = [PName_Kin, 'A(\d+]']; % Format "P3RRR1A1"
+  expression = [PName_Kin, 'A(\d+)']; % Format "P3RRR1A1"
   [tokens, ~] = regexp(csvline{1},expression,'tokens','match');
   if isempty(tokens)
     continue
   end
   % Aktuelle laufende Nummer aus der Tabelle holen
-  A_lfdNr = str2double(tokens{1}{3});
+  A_lfdNr = str2double(tokens{1}{1});
 end
 fclose(fid);
 % neuer Eintrag hat eine höhere Nummer als der vorherige
