@@ -5,3 +5,5 @@ codegen
 *.mat
 .~lock.*.csv#
 maplerepo_path.m
+*A0_invdyn_para_qa_slagn*.m
+*A0_Jinv*.m
