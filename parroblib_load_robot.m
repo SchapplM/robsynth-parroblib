@@ -25,7 +25,7 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2018-12
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
-function [NLEG, LEG_Names, Actuation, ActNr, symrob, EE_dof0] = parroblib_load_robot(Name)
+function [NLEG, LEG_Names, Actuation, ActNr, symrob, EE_dof0, PName_Kin] = parroblib_load_robot(Name)
 %% Initialisierung
 NLEG = 0;
 LEG_Names = {};
