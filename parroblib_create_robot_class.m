@@ -7,10 +7,11 @@
 %   Durchmesser des Kreises, auf dem die Basis-Koppelpunkte liegen
 % d_PB
 %   Durchmesser des Kreises der Plattform-Koppelpunkte
-% phi_RS_EE
+% phi_RS_EE (optional)
 %   Orientierung des Beinketten-Koppel-KS. Bei einigen planaren Systemen
 %   muss eine Drehung um Pi erfolgen, damit das Bein-Koppel-KS mit dem
 %   Plattform-KS übereinstimmen kann.
+%   Diese Drehung ist eigentlich schon in der SerRobLib gespeichert
 % 
 % Ausgabe:
 % RP [ParRob]
@@ -27,6 +28,10 @@
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
 function RP = parroblib_create_robot_class(Name, d_0A, d_PB, phi_RS_EE)
+
+if nargin < 4
+  phi_RS_EE = [];
+end
 
 %% Daten laden
 
@@ -45,7 +50,9 @@ RS.I_EE = logical(EE_dof0); % Für IK der Beinketten mit invkin_ser
 % TODO: Das ist keine automatische Lösung
 % EE anpassen für 2T1R-PKM, bei denen die Plattform-KoppelKS falsch gedreht
 % sind.
-RS.update_EE([], phi_RS_EE);
+if ~isempty(phi_RS_EE)
+  RS.update_EE([], phi_RS_EE);
+end
 %% Instanz der parallelen Roboterklasse erstellen
 
 % Pfade für Matlab-Funktionen hinzufügen
@@ -57,7 +64,7 @@ RP = RP.create_symmetric_robot(NLEG, RS, d_0A, d_PB);
 RP = RP.initialize();
 
 % EE-FG eintragen
-RP.I_EE = logical(EE_dof0); % Für IK der PKM
+RP.update_EE_FG(logical(EE_dof0)); % Für IK der PKM
 
 % Aktuierung eintragen
 I_qa = false(RP.NJ,1);
