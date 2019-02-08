@@ -32,6 +32,7 @@ LEG_Names = {};
 Actuation = {};
 ActNr = 0;
 symrob = true;
+EE_dof0 = NaN(6,1);
 
 repopath=fileparts(which('parroblib_path_init.m'));
 
@@ -47,7 +48,7 @@ res = tokens{1};
 NLEG = str2double(res{1});
 PName_Kin = ['P', res{1}, res{2}, res{3}];
 ActNr = str2double(res{4});
-%% csv-Tabelle öffnen: Kinematik
+%% csv-Tabelle öffnen: KinematikEE_dof0 = NaN(6,1);
 % Ergebnis: Tabellenzeile csvline_kin für den gesuchten Roboter
 kintabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), sprintf('sym%dleg_list.csv', NLEG));
 fid = fopen(kintabfile);
@@ -76,11 +77,18 @@ fclose(fid);
 if ~found
   error('Roboter %s wurde nicht in der Tabelle %s gefunden.', PName_Kin, kintabfile);
 end
+
+%% Ausgabe für Kinematik speichern
+LEG_Names = csvline_kin(2);
+symrob = true; % TOOD: Berücksichtigung nicht-kinematisch-symmetrischer PKM
+
 %% csv-Tabelle öffnen: Aktuierung
 % Ergebnis: Tabellenzeile csvline_act für den gesuchten Roboter
 acttabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Kin, 'actuation.csv');
+csvline_act = [];
 fid = fopen(acttabfile);
 if fid == -1
+  warning('Aktuierungstabelle %s existiert nicht', acttabfile);
   % Diese Aktuierung zu der Kinematik ist noch nicht gespeichert / generiert.
   return
 end
@@ -88,7 +96,7 @@ end
 tline = fgetl(fid);
 while ischar(tline)
   % Spaltenweise als Cell-Array
-  csvline = strsplit(tline, ';');
+  csvline = strsplit(tline, ';', 'CollapseDelimiters', false);
   tline = fgetl(fid); % nächste Zeile
   if isempty(csvline) || strcmp(csvline{1}, '')
     continue
@@ -101,23 +109,24 @@ while ischar(tline)
 end
 fclose(fid);
 
-%% Daten auslesen und zurückgeben
-symrob = true; % TOOD: Berücksichtigung nicht-kinematisch-symmetrischer PKM
-LEG_Names = csvline_kin(2);
-% Aktuierung in Zahl-Index-Format umwandeln. Siehe parroblib_find_robot.m
-LegJointDOF = str2double(LEG_Names{1}(2)); % Format SxRRPR... (nehme zweites Zeichen)
-k=2;
-Actuation = cell(NLEG,1);
-for iL = 1:NLEG
-  ActSel = NaN(LegJointDOF,1);
-  for j = 1:LegJointDOF
-    ActSel(j) = str2double(csvline_act{k});
-    k=k+1;
+%% Aktuierung abspeichern
+if ~isempty(csvline_act)
+  % Aktuierung in Zahl-Index-Format umwandeln. Siehe parroblib_find_robot.m
+  LegJointDOF = str2double(LEG_Names{1}(2)); % Format SxRRPR... (nehme zweites Zeichen)
+  k=2;
+  Actuation = cell(NLEG,1);
+  for iL = 1:NLEG
+    ActSel = NaN(LegJointDOF,1);
+    for j = 1:LegJointDOF
+      ActSel(j) = str2double(csvline_act{k});
+      k=k+1;
+    end
+    Actuation{iL} = find(ActSel);
   end
-  Actuation{iL} = find(ActSel);
 end
+
+%% EE-FG abspeichern
 % EE-FG sind in Kinematik-Tabelle enthalten
-EE_dof0 = NaN(6,1);
 for i = 1:6
   EE_dof0(i) = str2double(csvline_kin{2+i});
 end
