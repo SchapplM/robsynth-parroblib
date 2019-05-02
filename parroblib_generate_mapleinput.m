@@ -24,11 +24,15 @@ for i = 1:length(Names)
   [NLEG, LEG_Names, Actuation, ActNr, ~, EE_FG0] = parroblib_load_robot(n);
   % Robotereigenschaften aus dem Namen auslesen.
   % TODO: Einbindung nicht-symmetrischer PKM
-  expression = 'P(\d)([RP]+)(\d+)A(\d+)'; % Format "P3RRR1A1"
+  expression = 'P(\d)([RP]+)(\d+)[V]?(\d*)A(\d+)'; % Format "P3RRR1A1" oder "P3RRR1V1A1"
   [tokens, ~] = regexp(n,expression,'tokens','match');
   res = tokens{1};
 
-  PName_Kin = ['P', res{1}, res{2}, res{3}];
+  if isempty(res{4}) % serielle Kette ist keine abgeleitete Variante
+    PName_Kin = ['P', res{1}, res{2}, res{3}];
+  else % serielle Kette ist eine Variante abgeleitet aus Hauptmodell
+    PName_Kin = ['P', res{1}, res{2}, res{3}, 'V', res{4}];
+  end
   %% Maple-Toolbox-Eingabe erzeugen
   % Zur Definition des Formats der Eingabedatei; siehe HybrDyn-Repo
   mapleinputfile=fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Kin, ...
