@@ -43,7 +43,7 @@ PName_Kin = '';
 kintabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), sprintf('sym%dleg_list.csv', NLEG));
 fid = fopen(kintabfile);
 if fid == -1
-  warning('Datei existiert nicht. Sollte aber im Repo enthalten sein.');
+  warning('Datei %s existiert nicht. Sollte aber im Repo enthalten sein.', kintabfile);
   return
 end
 tline = fgetl(fid);

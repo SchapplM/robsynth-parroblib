@@ -110,11 +110,11 @@ end
 fclose(fid);
 
 %% Aktuierung abspeichern
+Actuation = cell(NLEG,1);
 if ~isempty(csvline_act)
   % Aktuierung in Zahl-Index-Format umwandeln. Siehe parroblib_find_robot.m
   LegJointDOF = str2double(LEG_Names{1}(2)); % Format SxRRPR... (nehme zweites Zeichen)
   k=2;
-  Actuation = cell(NLEG,1);
   for iL = 1:NLEG
     ActSel = NaN(LegJointDOF,1);
     for j = 1:LegJointDOF

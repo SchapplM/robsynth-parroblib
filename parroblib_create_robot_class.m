@@ -69,6 +69,9 @@ RP.update_EE_FG(logical(EE_dof0)); % Für IK der PKM
 % Aktuierung eintragen
 I_qa = false(RP.NJ,1);
 for i = 1:NLEG
+  if isempty(Actuation{i})
+    continue
+  end
   I_Legi = RP.I1J_LEG(i):RP.I2J_LEG(i);
   I_qa(I_Legi(Actuation{i})) = true;
 end
