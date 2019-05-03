@@ -30,7 +30,7 @@
 %   kinematic parameters (e.g. lengths of the links)
 %   pkin=[a2,a3,d2]';
 % m [4x1]
-%   mass of all robot links (including platform)
+%   mass of all robot links (leg links until cut joint, platform)
 % mrSges [4x3]
 %   first moment of all robot links (mass times center of mass in body frames)
 %   rows: links of the robot (leg links until cut joint, platform)
@@ -46,10 +46,10 @@
 %   in platform coordinates xP
 
 % Quelle: HybrDyn-Toolbox
-% Datum: 2018-12-20 17:35
-% Revision: f9720dcdc4676342702b46a014e894344751412a
+% Datum: 2019-05-03 14:42
+% Revision: abbb0d669c4fc7889a31e0cf750ab51a4f2eb1ce (2019-05-03)
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
-% (C) Institut für mechatronische Systeme, Universität Hannover
+% (C) Institut für Mechatronische Systeme, Universität Hannover
 
 function tauX = P3PRP1A0_invdyn_para_pf_slag_vp2(xP, xDP, xDDP, qJ, g, legFrame, ...
   koppelP, pkin, m, mrSges, Ifges)
@@ -82,9 +82,9 @@ assert(isreal(koppelP) && all(size(koppelP) == [3 3]), ...
 %% Symbolic Calculation
 % From invdyn_para_plfcoord_par2_matlab.m
 % OptimizationMode: 2
-% StartTime: 2018-12-20 17:34:56
-% EndTime: 2018-12-20 17:34:59
-% DurationCPUTime: 3.89s
+% StartTime: 2019-05-03 14:41:40
+% EndTime: 2019-05-03 14:41:43
+% DurationCPUTime: 3.63s
 % Computational Cost: add. (26085->404), mult. (49288->610), div. (2214->3), fcn. (23453->14), ass. (0->251)
 t190 = (pkin(2) ^ 2);
 t161 = 1 + t190;
@@ -239,7 +239,7 @@ t144 = m(3) * qJ(3,2) + mrSges(3,3);
 t143 = m(3) * qJ(3,3) + mrSges(3,3);
 t210 = mrSges(3,1) * t267 + Ifges(3,2) + Ifges(2,3);
 t203 = -t142 * t148 + 0.2e1 * t211;
-t200 = -t141 * t147 + 0.2e1 * t212;
+t200 = -t147 * t141 + 0.2e1 * t212;
 t197 = -t140 * t146 + 0.2e1 * t213;
 t179 = mrSges(4,1);
 t178 = mrSges(4,2);
@@ -256,9 +256,9 @@ t135 = -t257 / 0.2e1 - mrSges(2,1) / 0.2e1 - mrSges(3,1) / 0.2e1;
 t134 = g(1) * t151 + g(2) * t148;
 t133 = g(1) * t150 + g(2) * t147;
 t132 = g(1) * t149 + g(2) * t146;
-t122 = m(3) * t224 + mrSges(3,3) * t260 + t210;
-t121 = m(3) * t225 + mrSges(3,3) * t259 + t210;
-t120 = m(3) * t226 + mrSges(3,3) * t258 + t210;
+t122 = t224 * m(3) + mrSges(3,3) * t260 + t210;
+t121 = t225 * m(3) + mrSges(3,3) * t259 + t210;
+t120 = t226 * m(3) + mrSges(3,3) * t258 + t210;
 t119 = -t178 * t153 + t154 * t179;
 t118 = t179 * t153 + t154 * t178;
 t117 = t142 * t151 + 0.2e1 * t216;
@@ -273,11 +273,11 @@ t94 = -t123 * t165 - t126 * t160 + t167;
 t93 = -t125 * t160 + t128 * t165 + t166;
 t92 = -t124 * t160 + t127 * t165 + t166;
 t91 = -t123 * t160 + t126 * t165 + t166;
-t84 = -t117 * t227 + t190 * t148 + t159 * t203 + t148 - t211;
+t84 = -t117 * t227 + t190 * t148 + t203 * t159 + t148 - t211;
 t83 = t117 * t159 - t151 * t190 + t203 * t227 - t151 - t216;
-t82 = -t116 * t228 + t190 * t147 + t158 * t200 + t147 - t212;
+t82 = -t116 * t228 + t190 * t147 + t200 * t158 + t147 - t212;
 t81 = t116 * t158 - t150 * t190 + t200 * t228 - t150 - t215;
-t80 = -t115 * t229 + t190 * t146 + t157 * t197 + t146 - t213;
+t80 = -t115 * t229 + t190 * t146 + t197 * t157 + t146 - t213;
 t79 = t115 * t157 - t149 * t190 + t197 * t229 - t149 - t214;
 t72 = (t101 * t128 - t102 * t125) * t105;
 t71 = (-t100 * t124 + t127 * t99) * t104;
@@ -327,9 +327,9 @@ t16 = ((0.2e1 * (t61 + (-t248 / 0.2e1 - t245 / 0.2e1) * t105) * t239 - (pkin(2) 
 t15 = ((t28 - t270) * t227 + (-t159 * t69 - t207 + t69) * qJ(3,1)) * t251;
 t14 = ((t30 - t269) * t228 + (-t158 * t68 - t208 + t68) * qJ(3,2)) * t252;
 t13 = ((t29 - t268) * t229 + (-t157 * t67 - t209 + t67) * qJ(3,3)) * t253;
-t9 = -t264 * t145 + t152 * t16 + (-t134 * t170 + t173 * t242 - t15) * m(3);
-t8 = -t265 * t144 + t152 * t18 + (-t133 * t169 + t172 * t243 - t14) * m(3);
-t7 = -t266 * t143 + t152 * t17 + (-t132 * t168 + t171 * t244 - t13) * m(3);
+t9 = -t264 * t145 + t152 * t16 + (-t134 * t170 + t242 * t173 - t15) * m(3);
+t8 = -t265 * t144 + t152 * t18 + (-t133 * t169 + t243 * t172 - t14) * m(3);
+t7 = -t266 * t143 + t152 * t17 + (-t132 * t168 + t244 * t171 - t13) * m(3);
 t6 = -t114 * t12 - t122 * t16 + t152 * t15 + t270 * t145 * t261 + (-t131 * t139 - t134 * t138) * t173 - (t131 * t138 - t134 * t139) * t170;
 t5 = -t113 * t11 - t121 * t18 + t152 * t14 + t269 * t144 * t262 + (-t130 * t139 - t133 * t137) * t172 - (t130 * t137 - t133 * t139) * t169;
 t4 = -t112 * t10 - t120 * t17 + t152 * t13 + t268 * t143 * t263 + (-t129 * t139 - t132 * t136) * t171 - (t129 * t136 - t132 * t139) * t168;

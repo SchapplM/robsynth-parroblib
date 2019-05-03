@@ -26,7 +26,7 @@
 %   kinematic parameters (e.g. lengths of the links)
 %   pkin=[a2,a3,d1,d2,d3]';
 % m [3x1]
-%   mass of all robot links (including platform)
+%   mass of all robot links (leg links until cut joint, platform)
 % mrSges [3x3]
 %   first moment of all robot links (mass times center of mass in body frames)
 %   rows: links of the robot (leg links until cut joint, platform)
@@ -38,10 +38,10 @@
 %   in platform coordinates
 
 % Quelle: HybrDyn-Toolbox
-% Datum: 2018-12-20 18:13
-% Revision: f9720dcdc4676342702b46a014e894344751412a
+% Datum: 2019-05-03 15:38
+% Revision: abbb0d669c4fc7889a31e0cf750ab51a4f2eb1ce (2019-05-03)
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
-% (C) Institut für mechatronische Systeme, Universität Hannover
+% (C) Institut für Mechatronische Systeme, Universität Hannover
 
 function taugX = P3RRR1A0_gravload_para_pf_slag_vp2(xP, qJ, g, legFrame, ...
   koppelP, pkin, m, mrSges)
@@ -68,9 +68,9 @@ assert(isreal(koppelP) && all(size(koppelP) == [3 3]), ...
 %% Symbolic Calculation
 % From gravvec_para_plfcoord_par2_matlab.m
 % OptimizationMode: 2
-% StartTime: 2018-12-20 18:13:15
-% EndTime: 2018-12-20 18:13:15
-% DurationCPUTime: 0.33s
+% StartTime: 2019-05-03 15:38:22
+% EndTime: 2019-05-03 15:38:23
+% DurationCPUTime: 0.31s
 % Computational Cost: add. (459->85), mult. (614->153), div. (60->5), fcn. (536->20), ass. (0->75)
 t669 = qJ(1,3) + qJ(2,3);
 t654 = sin(t669);
@@ -97,21 +97,21 @@ t648 = -g(1) * t660 + g(2) * t663;
 t651 = g(1) * t663 + g(2) * t660;
 t612 = -t657 * (mrSges(2,1) * t648 - mrSges(2,2) * t651) + t654 * (mrSges(2,1) * t651 + mrSges(2,2) * t648);
 t666 = m(2) * pkin(1) + mrSges(1,1);
-t697 = ((mrSges(1,2) * t651 - t648 * t666) * t678 + (mrSges(1,2) * t648 + t651 * t666) * t675 + t612) * t700;
+t697 = ((mrSges(1,2) * t651 - t648 * t666) * t678 + t675 * (mrSges(1,2) * t648 + t651 * t666) + t612) * t700;
 t673 = legFrame(2,3);
 t661 = sin(t673);
 t664 = cos(t673);
 t649 = -g(1) * t661 + g(2) * t664;
 t652 = g(1) * t664 + g(2) * t661;
 t613 = -t658 * (mrSges(2,1) * t649 - mrSges(2,2) * t652) + t655 * (mrSges(2,1) * t652 + mrSges(2,2) * t649);
-t696 = ((mrSges(1,2) * t652 - t649 * t666) * t679 + (mrSges(1,2) * t649 + t652 * t666) * t676 + t613) * t699;
+t696 = ((mrSges(1,2) * t652 - t649 * t666) * t679 + t676 * (mrSges(1,2) * t649 + t652 * t666) + t613) * t699;
 t674 = legFrame(1,3);
 t662 = sin(t674);
 t665 = cos(t674);
 t650 = -g(1) * t662 + g(2) * t665;
 t653 = g(1) * t665 + g(2) * t662;
 t614 = -t659 * (mrSges(2,1) * t650 - mrSges(2,2) * t653) + t656 * (mrSges(2,1) * t653 + mrSges(2,2) * t650);
-t695 = ((mrSges(1,2) * t653 - t650 * t666) * t680 + (mrSges(1,2) * t650 + t653 * t666) * t677 + t614) * t698;
+t695 = ((mrSges(1,2) * t653 - t650 * t666) * t680 + t677 * (mrSges(1,2) * t650 + t653 * t666) + t614) * t698;
 t694 = t612 * t700;
 t693 = t613 * t699;
 t692 = t614 * t698;

@@ -26,7 +26,7 @@
 %   kinematic parameters (e.g. lengths of the links)
 %   pkin=[a2,a3,d2,d3]';
 % m [3x1]
-%   mass of all robot links (including platform)
+%   mass of all robot links (leg links until cut joint, platform)
 % rSges [3x3]
 %   center of mass of all robot links (in body frames)
 %   rows: links of the robot (leg links until cut joint, platform)
@@ -38,10 +38,10 @@
 %   in platform coordinates
 
 % Quelle: HybrDyn-Toolbox
-% Datum: 2018-12-20 17:42
-% Revision: f9720dcdc4676342702b46a014e894344751412a
+% Datum: 2019-05-03 14:47
+% Revision: abbb0d669c4fc7889a31e0cf750ab51a4f2eb1ce (2019-05-03)
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
-% (C) Institut für mechatronische Systeme, Universität Hannover
+% (C) Institut für Mechatronische Systeme, Universität Hannover
 
 function taugX = P3PRR1A0_gravload_para_pf_slag_vp1(xP, qJ, g, legFrame, ...
   koppelP, pkin, m, rSges)
@@ -68,8 +68,8 @@ assert(isreal(koppelP) && all(size(koppelP) == [3 3]), ...
 %% Symbolic Calculation
 % From gravvec_para_plfcoord_par1_matlab.m
 % OptimizationMode: 2
-% StartTime: 2018-12-20 17:42:35
-% EndTime: 2018-12-20 17:42:35
+% StartTime: 2019-05-03 14:47:35
+% EndTime: 2019-05-03 14:47:35
 % DurationCPUTime: 0.19s
 % Computational Cost: add. (132->55), mult. (249->105), div. (36->4), fcn. (218->14), ass. (0->56)
 t402 = m(2) / pkin(2);

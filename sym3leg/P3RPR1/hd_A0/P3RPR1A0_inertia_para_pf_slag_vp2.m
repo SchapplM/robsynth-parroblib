@@ -24,7 +24,7 @@
 %   kinematic parameters (e.g. lengths of the links)
 %   pkin=[a2,a3,d1,d3]';
 % m [3x1]
-%   mass of all robot links (including platform)
+%   mass of all robot links (leg links until cut joint, platform)
 % mrSges [3x3]
 %   first moment of all robot links (mass times center of mass in body frames)
 %   rows: links of the robot (leg links until cut joint, platform)
@@ -39,10 +39,10 @@
 %   inertia matrix in task space
 
 % Quelle: HybrDyn-Toolbox
-% Datum: 2018-12-20 17:54
-% Revision: f9720dcdc4676342702b46a014e894344751412a
+% Datum: 2019-05-03 14:58
+% Revision: abbb0d669c4fc7889a31e0cf750ab51a4f2eb1ce (2019-05-03)
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
-% (C) Institut für mechatronische Systeme, Universität Hannover
+% (C) Institut für Mechatronische Systeme, Universität Hannover
 
 function MX = P3RPR1A0_inertia_para_pf_slag_vp2(xP, qJ, legFrame, ...
   koppelP, pkin, m, mrSges, Ifges)
@@ -69,8 +69,8 @@ assert(isreal(koppelP) && all(size(koppelP) == [3 3]), ...
 %% Symbolic Calculation
 % From inertia_para_plfcoord_par2_matlab.m
 % OptimizationMode: 2
-% StartTime: 2018-12-20 17:54:29
-% EndTime: 2018-12-20 17:54:29
+% StartTime: 2019-05-03 14:58:07
+% EndTime: 2019-05-03 14:58:07
 % DurationCPUTime: 0.29s
 % Computational Cost: add. (1109->115), mult. (1601->204), div. (216->3), fcn. (1304->14), ass. (0->88)
 t246 = 2 * mrSges(2,3);
@@ -160,5 +160,5 @@ t161 = t164 * m(2) + t173 * t216;
 t160 = t166 * t216 + t175 * t196;
 t159 = t165 * t216 + t174 * t195;
 t158 = t164 * t216 + t173 * t194;
-t1 = [m(3) + (t172 * t193 + t181 * t187) * t235 + (t170 * t191 + t179 * t186) * t234 + (t168 * t189 + t177 * t185) * t233 (t172 * t192 + t181 * t184) * t235 + (t170 * t190 + t179 * t183) * t234 + (t168 * t188 + t177 * t182) * t233, t177 * t164 + t179 * t165 + t181 * t166 + t168 * t173 + t170 * t174 + t172 * t175 + t243; (t171 * t193 + t180 * t187) * t235 + (t169 * t191 + t178 * t186) * t234 + (t167 * t189 + t176 * t185) * t233, m(3) + (t171 * t192 + t180 * t184) * t235 + (t169 * t190 + t178 * t183) * t234 + (t167 * t188 + t176 * t182) * t233, t176 * t164 + t178 * t165 + t180 * t166 + t167 * t173 + t169 * t174 + t171 * t175 + t244; (t160 * t193 + t163 * t187) * t235 + (t159 * t191 + t162 * t186) * t234 + (t158 * t189 + t161 * t185) * t233 + t243 (t160 * t192 + t163 * t184) * t235 + (t159 * t190 + t162 * t183) * t234 + (t158 * t188 + t161 * t182) * t233 + t244, t158 * t173 + t159 * t174 + t160 * t175 + t161 * t164 + t162 * t165 + t163 * t166 + Ifges(3,3);];
+t1 = [m(3) + (t172 * t193 + t181 * t187) * t235 + (t170 * t191 + t179 * t186) * t234 + (t168 * t189 + t177 * t185) * t233, (t172 * t192 + t181 * t184) * t235 + (t170 * t190 + t179 * t183) * t234 + (t168 * t188 + t177 * t182) * t233, t177 * t164 + t179 * t165 + t181 * t166 + t168 * t173 + t170 * t174 + t172 * t175 + t243; (t171 * t193 + t180 * t187) * t235 + (t169 * t191 + t178 * t186) * t234 + (t167 * t189 + t176 * t185) * t233, m(3) + (t171 * t192 + t180 * t184) * t235 + (t169 * t190 + t178 * t183) * t234 + (t167 * t188 + t176 * t182) * t233, t176 * t164 + t178 * t165 + t180 * t166 + t167 * t173 + t169 * t174 + t171 * t175 + t244; (t160 * t193 + t163 * t187) * t235 + (t159 * t191 + t162 * t186) * t234 + (t158 * t189 + t161 * t185) * t233 + t243, (t160 * t192 + t163 * t184) * t235 + (t159 * t190 + t162 * t183) * t234 + (t158 * t188 + t161 * t182) * t233 + t244, t158 * t173 + t159 * t174 + t160 * t175 + t161 * t164 + t162 * t165 + t163 * t166 + Ifges(3,3);];
 MX  = t1;

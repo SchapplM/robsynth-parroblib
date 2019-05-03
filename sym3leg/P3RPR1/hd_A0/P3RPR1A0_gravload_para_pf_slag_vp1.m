@@ -26,7 +26,7 @@
 %   kinematic parameters (e.g. lengths of the links)
 %   pkin=[a2,a3,d1,d3]';
 % m [3x1]
-%   mass of all robot links (including platform)
+%   mass of all robot links (leg links until cut joint, platform)
 % rSges [3x3]
 %   center of mass of all robot links (in body frames)
 %   rows: links of the robot (leg links until cut joint, platform)
@@ -38,10 +38,10 @@
 %   in platform coordinates
 
 % Quelle: HybrDyn-Toolbox
-% Datum: 2018-12-20 17:54
-% Revision: f9720dcdc4676342702b46a014e894344751412a
+% Datum: 2019-05-03 14:58
+% Revision: abbb0d669c4fc7889a31e0cf750ab51a4f2eb1ce (2019-05-03)
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
-% (C) Institut für mechatronische Systeme, Universität Hannover
+% (C) Institut für Mechatronische Systeme, Universität Hannover
 
 function taugX = P3RPR1A0_gravload_para_pf_slag_vp1(xP, qJ, g, legFrame, ...
   koppelP, pkin, m, rSges)
@@ -68,85 +68,85 @@ assert(isreal(koppelP) && all(size(koppelP) == [3 3]), ...
 %% Symbolic Calculation
 % From gravvec_para_plfcoord_par1_matlab.m
 % OptimizationMode: 2
-% StartTime: 2018-12-20 17:54:27
-% EndTime: 2018-12-20 17:54:27
+% StartTime: 2019-05-03 14:58:05
+% EndTime: 2019-05-03 14:58:05
 % DurationCPUTime: 0.26s
 % Computational Cost: add. (309->86), mult. (492->161), div. (24->3), fcn. (362->14), ass. (0->77)
-t478 = legFrame(3,3);
-t467 = sin(t478);
-t470 = cos(t478);
-t455 = -t467 * g(1) + t470 * g(2);
-t458 = t470 * g(1) + t467 * g(2);
-t475 = rSges(2,3) + qJ(2,3);
-t481 = sin(qJ(1,3));
-t484 = cos(qJ(1,3));
-t487 = pkin(1) + rSges(2,1);
-t431 = ((-t455 * t487 - t475 * t458) * m(2) + m(1) * (-rSges(1,1) * t455 + rSges(1,2) * t458)) * t484 + t481 * ((-t455 * t475 + t487 * t458) * m(2) + m(1) * (rSges(1,1) * t458 + rSges(1,2) * t455));
-t492 = 0.1e1 / qJ(2,3);
-t506 = t431 * t492;
-t479 = legFrame(2,3);
-t468 = sin(t479);
-t471 = cos(t479);
-t456 = -t468 * g(1) + t471 * g(2);
-t459 = t471 * g(1) + t468 * g(2);
-t476 = rSges(2,3) + qJ(2,2);
-t482 = sin(qJ(1,2));
-t485 = cos(qJ(1,2));
-t432 = ((-t456 * t487 - t476 * t459) * m(2) + m(1) * (-rSges(1,1) * t456 + rSges(1,2) * t459)) * t485 + t482 * ((-t456 * t476 + t487 * t459) * m(2) + m(1) * (rSges(1,1) * t459 + rSges(1,2) * t456));
-t493 = 0.1e1 / qJ(2,2);
-t505 = t432 * t493;
-t480 = legFrame(1,3);
+t480 = legFrame(3,3);
 t469 = sin(t480);
 t472 = cos(t480);
-t457 = -t469 * g(1) + t472 * g(2);
-t460 = t472 * g(1) + t469 * g(2);
-t477 = rSges(2,3) + qJ(2,1);
-t483 = sin(qJ(1,1));
-t486 = cos(qJ(1,1));
-t433 = ((-t457 * t487 - t477 * t460) * m(2) + m(1) * (-rSges(1,1) * t457 + rSges(1,2) * t460)) * t486 + t483 * ((-t457 * t477 + t487 * t460) * m(2) + m(1) * (rSges(1,1) * t460 + rSges(1,2) * t457));
-t494 = 0.1e1 / qJ(2,1);
-t504 = t433 * t494;
-t440 = -t455 * t484 + t458 * t481;
-t503 = t440 * t492;
-t441 = -t456 * t485 + t459 * t482;
-t502 = t441 * t493;
+t457 = -g(1) * t469 + g(2) * t472;
+t460 = g(1) * t472 + g(2) * t469;
+t477 = rSges(2,3) + qJ(2,3);
+t483 = sin(qJ(1,3));
+t486 = cos(qJ(1,3));
+t489 = pkin(1) + rSges(2,1);
+t433 = ((-t457 * t489 - t460 * t477) * m(2) + m(1) * (-rSges(1,1) * t457 + rSges(1,2) * t460)) * t486 + t483 * ((-t457 * t477 + t460 * t489) * m(2) + m(1) * (rSges(1,1) * t460 + rSges(1,2) * t457));
+t494 = 0.1e1 / qJ(2,3);
+t508 = t433 * t494;
+t481 = legFrame(2,3);
+t470 = sin(t481);
+t473 = cos(t481);
+t458 = -g(1) * t470 + g(2) * t473;
+t461 = g(1) * t473 + g(2) * t470;
+t478 = rSges(2,3) + qJ(2,2);
+t484 = sin(qJ(1,2));
+t487 = cos(qJ(1,2));
+t434 = ((-t458 * t489 - t461 * t478) * m(2) + m(1) * (-rSges(1,1) * t458 + rSges(1,2) * t461)) * t487 + t484 * ((-t458 * t478 + t461 * t489) * m(2) + m(1) * (rSges(1,1) * t461 + rSges(1,2) * t458));
+t495 = 0.1e1 / qJ(2,2);
+t507 = t434 * t495;
+t482 = legFrame(1,3);
+t471 = sin(t482);
+t474 = cos(t482);
+t459 = -g(1) * t471 + g(2) * t474;
+t462 = g(1) * t474 + g(2) * t471;
+t479 = rSges(2,3) + qJ(2,1);
+t485 = sin(qJ(1,1));
+t488 = cos(qJ(1,1));
+t435 = ((-t459 * t489 - t462 * t479) * m(2) + m(1) * (-rSges(1,1) * t459 + rSges(1,2) * t462)) * t488 + t485 * ((-t459 * t479 + t462 * t489) * m(2) + m(1) * (rSges(1,1) * t462 + rSges(1,2) * t459));
+t496 = 0.1e1 / qJ(2,1);
+t506 = t435 * t496;
 t442 = -t457 * t486 + t460 * t483;
-t501 = t442 * t494;
-t500 = koppelP(1,1);
-t499 = koppelP(2,1);
-t498 = koppelP(3,1);
-t497 = koppelP(1,2);
-t496 = koppelP(2,2);
-t495 = koppelP(3,2);
-t491 = rSges(3,1);
-t490 = rSges(3,2);
-t489 = xP(3);
-t488 = pkin(1) + pkin(2);
-t474 = cos(t489);
-t473 = sin(t489);
-t466 = t483 * qJ(2,1) + t488 * t486;
-t465 = t482 * qJ(2,2) + t488 * t485;
-t464 = t481 * qJ(2,3) + t488 * t484;
-t463 = -t486 * qJ(2,1) + t483 * t488;
-t462 = -t485 * qJ(2,2) + t482 * t488;
-t461 = -t484 * qJ(2,3) + t481 * t488;
-t454 = -t473 * t497 + t474 * t500;
-t453 = -t473 * t496 + t474 * t499;
-t452 = -t473 * t495 + t474 * t498;
-t451 = -t473 * t500 - t474 * t497;
-t450 = -t473 * t499 - t474 * t496;
-t449 = -t473 * t498 - t474 * t495;
-t448 = -t469 * t483 + t472 * t486;
-t447 = t469 * t486 + t472 * t483;
-t446 = -t468 * t482 + t471 * t485;
-t445 = t468 * t485 + t471 * t482;
-t444 = -t467 * t481 + t470 * t484;
-t443 = t467 * t484 + t470 * t481;
-t439 = -t469 * t463 + t466 * t472;
-t438 = -t468 * t462 + t465 * t471;
-t437 = -t467 * t461 + t464 * t470;
-t436 = t463 * t472 + t469 * t466;
-t435 = t462 * t471 + t468 * t465;
-t434 = t461 * t470 + t467 * t464;
-t1 = [t444 * t506 + t446 * t505 + t448 * t504 - m(3) * g(1) + (-t437 * t503 - t438 * t502 - t439 * t501) * m(2); t443 * t506 + t445 * t505 + t447 * t504 - m(3) * g(2) + (-t434 * t503 - t435 * t502 - t436 * t501) * m(2); m(3) * ((g(1) * t491 + g(2) * t490) * t473 + (g(1) * t490 - g(2) * t491) * t474) + ((t447 * t454 + t448 * t451) * t433 - (t436 * t454 + t439 * t451) * m(2) * t442) * t494 + ((t445 * t453 + t446 * t450) * t432 - (t435 * t453 + t438 * t450) * m(2) * t441) * t493 + ((t443 * t452 + t444 * t449) * t431 - (t434 * t452 + t437 * t449) * m(2) * t440) * t492;];
+t505 = t442 * t494;
+t443 = -t458 * t487 + t461 * t484;
+t504 = t443 * t495;
+t444 = -t459 * t488 + t462 * t485;
+t503 = t444 * t496;
+t502 = koppelP(1,1);
+t501 = koppelP(2,1);
+t500 = koppelP(3,1);
+t499 = koppelP(1,2);
+t498 = koppelP(2,2);
+t497 = koppelP(3,2);
+t493 = rSges(3,1);
+t492 = rSges(3,2);
+t491 = xP(3);
+t490 = pkin(1) + pkin(2);
+t476 = cos(t491);
+t475 = sin(t491);
+t468 = qJ(2,1) * t485 + t488 * t490;
+t467 = qJ(2,2) * t484 + t487 * t490;
+t466 = qJ(2,3) * t483 + t486 * t490;
+t465 = -qJ(2,1) * t488 + t485 * t490;
+t464 = -qJ(2,2) * t487 + t484 * t490;
+t463 = -qJ(2,3) * t486 + t483 * t490;
+t456 = -t475 * t499 + t476 * t502;
+t455 = -t475 * t498 + t476 * t501;
+t454 = -t475 * t497 + t476 * t500;
+t453 = -t475 * t502 - t476 * t499;
+t452 = -t475 * t501 - t476 * t498;
+t451 = -t475 * t500 - t476 * t497;
+t450 = -t471 * t485 + t474 * t488;
+t449 = t471 * t488 + t474 * t485;
+t448 = -t470 * t484 + t473 * t487;
+t447 = t470 * t487 + t473 * t484;
+t446 = -t469 * t483 + t472 * t486;
+t445 = t469 * t486 + t472 * t483;
+t441 = -t465 * t471 + t468 * t474;
+t440 = -t464 * t470 + t467 * t473;
+t439 = -t463 * t469 + t466 * t472;
+t438 = t465 * t474 + t468 * t471;
+t437 = t464 * t473 + t467 * t470;
+t436 = t463 * t472 + t466 * t469;
+t1 = [t446 * t508 + t448 * t507 + t450 * t506 - m(3) * g(1) + (-t439 * t505 - t440 * t504 - t441 * t503) * m(2); t445 * t508 + t447 * t507 + t449 * t506 - m(3) * g(2) + (-t436 * t505 - t437 * t504 - t438 * t503) * m(2); m(3) * ((g(1) * t493 + g(2) * t492) * t475 + (g(1) * t492 - g(2) * t493) * t476) + ((t449 * t456 + t450 * t453) * t435 - (t438 * t456 + t441 * t453) * m(2) * t444) * t496 + ((t447 * t455 + t448 * t452) * t434 - (t437 * t455 + t440 * t452) * m(2) * t443) * t495 + ((t445 * t454 + t446 * t451) * t433 - (t436 * t454 + t439 * t451) * m(2) * t442) * t494;];
 taugX  = t1;

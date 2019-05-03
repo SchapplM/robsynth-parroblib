@@ -26,7 +26,7 @@
 %   kinematic parameters (e.g. lengths of the links)
 %   pkin=[a2,a3,d1,d3]';
 % m [3x1]
-%   mass of all robot links (including platform)
+%   mass of all robot links (leg links until cut joint, platform)
 % mrSges [3x3]
 %   first moment of all robot links (mass times center of mass in body frames)
 %   rows: links of the robot (leg links until cut joint, platform)
@@ -42,10 +42,10 @@
 %   in platform coordinates
 
 % Quelle: HybrDyn-Toolbox
-% Datum: 2018-12-20 17:54
-% Revision: f9720dcdc4676342702b46a014e894344751412a
+% Datum: 2019-05-03 14:58
+% Revision: abbb0d669c4fc7889a31e0cf750ab51a4f2eb1ce (2019-05-03)
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
-% (C) Institut für mechatronische Systeme, Universität Hannover
+% (C) Institut für Mechatronische Systeme, Universität Hannover
 
 function taucX = P3RPR1A0_coriolisvec_para_pf_slag_vp2(xP, xDP, qJ, legFrame, ...
   koppelP, pkin, m, mrSges, Ifges)
@@ -74,9 +74,9 @@ assert(isreal(koppelP) && all(size(koppelP) == [3 3]), ...
 %% Symbolic Calculation
 % From coriolisvec_para_plfcoord_par2_matlab.m
 % OptimizationMode: 2
-% StartTime: 2018-12-20 17:54:29
-% EndTime: 2018-12-20 17:54:30
-% DurationCPUTime: 1.00s
+% StartTime: 2019-05-03 14:58:07
+% EndTime: 2019-05-03 14:58:08
+% DurationCPUTime: 0.98s
 % Computational Cost: add. (3277->166), mult. (4877->312), div. (666->3), fcn. (3892->14), ass. (0->149)
 t406 = 2 * mrSges(2,3);
 t355 = xDP(3);

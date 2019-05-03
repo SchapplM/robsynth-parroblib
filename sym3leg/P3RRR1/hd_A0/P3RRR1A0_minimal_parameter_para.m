@@ -7,7 +7,7 @@
 %   kinematic parameters (e.g. lengths of the links)
 %   pkin=[a2,a3,d1,d2,d3]';
 % m [3x1]
-%   mass of all robot links (including platform)
+%   mass of all robot links (leg links until cut joint, platform)
 % mrSges [3x3]
 %   first moment of all robot links (mass times center of mass in body frames)
 %   rows: links of the robot (leg links until cut joint, platform)
@@ -28,10 +28,10 @@
 %   base parameter vector (minimal parameter vector)
 
 % Quelle: HybrDyn-Toolbox
-% Datum: 2018-12-20 18:13
-% Revision: f9720dcdc4676342702b46a014e894344751412a
+% Datum: 2019-05-03 15:38
+% Revision: abbb0d669c4fc7889a31e0cf750ab51a4f2eb1ce (2019-05-03)
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
-% (C) Institut für mechatronische Systeme, Universität Hannover
+% (C) Institut für Mechatronische Systeme, Universität Hannover
 
 function MPV = P3RRR1A0_minimal_parameter_para(pkin, m, mrSges, Ifges, koppelP)
 

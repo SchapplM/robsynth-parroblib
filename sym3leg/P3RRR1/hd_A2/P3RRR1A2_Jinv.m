@@ -32,10 +32,10 @@
 %   Analytische Jacobi-Matrix
 
 % Quelle: HybrDyn-Toolbox
-% Datum: 2018-12-20 18:16
-% Revision: f9720dcdc4676342702b46a014e894344751412a
+% Datum: 2019-05-03 15:41
+% Revision: abbb0d669c4fc7889a31e0cf750ab51a4f2eb1ce (2019-05-03)
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
-% (C) Institut für mechatronische Systeme, Universität Hannover
+% (C) Institut für Mechatronische Systeme, Universität Hannover
 
 function Jinv = P3RRR1A2_Jinv(xP, qJ, pkin, koppelP, ...
 legFrame)
@@ -58,9 +58,9 @@ assert(isreal(koppelP) && all(size(koppelP) == [3 3]), ...
 %% Symbolic Calculation
 % From Jinv_para_matlab.m
 % OptimizationMode: 2
-% StartTime: 2018-12-20 18:16:14
-% EndTime: 2018-12-20 18:16:14
-% DurationCPUTime: 0.15s
+% StartTime: 2019-05-03 15:41:38
+% EndTime: 2019-05-03 15:41:38
+% DurationCPUTime: 0.16s
 % Computational Cost: add. (108->57), mult. (153->116), div. (27->5), fcn. (168->20), ass. (0->50)
 t54 = 0.1e1 / pkin(2) / pkin(1);
 t30 = qJ(1,3) + qJ(2,3);
@@ -111,5 +111,5 @@ t7 = -t28 * t43 + t29 * t46;
 t6 = t28 * t48 + t29 * t45;
 t5 = t28 * t47 + t29 * t44;
 t4 = t28 * t46 + t29 * t43;
-t1 = [(pkin(1) * (-t38 * t24 + t27 * t41) + (-t24 * t18 + t27 * t21) * pkin(2)) * t51 (pkin(1) * (t24 * t41 + t27 * t38) + (t27 * t18 + t24 * t21) * pkin(2)) * t51 (((t14 * t29 - t28 * t15) * t27 + (t28 * t14 + t15 * t29) * t24) * pkin(1) + (-(-t24 * t9 + t6 * t27) * t21 + (t24 * t6 + t9 * t27) * t18) * pkin(2)) * t51; (pkin(1) * (-t37 * t23 + t26 * t40) + (-t23 * t17 + t26 * t20) * pkin(2)) * t52 (pkin(1) * (t23 * t40 + t26 * t37) + (t26 * t17 + t23 * t20) * pkin(2)) * t52 (((t12 * t29 - t28 * t13) * t26 + (t28 * t12 + t13 * t29) * t23) * pkin(1) + (-(-t23 * t8 + t5 * t26) * t20 + (t23 * t5 + t8 * t26) * t17) * pkin(2)) * t52; (pkin(1) * (-t36 * t22 + t25 * t39) + (-t22 * t16 + t25 * t19) * pkin(2)) * t53 (pkin(1) * (t22 * t39 + t25 * t36) + (t25 * t16 + t22 * t19) * pkin(2)) * t53 (((t10 * t29 - t28 * t11) * t25 + (t28 * t10 + t11 * t29) * t22) * pkin(1) + (-(-t22 * t7 + t4 * t25) * t19 + (t22 * t4 + t7 * t25) * t16) * pkin(2)) * t53;];
+t1 = [(pkin(1) * (-t38 * t24 + t27 * t41) + (-t24 * t18 + t27 * t21) * pkin(2)) * t51, (pkin(1) * (t24 * t41 + t27 * t38) + (t27 * t18 + t24 * t21) * pkin(2)) * t51, (((t14 * t29 - t28 * t15) * t27 + t24 * (t28 * t14 + t15 * t29)) * pkin(1) + (-(-t24 * t9 + t6 * t27) * t21 + (t24 * t6 + t9 * t27) * t18) * pkin(2)) * t51; (pkin(1) * (-t37 * t23 + t26 * t40) + (-t23 * t17 + t26 * t20) * pkin(2)) * t52, (pkin(1) * (t23 * t40 + t26 * t37) + (t26 * t17 + t23 * t20) * pkin(2)) * t52, (((t12 * t29 - t28 * t13) * t26 + t23 * (t28 * t12 + t13 * t29)) * pkin(1) + (-(-t23 * t8 + t5 * t26) * t20 + (t23 * t5 + t8 * t26) * t17) * pkin(2)) * t52; (pkin(1) * (-t36 * t22 + t25 * t39) + (-t22 * t16 + t25 * t19) * pkin(2)) * t53, (pkin(1) * (t22 * t39 + t25 * t36) + (t25 * t16 + t22 * t19) * pkin(2)) * t53, (((t10 * t29 - t28 * t11) * t25 + t22 * (t28 * t10 + t11 * t29)) * pkin(1) + (-(-t22 * t7 + t4 * t25) * t19 + (t22 * t4 + t7 * t25) * t16) * pkin(2)) * t53;];
 Jinv  = t1;

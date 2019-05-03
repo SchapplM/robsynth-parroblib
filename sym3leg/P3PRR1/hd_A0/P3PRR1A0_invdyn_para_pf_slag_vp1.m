@@ -30,7 +30,7 @@
 %   kinematic parameters (e.g. lengths of the links)
 %   pkin=[a2,a3,d2,d3]';
 % m [3x1]
-%   mass of all robot links (including platform)
+%   mass of all robot links (leg links until cut joint, platform)
 % rSges [3x3]
 %   center of mass of all robot links (in body frames)
 %   rows: links of the robot (leg links until cut joint, platform)
@@ -46,10 +46,10 @@
 %   in platform coordinates xP
 
 % Quelle: HybrDyn-Toolbox
-% Datum: 2018-12-20 17:42
-% Revision: f9720dcdc4676342702b46a014e894344751412a
+% Datum: 2019-05-03 14:47
+% Revision: abbb0d669c4fc7889a31e0cf750ab51a4f2eb1ce (2019-05-03)
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
-% (C) Institut für mechatronische Systeme, Universität Hannover
+% (C) Institut für Mechatronische Systeme, Universität Hannover
 
 function tauX = P3PRR1A0_invdyn_para_pf_slag_vp1(xP, xDP, xDDP, qJ, g, legFrame, ...
   koppelP, pkin, m, rSges, Icges)
@@ -82,8 +82,8 @@ assert(isreal(koppelP) && all(size(koppelP) == [3 3]), ...
 %% Symbolic Calculation
 % From invdyn_para_plfcoord_par1_matlab.m
 % OptimizationMode: 2
-% StartTime: 2018-12-20 17:42:33
-% EndTime: 2018-12-20 17:42:34
+% StartTime: 2019-05-03 14:47:34
+% EndTime: 2019-05-03 14:47:34
 % DurationCPUTime: 0.65s
 % Computational Cost: add. (845->166), mult. (1565->320), div. (450->4), fcn. (1400->14), ass. (0->125)
 t85 = sin(qJ(2,3));
@@ -210,5 +210,5 @@ t4 = -t66 * t16 * t88 * t75 + (pkin(2) * t16 * t119 + t85 * (rSges(2,1) * t60 + 
 t3 = -t59 * t94 + (t77 * t121 + (-t87 * rSges(2,1) + (-rSges(2,2) - t117) * t90) * m(2)) * t18;
 t2 = -t58 * t94 + (t76 * t121 + (-t86 * rSges(2,1) + (-rSges(2,2) - t118) * t89) * m(2)) * t17;
 t1 = -t57 * t94 + (t75 * t121 + (-t85 * rSges(2,1) + (-rSges(2,2) - t119) * t88) * m(2)) * t16;
-t125 = [(-t49 * t82 - t78 * t50 - g(1) + t84) * m(3) + ((-t111 * t26 + t35 * t47) * t42 + (-t114 * t26 + t35 * t48) * t39 + t47 * t3 - t6 * t111) * t77 + ((-t112 * t24 + t33 * t45) * t41 + (-t115 * t24 + t33 * t46) * t38 + t45 * t2 - t5 * t112) * t76 + ((-t113 * t22 + t31 * t43) * t40 + (-t116 * t22 + t31 * t44) * t37 + t43 * t1 - t4 * t113) * t75; (-t78 * t49 + t50 * t82 - g(2) + t83) * m(3) + ((-t27 * t111 + t36 * t47) * t42 + (-t27 * t114 + t36 * t48) * t39 + t48 * t3 - t6 * t114) * t77 + ((-t25 * t112 + t34 * t45) * t41 + (-t25 * t115 + t34 * t46) * t38 + t46 * t2 - t5 * t115) * t76 + ((-t23 * t113 + t32 * t43) * t40 + (-t23 * t116 + t32 * t44) * t37 + t44 * t1 - t4 * t116) * t75; Icges(3,3) * t82 + t13 * t1 + t14 * t2 + t15 * t3 + t28 * t4 + t29 * t5 + t30 * t6 + (-t49 * t84 + t50 * t83 + (t96 ^ 2 + t97 ^ 2) * t82 + (g(1) * t97 + g(2) * t96) * t73 + (g(1) * t96 - g(2) * t97) * t74) * m(3) + ((-t111 * t9 + t12 * t47) * t42 + (-t114 * t9 + t12 * t48) * t39) * t77 + ((t11 * t45 - t112 * t8) * t41 + (t11 * t46 - t115 * t8) * t38) * t76 + ((t10 * t43 - t113 * t7) * t40 + (t10 * t44 - t116 * t7) * t37) * t75;];
+t125 = [(-t49 * t82 - t78 * t50 - g(1) + t84) * m(3) + ((-t111 * t26 + t35 * t47) * t42 + (-t114 * t26 + t35 * t48) * t39 + t47 * t3 - t6 * t111) * t77 + ((-t112 * t24 + t33 * t45) * t41 + (-t115 * t24 + t33 * t46) * t38 + t45 * t2 - t5 * t112) * t76 + ((-t113 * t22 + t31 * t43) * t40 + (-t116 * t22 + t31 * t44) * t37 + t43 * t1 - t4 * t113) * t75; (-t78 * t49 + t50 * t82 - g(2) + t83) * m(3) + ((-t111 * t27 + t36 * t47) * t42 + (-t114 * t27 + t36 * t48) * t39 + t48 * t3 - t6 * t114) * t77 + ((-t112 * t25 + t34 * t45) * t41 + (-t115 * t25 + t34 * t46) * t38 + t46 * t2 - t5 * t115) * t76 + ((-t113 * t23 + t32 * t43) * t40 + (-t116 * t23 + t32 * t44) * t37 + t44 * t1 - t4 * t116) * t75; Icges(3,3) * t82 + t13 * t1 + t14 * t2 + t15 * t3 + t28 * t4 + t29 * t5 + t30 * t6 + (-t49 * t84 + t50 * t83 + (t96 ^ 2 + t97 ^ 2) * t82 + (g(1) * t97 + g(2) * t96) * t73 + (g(1) * t96 - g(2) * t97) * t74) * m(3) + ((-t111 * t9 + t12 * t47) * t42 + (-t114 * t9 + t12 * t48) * t39) * t77 + ((t11 * t45 - t112 * t8) * t41 + (t11 * t46 - t115 * t8) * t38) * t76 + ((t10 * t43 - t113 * t7) * t40 + (t10 * t44 - t116 * t7) * t37) * t75;];
 tauX  = t125;

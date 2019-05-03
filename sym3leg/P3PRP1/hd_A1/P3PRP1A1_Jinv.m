@@ -32,10 +32,10 @@
 %   Analytische Jacobi-Matrix
 
 % Quelle: HybrDyn-Toolbox
-% Datum: 2018-12-20 17:36
-% Revision: f9720dcdc4676342702b46a014e894344751412a
+% Datum: 2019-05-03 14:44
+% Revision: abbb0d669c4fc7889a31e0cf750ab51a4f2eb1ce (2019-05-03)
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
-% (C) Institut für mechatronische Systeme, Universität Hannover
+% (C) Institut für Mechatronische Systeme, Universität Hannover
 
 function Jinv = P3PRP1A1_Jinv(xP, qJ, pkin, koppelP, ...
 legFrame)
@@ -58,15 +58,15 @@ assert(isreal(koppelP) && all(size(koppelP) == [3 3]), ...
 %% Symbolic Calculation
 % From Jinv_para_matlab.m
 % OptimizationMode: 2
-% StartTime: 2018-12-20 17:36:12
-% EndTime: 2018-12-20 17:36:12
-% DurationCPUTime: 0.24s
+% StartTime: 2019-05-03 14:44:16
+% EndTime: 2019-05-03 14:44:16
+% DurationCPUTime: 0.25s
 % Computational Cost: add. (243->88), mult. (492->139), div. (9->3), fcn. (150->14), ass. (0->81)
 t61 = (pkin(2) ^ 2);
 t86 = t61 + 1;
-t85 = (pkin(2) * qJ(3,1));
-t84 = (pkin(2) * qJ(3,2));
-t83 = (pkin(2) * qJ(3,3));
+t85 = (pkin(2) * qJ(3,2));
+t84 = (pkin(2) * qJ(3,3));
+t83 = (qJ(3,1) * pkin(2));
 t48 = cos(qJ(2,3));
 t82 = sin(qJ(2,3)) * t48;
 t49 = cos(qJ(2,2));
@@ -85,30 +85,30 @@ t53 = (qJ(3,2) ^ 2);
 t26 = -t53 + t86;
 t54 = (qJ(3,1) ^ 2);
 t27 = -t54 + t86;
-t76 = t57 * t85;
+t76 = t57 * t83;
 t60 = koppelP(1,1);
-t75 = t60 * t85;
-t74 = t56 * t84;
+t75 = t60 * t83;
+t74 = t56 * t85;
 t59 = koppelP(2,1);
-t73 = t59 * t84;
-t72 = t55 * t83;
+t73 = t59 * t85;
+t72 = t55 * t84;
 t58 = koppelP(3,1);
-t71 = t58 * t83;
+t71 = t58 * t84;
 t44 = legFrame(1,3);
 t30 = sin(t44);
-t70 = t30 * t85;
+t70 = t30 * t83;
 t43 = legFrame(2,3);
 t29 = sin(t43);
-t69 = t29 * t84;
+t69 = t29 * t85;
 t42 = legFrame(3,3);
 t28 = sin(t42);
-t68 = t28 * t83;
+t68 = t28 * t84;
 t31 = cos(t42);
-t67 = t31 * t83;
+t67 = t31 * t84;
 t32 = cos(t43);
-t66 = t32 * t84;
+t66 = t32 * t85;
 t33 = cos(t44);
-t65 = t33 * t85;
+t65 = t33 * t83;
 t64 = -t30 * t27 + 0.2e1 * t65;
 t63 = -t29 * t26 + 0.2e1 * t66;
 t62 = -t28 * t25 + 0.2e1 * t67;
@@ -133,14 +133,14 @@ t13 = t25 * t58 - 2 * t72;
 t12 = t27 * t33 + 0.2e1 * t70;
 t11 = t26 * t32 + 0.2e1 * t69;
 t10 = t25 * t31 + 0.2e1 * t68;
-t9 = 0.1e1 / (t27 * t41 + 0.2e1 * t80 * t85 - t54 - t86);
-t8 = 0.1e1 / (t26 * t40 + 0.2e1 * t81 * t84 - t53 - t86);
-t7 = 0.1e1 / (t25 * t39 + 0.2e1 * t82 * t83 - t52 - t86);
+t9 = 0.1e1 / (t27 * t41 + 0.2e1 * t80 * t83 - t54 - t86);
+t8 = 0.1e1 / (t26 * t40 + 0.2e1 * t81 * t85 - t53 - t86);
+t7 = 0.1e1 / (t25 * t39 + 0.2e1 * t82 * t84 - t52 - t86);
 t6 = t34 * t17 + t18 * t35;
 t5 = t17 * t35 - t34 * t18;
 t4 = t34 * t15 + t16 * t35;
 t3 = t15 * t35 - t34 * t16;
 t2 = t34 * t13 + t14 * t35;
 t1 = t13 * t35 - t34 * t14;
-t36 = [(-t12 * t80 + t61 * t30 + t64 * t41 + t30 - t65) * t9 (t12 * t41 - t33 * t61 + t64 * t80 - t33 - t70) * t9 ((t6 * t30 + t5 * t33) * t41 + (-t5 * t30 + t6 * t33) * t80 + (-t23 * t35 + t34 * t24) * t33 - (t34 * t23 + t24 * t35) * t30) * t9; (-t11 * t81 + t61 * t29 + t63 * t40 + t29 - t66) * t8 (t11 * t40 - t32 * t61 + t63 * t81 - t32 - t69) * t8 ((t4 * t29 + t3 * t32) * t40 + (-t3 * t29 + t4 * t32) * t81 + (-t21 * t35 + t34 * t22) * t32 - (t34 * t21 + t22 * t35) * t29) * t8; (-t10 * t82 + t61 * t28 + t62 * t39 + t28 - t67) * t7 (t10 * t39 - t31 * t61 + t62 * t82 - t31 - t68) * t7 ((t1 * t31 + t2 * t28) * t39 + (-t1 * t28 + t2 * t31) * t82 + (-t19 * t35 + t34 * t20) * t31 - (t34 * t19 + t20 * t35) * t28) * t7;];
+t36 = [(-t12 * t80 + t61 * t30 + t64 * t41 + t30 - t65) * t9, (t12 * t41 - t33 * t61 + t64 * t80 - t33 - t70) * t9, ((t6 * t30 + t5 * t33) * t41 + (-t5 * t30 + t6 * t33) * t80 + (-t23 * t35 + t34 * t24) * t33 - t30 * (t34 * t23 + t24 * t35)) * t9; (-t11 * t81 + t61 * t29 + t63 * t40 + t29 - t66) * t8, (t11 * t40 - t32 * t61 + t63 * t81 - t32 - t69) * t8, ((t4 * t29 + t3 * t32) * t40 + (-t3 * t29 + t4 * t32) * t81 + (-t21 * t35 + t34 * t22) * t32 - t29 * (t34 * t21 + t22 * t35)) * t8; (-t10 * t82 + t61 * t28 + t62 * t39 + t28 - t67) * t7, (t10 * t39 - t31 * t61 + t62 * t82 - t31 - t68) * t7, ((t1 * t31 + t2 * t28) * t39 + (-t1 * t28 + t2 * t31) * t82 + (-t19 * t35 + t34 * t20) * t31 - t28 * (t34 * t19 + t20 * t35)) * t7;];
 Jinv  = t36;

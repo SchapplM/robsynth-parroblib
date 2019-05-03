@@ -36,10 +36,10 @@
 %   in task space
 
 % Quelle: HybrDyn-Toolbox
-% Datum: 2018-12-20 17:28
-% Revision: f9720dcdc4676342702b46a014e894344751412a
+% Datum: 2019-05-02 15:24
+% Revision: 3acd05283b8979b361f80d69cfa1c98d98241298 (2019-04-12)
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
-% (C) Institut für mechatronische Systeme, Universität Hannover
+% (C) Institut für Mechatronische Systeme, Universität Hannover
 
 function tauX_reg = P3PPR1A0_invdyn_para_pf_reg(xP, xDP, xDDP, qJ, g, legFrame, ...
   koppelP, pkin)
@@ -66,9 +66,9 @@ assert(isreal(koppelP) && all(size(koppelP) == [3 3]), ...
 %% Symbolic Calculation
 % From invdyn_para_plfcoord_reg_matlab.m
 % OptimizationMode: 2
-% StartTime: 2018-12-20 17:28:17
-% EndTime: 2018-12-20 17:28:17
-% DurationCPUTime: 0.20s
+% StartTime: 2019-05-02 15:24:32
+% EndTime: 2019-05-02 15:24:32
+% DurationCPUTime: 0.17s
 % Computational Cost: add. (369->61), mult. (595->91), div. (0->0), fcn. (420->8), ass. (0->54)
 t41 = xDDP(2) - g(2);
 t42 = xDDP(1) - g(1);

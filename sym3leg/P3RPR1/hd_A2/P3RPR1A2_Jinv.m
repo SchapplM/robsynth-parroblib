@@ -32,10 +32,10 @@
 %   Analytische Jacobi-Matrix
 
 % Quelle: HybrDyn-Toolbox
-% Datum: 2018-12-20 17:57
-% Revision: f9720dcdc4676342702b46a014e894344751412a
+% Datum: 2019-05-03 15:00
+% Revision: abbb0d669c4fc7889a31e0cf750ab51a4f2eb1ce (2019-05-03)
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
-% (C) Institut für mechatronische Systeme, Universität Hannover
+% (C) Institut für Mechatronische Systeme, Universität Hannover
 
 function Jinv = P3RPR1A2_Jinv(xP, qJ, pkin, koppelP, ...
 legFrame)
@@ -58,9 +58,9 @@ assert(isreal(koppelP) && all(size(koppelP) == [3 3]), ...
 %% Symbolic Calculation
 % From Jinv_para_matlab.m
 % OptimizationMode: 2
-% StartTime: 2018-12-20 17:56:58
-% EndTime: 2018-12-20 17:56:58
-% DurationCPUTime: 0.08s
+% StartTime: 2019-05-03 15:00:53
+% EndTime: 2019-05-03 15:00:53
+% DurationCPUTime: 0.09s
 % Computational Cost: add. (99->34), mult. (126->75), div. (9->3), fcn. (78->14), ass. (0->47)
 t46 = koppelP(1,1);
 t45 = koppelP(2,1);
@@ -108,5 +108,5 @@ t4 = t13 * t30 - t16 * t33;
 t3 = t15 * t35 + t32 * t18;
 t2 = t14 * t34 + t31 * t17;
 t1 = t13 * t33 + t30 * t16;
-t47 = [(t12 * t24 - t21 * t9) * t40 (t12 * t21 + t9 * t24) * t40 ((-t25 * t3 + t6 * t26) * t24 + (t25 * t6 + t3 * t26) * t21) * t40; (t11 * t23 - t20 * t8) * t39 (t11 * t20 + t8 * t23) * t39 ((-t25 * t2 + t5 * t26) * t23 + (t2 * t26 + t25 * t5) * t20) * t39; (t10 * t22 - t19 * t7) * t38 (t10 * t19 + t7 * t22) * t38 ((-t25 * t1 + t4 * t26) * t22 + (t1 * t26 + t25 * t4) * t19) * t38;];
+t47 = [(t12 * t24 - t9 * t21) * t40, (t21 * t12 + t9 * t24) * t40, ((-t25 * t3 + t6 * t26) * t24 + t21 * (t25 * t6 + t3 * t26)) * t40; (t11 * t23 - t8 * t20) * t39, (t20 * t11 + t8 * t23) * t39, ((-t25 * t2 + t5 * t26) * t23 + t20 * (t2 * t26 + t25 * t5)) * t39; (t10 * t22 - t7 * t19) * t38, (t19 * t10 + t7 * t22) * t38, ((-t25 * t1 + t4 * t26) * t22 + t19 * (t1 * t26 + t25 * t4)) * t38;];
 Jinv  = t47;

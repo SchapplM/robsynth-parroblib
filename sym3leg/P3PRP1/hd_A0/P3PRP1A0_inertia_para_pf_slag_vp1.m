@@ -24,7 +24,7 @@
 %   kinematic parameters (e.g. lengths of the links)
 %   pkin=[a2,a3,d2]';
 % m [4x1]
-%   mass of all robot links (including platform)
+%   mass of all robot links (leg links until cut joint, platform)
 % rSges [4x3]
 %   center of mass of all robot links (in body frames)
 %   rows: links of the robot (leg links until cut joint, platform)
@@ -39,10 +39,10 @@
 %   inertia matrix in task space
 
 % Quelle: HybrDyn-Toolbox
-% Datum: 2018-12-20 17:35
-% Revision: f9720dcdc4676342702b46a014e894344751412a
+% Datum: 2019-05-03 14:42
+% Revision: abbb0d669c4fc7889a31e0cf750ab51a4f2eb1ce (2019-05-03)
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
-% (C) Institut für mechatronische Systeme, Universität Hannover
+% (C) Institut für Mechatronische Systeme, Universität Hannover
 
 function MX = P3PRP1A0_inertia_para_pf_slag_vp1(xP, qJ, legFrame, ...
   koppelP, pkin, m, rSges, Icges)
@@ -69,9 +69,9 @@ assert(isreal(koppelP) && all(size(koppelP) == [3 3]), ...
 %% Symbolic Calculation
 % From inertia_para_plfcoord_par1_matlab.m
 % OptimizationMode: 2
-% StartTime: 2018-12-20 17:34:49
-% EndTime: 2018-12-20 17:34:50
-% DurationCPUTime: 1.09s
+% StartTime: 2019-05-03 14:41:33
+% EndTime: 2019-05-03 14:41:34
+% DurationCPUTime: 1.20s
 % Computational Cost: add. (6088->252), mult. (11247->374), div. (432->3), fcn. (5066->14), ass. (0->157)
 t434 = 2 * pkin(2);
 t433 = 2 * rSges(3,3);
@@ -187,11 +187,11 @@ t320 = t393 * t373 - t370 * (t354 - t394);
 t319 = t400 * t375 + t372 * (-t359 - t399);
 t318 = t397 * t374 + t371 * (-t358 - t396);
 t317 = t394 * t373 + t370 * (-t357 - t393);
-t316 = -t340 * t416 + t392 * t356 + t366 * t401 + t356 - t404;
+t316 = -t340 * t416 + t392 * t356 + t401 * t366 + t356 - t404;
 t315 = t340 * t366 - t359 * t392 + t401 * t416 - t359 - t409;
-t314 = -t339 * t417 + t392 * t355 + t365 * t398 + t355 - t405;
+t314 = -t339 * t417 + t392 * t355 + t398 * t365 + t355 - t405;
 t313 = t339 * t365 - t358 * t392 + t398 * t417 - t358 - t408;
-t312 = -t338 * t418 + t392 * t354 + t364 * t395 + t354 - t406;
+t312 = -t338 * t418 + t392 * t354 + t395 * t364 + t354 - t406;
 t311 = t338 * t364 - t357 * t392 + t395 * t418 - t357 - t407;
 t310 = (t327 * t348 + t328 * t345) * t337;
 t309 = (t325 * t347 + t326 * t344) * t336;
@@ -229,5 +229,5 @@ t278 = t302 * t362 - t305 * t428 + t308 * t332;
 t277 = t304 * t334 - t307 * t425 + t310 * t331;
 t276 = t303 * t333 - t306 * t425 + t309 * t330;
 t275 = t302 * t332 - t305 * t425 + t308 * t329;
-t1 = [m(4) + (t289 * t328 + t295 * t316 + t301 * t319) * t337 + (t287 * t326 + t293 * t314 + t299 * t318) * t336 + (t285 * t324 + t291 * t312 + t297 * t317) * t335 (t289 * t327 + t295 * t315 + t301 * t322) * t337 + (t287 * t325 + t293 * t313 + t299 * t321) * t336 + (t285 * t323 + t291 * t311 + t297 * t320) * t335, t285 * t308 + t287 * t309 + t289 * t310 + t291 * t302 + t293 * t303 + t295 * t304 + t297 * t305 + t299 * t306 + t301 * t307 + t341; (t288 * t328 + t294 * t316 + t300 * t319) * t337 + (t286 * t326 + t292 * t314 + t298 * t318) * t336 + (t284 * t324 + t290 * t312 + t296 * t317) * t335, m(4) + (t288 * t327 + t294 * t315 + t300 * t322) * t337 + (t286 * t325 + t292 * t313 + t298 * t321) * t336 + (t284 * t323 + t290 * t311 + t296 * t320) * t335, t284 * t308 + t286 * t309 + t288 * t310 + t290 * t302 + t292 * t303 + t294 * t304 + t296 * t305 + t298 * t306 + t300 * t307 + t342; t341 + (t277 * t328 + t280 * t316 + t283 * t319) * t337 + (t276 * t326 + t279 * t314 + t282 * t318) * t336 + (t275 * t324 + t278 * t312 + t281 * t317) * t335, t342 + (t277 * t327 + t280 * t315 + t283 * t322) * t337 + (t276 * t325 + t279 * t313 + t282 * t321) * t336 + (t275 * t323 + t278 * t311 + t281 * t320) * t335, t280 * t304 + t277 * t310 + t283 * t307 + t279 * t303 + t276 * t309 + t282 * t306 + t278 * t302 + t275 * t308 + t281 * t305 + Icges(4,3) + m(4) * (t379 ^ 2 + t380 ^ 2);];
+t1 = [m(4) + (t289 * t328 + t295 * t316 + t301 * t319) * t337 + (t287 * t326 + t293 * t314 + t299 * t318) * t336 + (t285 * t324 + t291 * t312 + t297 * t317) * t335, (t289 * t327 + t295 * t315 + t301 * t322) * t337 + (t287 * t325 + t293 * t313 + t299 * t321) * t336 + (t285 * t323 + t291 * t311 + t297 * t320) * t335, t285 * t308 + t287 * t309 + t289 * t310 + t291 * t302 + t293 * t303 + t295 * t304 + t297 * t305 + t299 * t306 + t301 * t307 + t341; (t288 * t328 + t294 * t316 + t300 * t319) * t337 + (t286 * t326 + t292 * t314 + t298 * t318) * t336 + (t284 * t324 + t290 * t312 + t296 * t317) * t335, m(4) + (t288 * t327 + t294 * t315 + t300 * t322) * t337 + (t286 * t325 + t292 * t313 + t298 * t321) * t336 + (t284 * t323 + t290 * t311 + t296 * t320) * t335, t284 * t308 + t286 * t309 + t288 * t310 + t290 * t302 + t292 * t303 + t294 * t304 + t296 * t305 + t298 * t306 + t300 * t307 + t342; t341 + (t277 * t328 + t280 * t316 + t283 * t319) * t337 + (t276 * t326 + t279 * t314 + t282 * t318) * t336 + (t275 * t324 + t278 * t312 + t281 * t317) * t335, t342 + (t277 * t327 + t280 * t315 + t283 * t322) * t337 + (t276 * t325 + t279 * t313 + t282 * t321) * t336 + (t275 * t323 + t278 * t311 + t281 * t320) * t335, t280 * t304 + t277 * t310 + t283 * t307 + t279 * t303 + t276 * t309 + t282 * t306 + t278 * t302 + t275 * t308 + t281 * t305 + Icges(4,3) + m(4) * (t379 ^ 2 + t380 ^ 2);];
 MX  = t1;
