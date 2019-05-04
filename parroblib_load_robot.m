@@ -39,15 +39,19 @@ repopath=fileparts(which('parroblib_path_init.m'));
 % Name der Kinematischen Struktur von Aktuierung trennen
 % Namensschema für symmetrische, serielle PKM als regulären Ausdruck
 % TODO: Anpassung an nicht-serielle, nicht-symmetrische PKM
-expression = 'P(\d)([RP]+)(\d+)A(\d+)'; % Format "P3RRR1A1"
+expression = 'P(\d)([RP]+)(\d+)[V]?(\d*)A(\d+)'; % Format "P3RRR1A1" oder "P3RRR1V1A1"
 [tokens, ~] = regexp(Name,expression,'tokens','match');
 if isempty(tokens)
   error('Eingegebener Name %s entspricht nicht dem Namensschema', Name);
 end
 res = tokens{1};
 NLEG = str2double(res{1});
-PName_Kin = ['P', res{1}, res{2}, res{3}];
-ActNr = str2double(res{4});
+if isempty(res{4}) % serielle Kette ist keine abgeleitete Variante
+  PName_Kin = ['P', res{1}, res{2}, res{3}];
+else % serielle Kette ist eine Variante abgeleitet aus Hauptmodell
+  PName_Kin = ['P', res{1}, res{2}, res{3}, 'V', res{4}];
+end
+ActNr = str2double(res{5});
 %% csv-Tabelle öffnen: KinematikEE_dof0 = NaN(6,1);
 % Ergebnis: Tabellenzeile csvline_kin für den gesuchten Roboter
 kintabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), sprintf('sym%dleg_list.csv', NLEG));
