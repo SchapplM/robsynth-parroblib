@@ -85,9 +85,8 @@ for i = 1:length(Names)
     end
     % Generiere diese Beinkette neu (ohne Rückkopieren der
     % Matlab-Funktionen ins SerRobLib-Repo)
-    % TODO: Matlab-Funktionen für die serielle Beinkette nicht neu
-    % exportieren, werden sowieso nicht benutzt.
-    serroblib_generate_code({LEG_Names{k}}, true, true)  
+    serroblib_generate_mapleinput({LEG_Names{k}});
+    serroblib_generate_code({LEG_Names{k}}, true, true, 3);
   end
 
   %% Code-Generierung für allgemeine PKM dieses Kinematik-Typs
