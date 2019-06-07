@@ -33,6 +33,13 @@ for i = 1:length(Names)
   else % serielle Kette ist eine Variante abgeleitet aus Hauptmodell
     PName_Kin = ['P', res{1}, res{2}, res{3}, 'V', res{4}];
   end
+  
+  %% Definition der Beinketten-Orientierung
+  leg_frame_entries = {'xA', 'yA', '0', '0', '0', 'gammaLeg'};
+  if all(EE_FG0 == [1 1 1 1 1 1])
+    leg_frame_entries = {'xA', 'yA', 'zA', 'alphaLeg', 'betaLeg', 'gammaLeg'};
+  end
+
   %% Maple-Toolbox-Eingabe erzeugen
   % Zur Definition des Formats der Eingabedatei; siehe HybrDyn-Repo
   mapleinputfile=fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Kin, ...
@@ -59,7 +66,9 @@ for i = 1:length(Names)
   % Aktuelle Annahme: Gestellt ist eine Ebene, alle Beinketten liegen mit
   % Basis in dieser Ebene
   % TODO: xA und yA scheinen für die Dynamik gar nicht relevant zu sein.
-  fprintf(fid, 'leg_frame := Matrix(7,1,[xA, yA, 0, 0, 0, gammaLeg, xyz]):\n');
+  fprintf(fid, 'leg_frame := Matrix(7,1,[%s, %s, %s, %s, %s, %s, xyz]):\n', ...
+    leg_frame_entries{1}, leg_frame_entries{2}, leg_frame_entries{3}, ...
+    leg_frame_entries{4}, leg_frame_entries{5}, leg_frame_entries{6});
   
   % EE-FG
   fprintf(fid, 'xE_s := Matrix(7,1,[');
