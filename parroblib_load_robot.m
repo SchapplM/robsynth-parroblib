@@ -17,7 +17,7 @@
 %   Laufende Nummer dieser Aktuierungsmöglichkeit der Roboterkinematik
 % symrob [1x1 logical]
 %   true, wenn es eine symmetrische PKM ist
-% EEdof0
+% EEdof0 [1x6[
 %   Vektor mit beweglichen EE-FG des Roboters (Geschw. und Winkelgeschw. im
 %   Basis-KS. Entspricht Vorgabe in der Struktursynthese von Ramirez)
 %   1="Komponente durch Roboter beeinflussbar"; 0="nicht beeinflussbar"
@@ -32,7 +32,7 @@ LEG_Names = {};
 Actuation = {};
 ActNr = 0;
 symrob = true;
-EE_dof0 = NaN(6,1);
+EE_dof0 = NaN(1,6);
 
 repopath=fileparts(which('parroblib_path_init.m'));
 
