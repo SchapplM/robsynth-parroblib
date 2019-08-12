@@ -17,7 +17,11 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2019-02
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
-function success = parroblib_remove_robot(PName_Kin)
+function success = parroblib_remove_robot(PName_Kin, nofiledelete)
+
+if nargin < 2
+  nofiledelete = false;
+end
 
 %% Initialisierung
 repopath=fileparts(which('parroblib_path_init.m'));
@@ -69,7 +73,10 @@ delete(kintabfile_copy);
 % Ordner mit Code und Parameter-Modellen löschen
 % Aktuell muss noch manuell geprüft werden, ob dabei wichtige Daten verloren gehen
 robdir = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Kin);
-rmdir(robdir, 's');
-
+if nofiledelete
+  move(robdir, [robdir, '_delete']);
+else
+  rmdir(robdir, 's');
+end
 success = true;
 return
