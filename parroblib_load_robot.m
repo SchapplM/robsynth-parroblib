@@ -17,7 +17,7 @@
 %   Laufende Nummer dieser Aktuierungsmöglichkeit der Roboterkinematik
 % symrob [1x1 logical]
 %   true, wenn es eine symmetrische PKM ist
-% EEdof0 [1x6[
+% EEdof0 [1x6]
 %   Vektor mit beweglichen EE-FG des Roboters (Geschw. und Winkelgeschw. im
 %   Basis-KS. Entspricht Vorgabe in der Struktursynthese von Ramirez)
 %   1="Komponente durch Roboter beeinflussbar"; 0="nicht beeinflussbar"
@@ -85,7 +85,10 @@ end
 %% Ausgabe für Kinematik speichern
 LEG_Names = csvline_kin(2);
 symrob = true; % TOOD: Berücksichtigung nicht-kinematisch-symmetrischer PKM
-
+% identische Beinketten nochmal in die Variable schreiben
+for i = 1:NLEG
+  LEG_Names{i} = LEG_Names{1};
+end
 %% csv-Tabelle öffnen: Aktuierung
 % Ergebnis: Tabellenzeile csvline_act für den gesuchten Roboter
 acttabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Kin, 'actuation.csv');
