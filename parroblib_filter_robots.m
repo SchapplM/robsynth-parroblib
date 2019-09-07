@@ -31,6 +31,7 @@ function [PNames_Kin, PNames_Akt] = parroblib_filter_robots(NLEG, EE_FG0, EE_FG_
 repopath=fileparts(which('parroblib_path_init.m'));
 %% Kinematik-Tabelle durchsuchen
 PNames_Kin = {};
+PNames_Akt = {};
 kintabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), sprintf('sym%dleg_list.csv', NLEG));
 fid = fopen(kintabfile);
 if fid == -1
