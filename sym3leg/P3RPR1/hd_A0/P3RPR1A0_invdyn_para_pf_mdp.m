@@ -1,5 +1,5 @@
 % Calculate minimal parameter regressor of inverse dynamics forces for
-% P3RPR1A0
+% P3RPR1G1P1A0
 % Use Code from Maple symbolic Code Generation
 %
 % Input:
@@ -31,7 +31,7 @@
 %   columns: x-, y-, z-coordinates
 % MDP [10x1]
 %   Minimal dynamic parameter vector for parallel robot(fixed base model)
-%   see P3RPR1A0_convert_par2_MPV_fixb.m
+%   see P3RPR1G1P1A0_convert_par2_MPV_fixb.m
 
 % Output:
 % tauX [3x1]
@@ -44,29 +44,29 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
-function tauX = P3RPR1A0_invdyn_para_pf_mdp(xP, xDP, xDDP, qJ, g, legFrame, ...
+function tauX = P3RPR1G1P1A0_invdyn_para_pf_mdp(xP, xDP, xDDP, qJ, g, legFrame, ...
   koppelP, pkin, MDP)
 %% Coder Information
 %#codegen
 %$cgargs {zeros(3,1),zeros(3,1),zeros(3,1),zeros(2,3),zeros(3,1),zeros(3,3),zeros(3,3),zeros(4,1),zeros(10,1)}
 assert(isreal(xP) && all(size(xP) == [3 1]), ...
-  'P3RPR1A0_invdyn_para_pf_mdp: xP has to be [3x1] (double)');
+  'P3RPR1G1P1A0_invdyn_para_pf_mdp: xP has to be [3x1] (double)');
 assert(isreal(xDP) && all(size(xDP) == [3 1]), ...
-  'P3RPR1A0_invdyn_para_pf_mdp: xDP has to be [3x1] (double)');
+  'P3RPR1G1P1A0_invdyn_para_pf_mdp: xDP has to be [3x1] (double)');
 assert(isreal(xDDP) && all(size(xDDP) == [3 1]), ...
-  'P3RPR1A0_invdyn_para_pf_mdp: xDDP has to be [3x1] (double)');
+  'P3RPR1G1P1A0_invdyn_para_pf_mdp: xDDP has to be [3x1] (double)');
 assert(isreal(qJ) && all(size(qJ) == [2 3]), ...
-  'P3RPR1A0_invdyn_para_pf_mdp: qJ has to be [2x3] (double)');
+  'P3RPR1G1P1A0_invdyn_para_pf_mdp: qJ has to be [2x3] (double)');
 assert(isreal(g) && all(size(g) == [3 1]), ...
-  'P3RPR1A0_invdyn_para_pf_mdp: g has to be [3x1] (double)');
+  'P3RPR1G1P1A0_invdyn_para_pf_mdp: g has to be [3x1] (double)');
 assert(isreal(pkin) && all(size(pkin) == [4 1]), ...
-  'P3RPR1A0_invdyn_para_pf_mdp: pkin has to be [4x1] (double)');
+  'P3RPR1G1P1A0_invdyn_para_pf_mdp: pkin has to be [4x1] (double)');
 assert(isreal(legFrame) && all(size(legFrame) == [3 3]), ...
-  'P3RPR1A0_invdyn_para_pf_mdp: legFrame has to be [3x1] (double)');
+  'P3RPR1G1P1A0_invdyn_para_pf_mdp: legFrame has to be [3x1] (double)');
 assert(isreal(koppelP) && all(size(koppelP) == [3 3]), ...
-  'P3RPR1A0_invdyn_para_pf_mdp: Koppelpunkt has to be [3x3] (double)');
+  'P3RPR1G1P1A0_invdyn_para_pf_mdp: Koppelpunkt has to be [3x3] (double)');
 assert(isreal(MDP) && all(size(MDP) == [10 1]), ...
-  'P3RPR1A0_invdyn_para_pf_mdp: MDP has to be [10x1] (double)'); 
+  'P3RPR1G1P1A0_invdyn_para_pf_mdp: MDP has to be [10x1] (double)'); 
 
 %% Symbolic Calculation
 % From invdyn_para_plfcoord_reg_mdp_matlab.m

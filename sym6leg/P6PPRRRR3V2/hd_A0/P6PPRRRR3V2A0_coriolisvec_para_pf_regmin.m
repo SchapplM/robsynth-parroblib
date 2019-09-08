@@ -1,5 +1,5 @@
 % Calculate minimal parameter regressor of vector of centrifugal and coriolis load for parallel robot
-% P6PPRRRR3V2A0
+% P6PPRRRR3V2G1P1A0
 % Use Code from Maple symbolic Code Generation
 %
 % Input:
@@ -37,23 +37,23 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
-function tau_reg = P6PPRRRR3V2A0_coriolisvec_para_pf_regmin(xP, xDP, qJ, legFrame, ...
+function tau_reg = P6PPRRRR3V2G1P1A0_coriolisvec_para_pf_regmin(xP, xDP, qJ, legFrame, ...
   koppelP, pkin)
 %% Coder Information
 %#codegen
 %$cgargs {zeros(6,1),zeros(6,1),zeros(3,6),zeros(6,3),zeros(6,3),zeros(10,1)}
 assert(isreal(xP) && all(size(xP) == [6 1]), ...
-  'P6PPRRRR3V2A0_coriolisvec_para_pf_regmin: xP has to be [6x1] (double)');
+  'P6PPRRRR3V2G1P1A0_coriolisvec_para_pf_regmin: xP has to be [6x1] (double)');
 assert(isreal(xDP) && all(size(xDP) == [6 1]), ...
-  'P6PPRRRR3V2A0_coriolisvec_para_pf_regmin: xDP has to be [6x1] (double)');
+  'P6PPRRRR3V2G1P1A0_coriolisvec_para_pf_regmin: xDP has to be [6x1] (double)');
 assert(isreal(qJ) && all(size(qJ) == [3 6]), ...
-  'P6PPRRRR3V2A0_coriolisvec_para_pf_regmin: qJ has to be [3x6] (double)');
+  'P6PPRRRR3V2G1P1A0_coriolisvec_para_pf_regmin: qJ has to be [3x6] (double)');
 assert(isreal(pkin) && all(size(pkin) == [10 1]), ...
-  'P6PPRRRR3V2A0_coriolisvec_para_pf_regmin: pkin has to be [10x1] (double)');
+  'P6PPRRRR3V2G1P1A0_coriolisvec_para_pf_regmin: pkin has to be [10x1] (double)');
 assert(isreal(legFrame) && all(size(legFrame) == [6 3]), ...
-  'P6PPRRRR3V2A0_coriolisvec_para_pf_regmin: legFrame has to be [6x1] (double)');
+  'P6PPRRRR3V2G1P1A0_coriolisvec_para_pf_regmin: legFrame has to be [6x1] (double)');
 assert(isreal(koppelP) && all(size(koppelP) == [6 3]), ...
-  'P6PPRRRR3V2A0_coriolisvec_para_pf_regmin: Koppelpunkt has to be [6x3] (double)');
+  'P6PPRRRR3V2G1P1A0_coriolisvec_para_pf_regmin: Koppelpunkt has to be [6x3] (double)');
 
 %% Symbolic Calculation
 % From invdyn_para_plfcoord_tauCreg_matlab.m

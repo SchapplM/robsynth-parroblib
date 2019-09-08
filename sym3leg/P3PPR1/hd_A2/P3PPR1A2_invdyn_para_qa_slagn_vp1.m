@@ -1,5 +1,5 @@
 % Calculate vector of inverse dynamics forces for parallel robot
-% P3PPR1A2
+% P3PPR1G1P1A2
 % Use Code from Maple symbolic Code Generation
 %
 % Input:
@@ -51,37 +51,37 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
-function tauA = P3PPR1A2_invdyn_para_qa_slagn_vp1(xP, xDP, xDDP, qJ, g, legFrame, ...
+function tauA = P3PPR1G1P1A2_invdyn_para_qa_slagn_vp1(xP, xDP, xDDP, qJ, g, legFrame, ...
   koppelP, pkin, m, rSges, Icges)
 %% Coder Information
 %#codegen
 %$cgargs {zeros(3,1),zeros(3,1),zeros(3,1),zeros(2,3),zeros(3,1),zeros(3,3),zeros(3,3),zeros(3,1),zeros(2+1,1),zeros(2+1,3),zeros(2+1,6)}
 assert(isreal(xP) && all(size(xP) == [3 1]), ...
-  'P3PPR1A2_invdyn_para_qa_slagn_vp1: xP has to be [3x1] (double)');
+  'P3PPR1G1P1A2_invdyn_para_qa_slagn_vp1: xP has to be [3x1] (double)');
 assert(isreal(xDP) && all(size(xDP) == [3 1]), ...
-  'P3PPR1A2_invdyn_para_qa_slagn_vp1: xDP has to be [3x1] (double)');
+  'P3PPR1G1P1A2_invdyn_para_qa_slagn_vp1: xDP has to be [3x1] (double)');
 assert(isreal(xDDP) && all(size(xDDP) == [3 1]), ...
-  'P3PPR1A2_invdyn_para_qa_slagn_vp1: xDDP has to be [3x1] (double)');
+  'P3PPR1G1P1A2_invdyn_para_qa_slagn_vp1: xDDP has to be [3x1] (double)');
 assert(isreal(qJ) && all(size(qJ) == [2 3]), ...
-  'P3PPR1A2_invdyn_para_qa_slagn_vp1: qJ has to be [2x3] (double)');
+  'P3PPR1G1P1A2_invdyn_para_qa_slagn_vp1: qJ has to be [2x3] (double)');
 assert(isreal(g) && all(size(g) == [3 1]), ...
-  'P3PPR1A2_invdyn_para_qa_slagn_vp1: g has to be [3x1] (double)');
+  'P3PPR1G1P1A2_invdyn_para_qa_slagn_vp1: g has to be [3x1] (double)');
 assert(isreal(pkin) && all(size(pkin) == [3 1]), ...
-  'P3PPR1A2_invdyn_para_qa_slagn_vp1: pkin has to be [3x1] (double)');
+  'P3PPR1G1P1A2_invdyn_para_qa_slagn_vp1: pkin has to be [3x1] (double)');
 assert(isreal(m) && all(size(m) == [3 1]), ...
-  'P3PPR1A2_invdyn_para_qa_slagn_vp1: m has to be [3x1] (double)'); 
+  'P3PPR1G1P1A2_invdyn_para_qa_slagn_vp1: m has to be [3x1] (double)'); 
 assert(isreal(rSges) && all(size(rSges) == [3,3]), ...
-  'P3PPR1A2_invdyn_para_qa_slagn_vp1: rSges has to be [3x3] (double)');
+  'P3PPR1G1P1A2_invdyn_para_qa_slagn_vp1: rSges has to be [3x3] (double)');
 assert(isreal(Icges) && all(size(Icges) == [3 6]), ...
-  'P3PPR1A2_invdyn_para_qa_slagn_vp1: Icges has to be [3x6] (double)'); 
+  'P3PPR1G1P1A2_invdyn_para_qa_slagn_vp1: Icges has to be [3x6] (double)'); 
 assert(isreal(legFrame) && all(size(legFrame) == [3 3]), ...
-  'P3PPR1A2_invdyn_para_qa_slagn_vp1: legFrame has to be [3x1] (double)');
+  'P3PPR1G1P1A2_invdyn_para_qa_slagn_vp1: legFrame has to be [3x1] (double)');
 assert(isreal(koppelP) && all(size(koppelP) == [3 3]), ...
-  'P3PPR1A2_invdyn_para_qa_slagn_vp1: Koppelpunkt has to be [3x3] (double)');
+  'P3PPR1G1P1A2_invdyn_para_qa_slagn_vp1: Koppelpunkt has to be [3x3] (double)');
 
 %% Function calls and calculation
-tauX = P3PPR1A0_invdyn_para_pf_slag_vp1(xP, xDP, xDDP, qJ, g, legFrame, ...
+tauX = P3PPR1G1P1A0_invdyn_para_pf_slag_vp1(xP, xDP, xDDP, qJ, g, legFrame, ...
   koppelP, pkin, m, rSges, Icges);
-Jinv = P3PPR1A2_Jinv(xP, qJ, pkin, koppelP, legFrame);
+Jinv = P3PPR1G1P1A2_Jinv(xP, qJ, pkin, koppelP, legFrame);
 tauA  = (Jinv') \ tauX;
 tauA  = tauA;

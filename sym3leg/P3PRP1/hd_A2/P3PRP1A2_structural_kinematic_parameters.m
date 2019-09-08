@@ -1,5 +1,5 @@
 % Return Structural Kinematic Parameters of the parallel Robot 
-% P3PRP1A2
+% P3PRP1G1P1A2
 %
 % Output:
 % NQJ_leg [1x1]
@@ -12,6 +12,6 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
-function [NQJ_leg] = P3PRP1A2_structural_kinematic_parameters()
+function [NQJ_leg] = P3PRP1G1P1A2_structural_kinematic_parameters()
 
 NQJ_leg = 3;

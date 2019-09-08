@@ -1,5 +1,5 @@
 % Calculate vector of inverse dynamics forces for parallel robot
-% P3RPP1A0
+% P3RPP1G1P1A0
 % Use Code from Maple symbolic Code Generation
 %
 % Input:
@@ -51,33 +51,33 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
-function tauX = P3RPP1A0_invdyn_para_pf_slag_vp2(xP, xDP, xDDP, qJ, g, legFrame, ...
+function tauX = P3RPP1G1P1A0_invdyn_para_pf_slag_vp2(xP, xDP, xDDP, qJ, g, legFrame, ...
   koppelP, pkin, m, mrSges, Ifges)
 %% Coder Information
 %#codegen
 %$cgargs {zeros(3,1),zeros(3,1),zeros(3,1),zeros(3,3),zeros(3,1),zeros(3,3),zeros(3,3),zeros(3,1),zeros(3+1,1),zeros(3+1,3),zeros(3+1,6)}
 assert(isreal(xP) && all(size(xP) == [3 1]), ...
-  'P3RPP1A0_invdyn_para_pf_slag_vp2: xP has to be [3x1] (double)');
+  'P3RPP1G1P1A0_invdyn_para_pf_slag_vp2: xP has to be [3x1] (double)');
 assert(isreal(xDP) && all(size(xDP) == [3 1]), ...
-  'P3RPP1A0_invdyn_para_pf_slag_vp2: xDP has to be [3x1] (double)');
+  'P3RPP1G1P1A0_invdyn_para_pf_slag_vp2: xDP has to be [3x1] (double)');
 assert(isreal(xDDP) && all(size(xDDP) == [3 1]), ...
-  'P3RPP1A0_invdyn_para_pf_slag_vp2: xDDP has to be [3x1] (double)');
+  'P3RPP1G1P1A0_invdyn_para_pf_slag_vp2: xDDP has to be [3x1] (double)');
 assert(isreal(qJ) && all(size(qJ) == [3 3]), ...
-  'P3RPP1A0_invdyn_para_pf_slag_vp2: qJ has to be [3x3] (double)');
+  'P3RPP1G1P1A0_invdyn_para_pf_slag_vp2: qJ has to be [3x3] (double)');
 assert(isreal(g) && all(size(g) == [3 1]), ...
-  'P3RPP1A0_invdyn_para_pf_slag_vp2: g has to be [3x1] (double)');
+  'P3RPP1G1P1A0_invdyn_para_pf_slag_vp2: g has to be [3x1] (double)');
 assert(isreal(pkin) && all(size(pkin) == [3 1]), ...
-  'P3RPP1A0_invdyn_para_pf_slag_vp2: pkin has to be [3x1] (double)');
+  'P3RPP1G1P1A0_invdyn_para_pf_slag_vp2: pkin has to be [3x1] (double)');
 assert(isreal(m) && all(size(m) == [4 1]), ...
-  'P3RPP1A0_invdyn_para_pf_slag_vp2: m has to be [4x1] (double)'); 
+  'P3RPP1G1P1A0_invdyn_para_pf_slag_vp2: m has to be [4x1] (double)'); 
 assert(isreal(mrSges) && all(size(mrSges) == [4,3]), ...
-  'P3RPP1A0_invdyn_para_pf_slag_vp2: mrSges has to be [4x3] (double)');
+  'P3RPP1G1P1A0_invdyn_para_pf_slag_vp2: mrSges has to be [4x3] (double)');
 assert(isreal(Ifges) && all(size(Ifges) == [4 6]), ...
-  'P3RPP1A0_invdyn_para_pf_slag_vp2: Ifges has to be [4x6] (double)'); 
+  'P3RPP1G1P1A0_invdyn_para_pf_slag_vp2: Ifges has to be [4x6] (double)'); 
 assert(isreal(legFrame) && all(size(legFrame) == [3 3]), ...
-  'P3RPP1A0_invdyn_para_pf_slag_vp2: legFrame has to be [3x1] (double)');
+  'P3RPP1G1P1A0_invdyn_para_pf_slag_vp2: legFrame has to be [3x1] (double)');
 assert(isreal(koppelP) && all(size(koppelP) == [3 3]), ...
-  'P3RPP1A0_invdyn_para_pf_slag_vp2: Koppelpunkt has to be [3x3] (double)');
+  'P3RPP1G1P1A0_invdyn_para_pf_slag_vp2: Koppelpunkt has to be [3x3] (double)');
 
 %% Symbolic Calculation
 % From invdyn_para_plfcoord_par2_matlab.m

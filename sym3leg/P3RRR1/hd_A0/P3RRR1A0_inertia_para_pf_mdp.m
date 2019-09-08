@@ -1,5 +1,5 @@
 % Calculate minimal parameter regressor of inertia matrix for parallel robot
-% P3RRR1A0
+% P3RRR1G1P1A0
 % Use Code from Maple symbolic Code Generation
 %
 % Input:
@@ -25,7 +25,7 @@
 %   columns: x-, y-, z-coordinates
 % MDP [10x1]
 %   Minimal dynamic parameter vector for parallel robot(fixed base model)
-%   see P3RRR1A0_convert_par2_MPV_fixb.m
+%   see P3RRR1G1P1A0_convert_par2_MPV_fixb.m
 
 % Output:
 % MMX [3x3]
@@ -38,23 +38,23 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
-function MMX = P3RRR1A0_inertia_para_pf_mdp(xP, qJ, legFrame, ...
+function MMX = P3RRR1G1P1A0_inertia_para_pf_mdp(xP, qJ, legFrame, ...
   koppelP, pkin, MDP)
 %% Coder Information
 %#codegen
 %$cgargs {zeros(3,1),zeros(2,3),zeros(3,3),zeros(3,3),zeros(5,1),zeros(10,1)}
 assert(isreal(xP) && all(size(xP) == [3 1]), ...
-  'P3RRR1A0_inertia_para_pf_mdp: xP has to be [3x1] (double)');
+  'P3RRR1G1P1A0_inertia_para_pf_mdp: xP has to be [3x1] (double)');
 assert(isreal(qJ) && all(size(qJ) == [2 3]), ...
-  'P3RRR1A0_inertia_para_pf_mdp: qJ has to be [2x3] (double)');
+  'P3RRR1G1P1A0_inertia_para_pf_mdp: qJ has to be [2x3] (double)');
 assert(isreal(pkin) && all(size(pkin) == [5 1]), ...
-  'P3RRR1A0_inertia_para_pf_mdp: pkin has to be [5x1] (double)');
+  'P3RRR1G1P1A0_inertia_para_pf_mdp: pkin has to be [5x1] (double)');
 assert(isreal(legFrame) && all(size(legFrame) == [3 3]), ...
-  'P3RRR1A0_inertia_para_pf_mdp: legFrame has to be [3x1] (double)');
+  'P3RRR1G1P1A0_inertia_para_pf_mdp: legFrame has to be [3x1] (double)');
 assert(isreal(koppelP) && all(size(koppelP) == [3 3]), ...
-  'P3RRR1A0_inertia_para_pf_mdp: Koppelpunkt has to be [3x3] (double)');
+  'P3RRR1G1P1A0_inertia_para_pf_mdp: Koppelpunkt has to be [3x3] (double)');
 assert(isreal(MDP) && all(size(MDP) == [10 1]), ...
-  'P3RRR1A0_inertia_para_pf_mdp: MDP has to be [10x1] (double)'); 
+  'P3RRR1G1P1A0_inertia_para_pf_mdp: MDP has to be [10x1] (double)'); 
 
 %% Symbolic Calculation
 % From invdyn_para_plfcoord_MMreg_mdp_matlab.m

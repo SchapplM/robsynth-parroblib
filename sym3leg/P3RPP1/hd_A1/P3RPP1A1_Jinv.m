@@ -37,7 +37,7 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
-function Jinv = P3RPP1A1_Jinv(xP, qJ, pkin, koppelP, ...
+function Jinv = P3RPP1G1P1A1_Jinv(xP, qJ, pkin, koppelP, ...
 legFrame)
 
 
@@ -45,15 +45,15 @@ legFrame)
 %#codegen
 %$cgargs {zeros(3,1),zeros(3,3),zeros(3,1),zeros(3,3),zeros(3,3)}
 assert(isreal(qJ) && all(size(qJ) == [3 3]), ...
-  'P3RPP1A1_Jinv: qJ has to be [3x3] (double)');
+  'P3RPP1G1P1A1_Jinv: qJ has to be [3x3] (double)');
 assert(isreal(xP) && all(size(xP) == [3 1]), ...
-  'P3RPP1A1_Jinv: xP has to be [3x1] (double)');
+  'P3RPP1G1P1A1_Jinv: xP has to be [3x1] (double)');
 assert(isreal(pkin) && all(size(pkin) == [3 1]), ...
-  'P3RPP1A1_Jinv: pkin has to be [3x1] (double)');
+  'P3RPP1G1P1A1_Jinv: pkin has to be [3x1] (double)');
 assert(isreal(legFrame) && all(size(legFrame) == [3 3]), ...
-  'P3RPP1A1_Jinv: legFrame has to be [3x1] (double)');
+  'P3RPP1G1P1A1_Jinv: legFrame has to be [3x1] (double)');
 assert(isreal(koppelP) && all(size(koppelP) == [3 3]), ...
-  'P3RPP1A1_Jinv: Koppelpunkt has to be [3x3] (double)');
+  'P3RPP1G1P1A1_Jinv: Koppelpunkt has to be [3x3] (double)');
 
 %% Symbolic Calculation
 % From Jinv_para_matlab.m
