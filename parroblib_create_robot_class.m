@@ -56,8 +56,10 @@ end
 %% Instanz der parallelen Roboterklasse erstellen
 
 % Pfade für Matlab-Funktionen hinzufügen
+warning('off', 'MATLAB:mpath:nameNonexistentOrNotADirectory')
 addpath(fullfile(parroblibpath, sprintf('sym%dleg', NLEG), PName_Kin, 'hd_A0'));
 addpath(fullfile(parroblibpath, sprintf('sym%dleg', NLEG), PName_Kin, sprintf('hd_A%d', ActNr)));
+warning('on', 'MATLAB:mpath:nameNonexistentOrNotADirectory')
 
 RP = ParRob(Name);
 RP = RP.create_symmetric_robot(NLEG, RS, d_0A, d_PB);
