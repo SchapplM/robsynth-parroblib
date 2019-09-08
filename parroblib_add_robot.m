@@ -28,6 +28,10 @@
 function [Name, new] = parroblib_add_robot(NLEG, LEG_Names, Actuation, EEdof0)
 %% Init
 repopath=fileparts(which('parroblib_path_init.m'));
+if length(Actuation) ~= NLEG
+  error('Zu jeder Beinkette muss die Aktuierung gegeben sein');
+end
+
 % Prüfe, ob kinematisch symmetrisch (durch Vergleich der Namen der
 % Beinketten)
 symrob = true;
