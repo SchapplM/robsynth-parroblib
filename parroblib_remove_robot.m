@@ -6,8 +6,9 @@
 % Eingabe:
 % PName
 %   Name des Roboters in der Datenbank. Optionen:
-%   * PName_Kin (nur Kinematik, ohne Endung für Aktuierung; z.B. "P3RPR1")
-%   * PName_Act (Kinematik mit Aktuierung; z.B. "P3RPR1A2")
+%   * PName_Kin (nur Kinematik, ohne Endung für Aktuierung; z.B. "P3RPR1G1P1")
+%   * PName_Act (Kinematik mit Aktuierung; z.B. "P3RPR1G1P1A2")
+%   Je nachdem welche Art von Name übergeben wird, wird der Eintrag gelöscht
 % 
 % Ausgabe:
 % success
@@ -30,25 +31,31 @@ end
 repopath=fileparts(which('parroblib_path_init.m'));
 
 Name_Typ = 0; % 0=Fehler, 1=Kinematik, 2=Aktuierung
-
+ActNr = -1; % Initialisierung als "nicht belegt"
+Coupling = [-1, -1]; % Initialisierung
 % Namensschema für symmetrische, serielle PKM als regulären Ausdruck
+% Nehme nicht parroblib_load_robot um beide Arten von Namen zuzulassen
 % TODO: Anpassung an nicht-serielle, nicht-symmetrische PKM
-expression_kin = 'P(\d)([RP]+)(\d+)[V]?(\d*)'; % Format "P3RRR1" oder "P3RRR1V1"
+expression_kin = 'P(\d)([RP]+)(\d+)[V]?(\d*)G(\d+)P(\d+)'; % Format "P3RRR1G1P1" oder "P3RRR1V1G1P1"
 expression_act = [expression_kin,'A(\d+)']; % Format "P3RRR1A1"
 [tokens_kin, ~] = regexp(PName_Input,[expression_kin,'$'],'tokens','match');
 [tokens_act, ~] = regexp(PName_Input,[expression_act,'$'],'tokens','match');
 if ~isempty(tokens_kin)
   PName_Kin = PName_Input;
-  Name_Typ = 1;
   res = tokens_kin{1};
+  PName_Legs = ['P', res{1}, res{2}, res{3}];
+  Name_Typ = 1;
 elseif ~isempty(tokens_act)
   res = tokens_act{1};
   if isempty(res{4}) % serielle Kette ist keine abgeleitete Variante
-    PName_Kin = ['P', res{1}, res{2}, res{3}];
+    PName_Legs = ['P', res{1}, res{2}, res{3}];
   else % serielle Kette ist eine Variante abgeleitet aus Hauptmodell
-    PName_Kin = ['P', res{1}, res{2}, res{3}, 'V', res{4}];
+    PName_Legs = ['P', res{1}, res{2}, res{3}, 'V', res{4}];
   end
+  PName_Kin = [PName_Legs, 'G', res{5}, 'P', res{6}];
   Name_Typ = 2;
+  Coupling = [str2double(res{5}), str2double(res{6})];
+  ActNr = str2double(res{7});
 else
   error('Eingegebener Name %s entspricht nicht dem Namensschema', PName_Input);
 end
@@ -94,7 +101,7 @@ if Name_Typ == 1
 end
 %% Tabelle für Aktuierung öffnen und Zeile entfernen
 if Name_Typ == 2
-  acttabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Kin, 'actuation.csv');
+  acttabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, 'actuation.csv');
   acttabfile_copy = [acttabfile, '.copy']; % Kopie der Tabelle zur Bearbeitung
 
   fid = fopen(acttabfile, 'r');
@@ -146,17 +153,23 @@ end
 if Name_Typ == 1
   % Ordner mit Code und Parameter-Modellen löschen (auch alle Aktuierungen)
   % Aktuell muss noch manuell geprüft werden, ob dabei wichtige Daten verloren gehen
-  robdir = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Input);
-  if nofiledelete
-    move(robdir, [robdir, '_delete']);
-  else
-    rmdir(robdir, 's');
+  robdirs = dir(fullfile( repopath, sprintf('sym%dleg', NLEG), PName_Legs, ...
+    sprintf('hd_G%dP%d*',Coupling(1),Coupling(2)) ));
+  for i = 1:length(robdirs)
+    if nofiledelete
+      move(robdir, [robdir, '_delete']);
+    else
+      rmdir(robdir, 's');
+    end
   end
+  % TODO: Tabelle "actuation.csv" muss noch gelöscht werden, falls
+  % notwendig (falls sie leer ist). Danach muss das Verzeichnis gelöscht
+  % werden
 elseif Name_Typ == 2 && ~removed_Kin
   % Aktuierung: Lösche nur den Unterordner, der zu dieser Aktuierung gehört
   % Nur löschen, wenn der Hauptordner des Kinematikmodells noch da ist.
-  actnr = PName_Input(length(PName_Kin)+2:end);
-  codedir = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Kin, sprintf('hd_A%s', actnr));
+  codedir = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, ...
+    sprintf('hd_G%dP%dA%s', Coupling(1), Coupling(2), ActNr));
   if exist(codedir, 'file') % Das Verzeichnis wird erst durch Code-Generierung angelegt. Ist eventuell noch nicht erfolgt.
     if nofiledelete
       move(codedir, [codedir, '_delete']);

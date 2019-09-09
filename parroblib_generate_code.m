@@ -37,17 +37,9 @@ for i = 1:length(Names)
   n = Names{i};
 
   % Daten über den Roboter zusammenstellen
-  [NLEG, LEG_Names, Actuation, ActNr] = parroblib_load_robot(n);
+  [NLEG, LEG_Names, Actuation, Coupling, ActNr, ~, ~, PName_Kin, PName_Legs] = parroblib_load_robot(n);
   % Robotereigenschaften aus dem Namen auslesen.
   % TODO: Einbindung nicht-symmetrischer PKM
-  expression = 'P(\d)([RP]+)(\d+)[V]?(\d*)A(\d+)'; % Format "P3RRR1A1" oder "P3RRR1V1A1"
-  [tokens, ~] = regexp(n,expression,'tokens','match');
-  res = tokens{1};
-  if isempty(res{4}) % serielle Kette ist keine abgeleitete Variante
-    PName_Kin = ['P', res{1}, res{2}, res{3}];
-  else % serielle Kette ist eine Variante abgeleitet aus Hauptmodell
-    PName_Kin = ['P', res{1}, res{2}, res{3}, 'V', res{4}];
-  end
   
   % Prüfen, ob der Roboter modelliert werden kann
   for kk = 1:length(Actuation)
@@ -62,7 +54,7 @@ for i = 1:length(Names)
   % Maple-Toolbox-Eingabe laden (wurde an anderer Stelle erzeugt)
   % (durch parroblib_generate_mapleinput.m)
   mapleinputfile=fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Kin, ...
-    sprintf('hd_A%d',ActNr), sprintf('robot_env_par_%s', n));
+    sprintf('hd_G%dP%dA%d',Coupling(1),Coupling(2),ActNr), sprintf('robot_env_par_%s', n));
   if ~exist(mapleinputfile, 'file')
     error('Datei %s existiert nicht. Wurde `parroblib_generate_mapleinput.m` ausgeführt?', fileparts(mapleinputfile) );
   end
@@ -99,8 +91,8 @@ for i = 1:length(Names)
   n_A0 = [PName_Kin,'A0'];
   if ActNr == 1
     % Roboternamen, Datei- und Ordnernamen für allgemeinen Fall definieren
-    mapleinputfile_A0=fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Kin, ...
-      'hd_A0', sprintf('robot_env_par_%s', n_A0));
+    mapleinputfile_A0=fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, ...
+      sprintf('hd_G%dP%dA0', Coupling(1), Coupling(2)), sprintf('robot_env_par_%s', n_A0));
     outputdir_tb_par_A0 = fullfile(mrp, 'codeexport', n_A0, 'matlabfcn'); % Verzeichnis in der Maple-Toolbox
     outputdir_local_A0 = fileparts(mapleinputfile_A0);
     

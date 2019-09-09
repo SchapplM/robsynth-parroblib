@@ -7,6 +7,8 @@
 %   (falls nur ein Wert: Symmetrisch)
 % Actuation [1xNLEG cell-Array]
 %   Nummern der aktuierten Gelenke jeder Beinkette.
+% Coupling [1x2]
+%   Nummern des Gestell- und Plattform-Koppel-Typs (entsprechend ParRob)
 % EEdof0
 %   Vektor mit beweglichen EE-FG des Roboters (Geschw. und Winkelgeschw. im
 %   Basis-KS. Entspricht Vorgabe in der Struktursynthese von Ramirez)
@@ -25,12 +27,14 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2018-12
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
-function [Name, new] = parroblib_add_robot(NLEG, LEG_Names, Actuation, EEdof0)
+function [Name, new] = parroblib_add_robot(NLEG, LEG_Names, Actuation, Coupling, EEdof0)
 %% Init
 repopath=fileparts(which('parroblib_path_init.m'));
 if length(Actuation) ~= NLEG
   error('Zu jeder Beinkette muss die Aktuierung gegeben sein');
 end
+assert(isa(Coupling, 'double') && all(size(Coupling) == [1 2]), ...
+  'Koppelpunkt-Kennung muss 1x2 double sein');
 
 % Prüfe, ob kinematisch symmetrisch (durch Vergleich der Namen der
 % Beinketten)
@@ -85,7 +89,8 @@ if ~found(1)
     fclose(fid);
   end
   % Namen der Kinematik-Struktur generieren
-  PName_Kin = ['P', num2str(NLEG), LEG_Names{1}(3:end)]; % Namensschema PxRRPRyy
+ % Namensschema PxRRPRyyGuuPvv
+  PName_Kin = sprintf('P%d%sG%dP%d',NLEG,LEG_Names{1}(3:end),Coupling(1),Coupling(2));
   
   % Roboterstruktur an Tabelle anhängen
   csvline_robkin = {PName_Kin, LEG_Names{1}};
@@ -117,8 +122,12 @@ end
 % Anzahl der Bein-FG aus Namen der Beinkette feststellen. TODO: Das ist auf
 % symmetrische serielle PKM begrenzt
 LegJointDOF = str2double(LEG_Names{1}(2)); % Format SxRRPR...
+% Extrahiere Beinketten-Name der PKM (ohne Ausrichtungs-Nummern G/P)
+expression = '(P[\d][RP]+[\d+][V]?[\d]*)G[\d+]P[\d+]'; % Format "P3RRR1G1P1A1" oder "P3RRR1V1G1P1A1"
+[tokens, ~] = regexp(PName_Kin,expression,'tokens','match');
+PName_Legs = tokens{1}{1};
 
-acttabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Kin, 'actuation.csv');
+acttabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, 'actuation.csv');
 if ~exist(acttabfile, 'file')
   % Tabelle existiert nicht. Erstellen
   % Kopfzeile als Cell-Array
@@ -161,7 +170,7 @@ while ischar(tline)
   if isempty(csvline) || strcmp(csvline{1}, '')
     continue
   end
-  expression = [PName_Kin, 'A(\d+)']; % Format "P3RRR1A1"
+  expression = [PName_Kin, 'A(\d+)']; % Format "P3RRR1G1P1A1"
   [tokens, ~] = regexp(csvline{1},expression,'tokens','match');
   if isempty(tokens)
     continue

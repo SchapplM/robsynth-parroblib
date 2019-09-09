@@ -13,6 +13,8 @@
 %   (falls nur ein Wert: Symmetrisch)
 % Actuation [1xNLEG cell-Array]
 %   Nummern der aktuierten Gelenke jeder Beinkette.
+% Coupling [1x2]
+%   Nummern des Gestell- und Plattform-Koppel-Typs (entsprechend ParRob)
 % ActNr
 %   Laufende Nummer dieser Aktuierungsmöglichkeit der Roboterkinematik
 % symrob [1x1 logical]
@@ -21,11 +23,16 @@
 %   Vektor mit beweglichen EE-FG des Roboters (Geschw. und Winkelgeschw. im
 %   Basis-KS. Entspricht Vorgabe in der Struktursynthese von Ramirez)
 %   1="Komponente durch Roboter beeinflussbar"; 0="nicht beeinflussbar"
+% PName_Kin
+%   Eindeutiger Name der PKM-Kinematik (ohne Aktuierung)
+% PName_Legs
+%   Eindeutiger Name der Führungsketten-Zusammensetzung (ohne Aktuierung
+%   und Gestell- oder Plattformausrichtung)
 
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2018-12
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
-function [NLEG, LEG_Names, Actuation, ActNr, symrob, EE_dof0, PName_Kin] = parroblib_load_robot(Name)
+function [NLEG, LEG_Names, Actuation, Coupling, ActNr, symrob, EE_dof0, PName_Kin, PName_Legs] = parroblib_load_robot(Name)
 %% Initialisierung
 NLEG = 0;
 LEG_Names = {};
@@ -39,7 +46,7 @@ repopath=fileparts(which('parroblib_path_init.m'));
 % Name der Kinematischen Struktur von Aktuierung trennen
 % Namensschema für symmetrische, serielle PKM als regulären Ausdruck
 % TODO: Anpassung an nicht-serielle, nicht-symmetrische PKM
-expression = 'P(\d)([RP]+)(\d+)[V]?(\d*)A(\d+)'; % Format "P3RRR1A1" oder "P3RRR1V1A1"
+expression = 'P(\d)([RP]+)(\d+)[V]?(\d*)[G]?(\d*)[P]?(\d*)A(\d+)'; % Format "P3RRR1G1P1A1" oder "P3RRR1V1G1P1A1"
 [tokens, ~] = regexp(Name,expression,'tokens','match');
 if isempty(tokens)
   error('Eingegebener Name %s entspricht nicht dem Namensschema', Name);
@@ -47,11 +54,21 @@ end
 res = tokens{1};
 NLEG = str2double(res{1});
 if isempty(res{4}) % serielle Kette ist keine abgeleitete Variante
-  PName_Kin = ['P', res{1}, res{2}, res{3}];
+  PName_Legs = ['P', res{1}, res{2}, res{3}];
 else % serielle Kette ist eine Variante abgeleitet aus Hauptmodell
-  PName_Kin = ['P', res{1}, res{2}, res{3}, 'V', res{4}];
+  PName_Legs = ['P', res{1}, res{2}, res{3}, 'V', res{4}];
 end
-ActNr = str2double(res{5});
+if isempty(res{5})
+  % Für Kompatibilität zu alten Aufrufen der Funktion. Akzeptiere auch
+  % Eingaben der Form
+  warning('Eingegebener Robotername %s entspricht altem Format ohne G-/P-Nummer', Name);
+  Coupling = [1 1];
+else
+  Coupling = [str2double(res{5}), str2double(res{6})];
+end
+PName_Kin = [PName_Legs, sprintf('G%dP%d', Coupling(1), Coupling(2))];
+
+ActNr = str2double(res{7});
 %% csv-Tabelle öffnen: KinematikEE_dof0 = NaN(6,1);
 % Ergebnis: Tabellenzeile csvline_kin für den gesuchten Roboter
 kintabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), sprintf('sym%dleg_list.csv', NLEG));
@@ -91,7 +108,7 @@ for i = 1:NLEG
 end
 %% csv-Tabelle öffnen: Aktuierung
 % Ergebnis: Tabellenzeile csvline_act für den gesuchten Roboter
-acttabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Kin, 'actuation.csv');
+acttabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, 'actuation.csv');
 csvline_act = [];
 fid = fopen(acttabfile);
 if fid == -1
@@ -130,6 +147,8 @@ if ~isempty(csvline_act)
     end
     Actuation{iL} = find(ActSel);
   end
+else
+  warning('Aktuierung %d (%s) nicht in Aktuierungstabelle gefunden', ActNr, Name);
 end
 
 %% EE-FG abspeichern

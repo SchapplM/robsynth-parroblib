@@ -35,7 +35,7 @@ PNames_Akt = {};
 kintabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), sprintf('sym%dleg_list.csv', NLEG));
 fid = fopen(kintabfile);
 if fid == -1
-  warning('Datei existiert nicht. Sollte aber im Repo enthalten sein.');
+  warning('Datei %s existiert nicht. Sollte aber im Repo enthalten sein.', kintabfile);
   return
 end
 % Tabelle zeilenweise durchgehen
@@ -77,10 +77,24 @@ fclose(fid);
 PNames_Akt = {};
 for i = 1:length(PNames_Kin)
   PName_Kin = PNames_Kin{i};
-  acttabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Kin, 'actuation.csv');
+  % Extrahiere Beinketten-Name der PKM (ohne Ausrichtungs-Nummern G/P)
+  % Unter diesem Namen ist die Aktuierungstabelle gespeichert
+  expression = 'P(\d)([RP]+)(\d+)[V]?(\d*)[G]?(\d*)[P]?(\d*)'; % Format "P3RRRG1P11A1" oder "P3RRR1V1G1P1A1"
+  [tokens, ~] = regexp(PName_Kin,expression,'tokens','match');
+  if isempty(tokens)
+    error('Eintrag %s aus der Tabelle stimmt nicht mit Namensschema überein.', PName_Kin);
+  end
+  res = tokens{1};
+  if isempty(res{4}) % serielle Kette ist keine abgeleitete Variante
+    PName_Legs = ['P', res{1}, res{2}, res{3}];
+  else % serielle Kette ist eine Variante abgeleitet aus Hauptmodell
+    PName_Legs = ['P', res{1}, res{2}, res{3}, 'V', res{4}];
+  end
+  acttabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, 'actuation.csv');
   fid = fopen(acttabfile);
   if fid == -1
     % Diese Aktuierung zu der Kinematik ist noch nicht gespeichert / generiert.
+    warning('Zu Kinematik %s gibt es keine Aktuierungstabelle %s', PName_Kin, acttabfile);
     return
   end
   tline = fgetl(fid);
