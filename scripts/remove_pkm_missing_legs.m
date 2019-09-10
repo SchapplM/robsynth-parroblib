@@ -9,14 +9,14 @@ clear
 
 serroblibpath=fileparts(which('serroblib_path_init.m'));
 
-for NLEG = 3:4
+for NLEG = [3 4 6]
   EE_FG0 = [0 0 0 0 0 0];
   EE_FG_Mask = [0 0 0 0 0 0]; % Maske 0, EE-FG sind egal.
   [PNames_Kin, PNames_Akt] = parroblib_filter_robots(NLEG, EE_FG0, EE_FG_Mask);
 
   for i = 1:length(PNames_Kin)
     fprintf('%d/%d: Prüfe PKM %s\n', i, length(PNames_Kin), PNames_Kin{i});
-    [~, LEG_Names, Actuation, ActNr, ~, EE_dof0, PName_Kin] = parroblib_load_robot([PNames_Kin{i},'A0']);
+    [~, LEG_Names] = parroblib_load_robot([PNames_Kin{i},'A0']);
     % Prüfe, ob Name der Beinkette in Modellbibliothek serieller Roboter ist
     NFG_Leg = str2double(LEG_Names{1}(2));
     mdllistfile_Ndof = fullfile(serroblibpath, sprintf('mdl_%ddof', NFG_Leg), sprintf('S%d_list.mat',NFG_Leg));

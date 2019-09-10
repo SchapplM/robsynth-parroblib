@@ -2,11 +2,14 @@
 % 
 % Eingabe:
 % Name
-%   Name des PKM-Robotermodells nach dem Schema "PxRRRyyAzz"
-% d_0A
-%   Durchmesser des Kreises, auf dem die Basis-Koppelpunkte liegen
-% d_PB
-%   Durchmesser des Kreises der Plattform-Koppelpunkte
+%   Name des PKM-Robotermodells nach dem Schema "PxRRRyyGuuPvvAzz"
+% p_Base
+%   Parameter der Gestell-Koppelpunkte. Z.B. Radius des Kreises.
+%   Siehe ParRob/align_base_coupling
+% p_platform
+%   Parameter der Plattform-Koppelpunkte. Z.B. Radius des Kreises der
+%   Plattform-Koppelpunkte
+%   Siehe ParRob/align_platform_coupling
 % phi_RS_EE (optional)
 %   Orientierung des Beinketten-Koppel-KS. Bei einigen planaren Systemen
 %   muss eine Drehung um Pi erfolgen, damit das Bein-Koppel-KS mit dem
@@ -27,7 +30,7 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2018-12
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
-function RP = parroblib_create_robot_class(Name, d_0A, d_PB, phi_RS_EE)
+function RP = parroblib_create_robot_class(Name, p_Base, p_platform, phi_RS_EE)
 
 if nargin < 4
   phi_RS_EE = [];
@@ -35,9 +38,7 @@ end
 
 %% Daten laden
 
-[NLEG, LEG_Names, Actuation, ActNr, ~, EE_dof0, PName_Kin] = parroblib_load_robot(Name);
-
-parroblibpath=fileparts(which('parroblib_path_init.m'));
+[NLEG,LEG_Names,Actuation,Coupling,~,~, EE_dof0]=parroblib_load_robot(Name);
 
 %% Instanz der seriellen Roboterklasse erstellen
 % TODO: Nicht-symmetrische PKM fehlen noch
@@ -55,15 +56,13 @@ if ~isempty(phi_RS_EE)
 end
 %% Instanz der parallelen Roboterklasse erstellen
 
-% Pfade für Matlab-Funktionen hinzufügen
-warning('off', 'MATLAB:mpath:nameNonexistentOrNotADirectory')
-addpath(fullfile(parroblibpath, sprintf('sym%dleg', NLEG), PName_Kin, 'hd_A0'));
-addpath(fullfile(parroblibpath, sprintf('sym%dleg', NLEG), PName_Kin, sprintf('hd_A%d', ActNr)));
-warning('on', 'MATLAB:mpath:nameNonexistentOrNotADirectory')
+parroblib_addtopath({Name})
 
 RP = ParRob(Name);
-RP = RP.create_symmetric_robot(NLEG, RS, d_0A, d_PB);
-RP = RP.initialize();
+RP.create_symmetric_robot(NLEG, RS);
+RP.align_base_coupling(Coupling(1), p_Base);
+RP.align_platform_coupling(Coupling(2), p_platform);
+RP.initialize();
 
 % EE-FG eintragen
 RP.update_EE_FG(logical(EE_dof0)); % Für IK der PKM

@@ -17,11 +17,13 @@ end
 parroblibpath=fileparts(which('parroblib_path_init.m'));
 for i = 1:length(Names)
   Name = Names{i};
-  [NLEG, ~, ~, ActNr, ~, ~, PName_Kin] = parroblib_load_robot(Name);
+  [NLEG, ~, ~, Coupling, ActNr, ~, ~, ~, PName_Legs] = parroblib_load_robot(Name);
 
   % Pfade für Matlab-Funktionen hinzufügen
-  fcn_dir1 = fullfile(parroblibpath, sprintf('sym%dleg', NLEG), PName_Kin, 'hd_A0');
-  fcn_dir2 = fullfile(parroblibpath, sprintf('sym%dleg', NLEG), PName_Kin, sprintf('hd_A%d', ActNr));
+  fcn_dir1 = fullfile(parroblibpath, sprintf('sym%dleg', NLEG), PName_Legs, ...
+    sprintf('hd_G%dP%dA0', Coupling(1), Coupling(2)));
+  fcn_dir2 = fullfile(parroblibpath, sprintf('sym%dleg', NLEG), PName_Legs, ...
+    sprintf('hd_G%dP%dA%d', Coupling(1), Coupling(2), ActNr));
   if exist(fcn_dir1, 'file')
     addpath(fcn_dir1);
   end

@@ -4,9 +4,10 @@
 % Eingabe:
 % Names
 %   Cell-Array mit Liste der Namen der Roboterstrukturen, für die der Code
-%   erzeugt werden soll. Der Name entspricht dem Schema "PxRRRyyyAzzz" mit
-%   x=Anzahl Beine, yyy laufende Nummer für "RRR" (Benennung der seriellen
-%   Beinkette) und zzz Nummer der Aktuierung.
+%   erzeugt werden soll. Der Name entspricht dem Schema "PxRRRyGuPvAz" mit
+%   x=Anzahl Beine, y laufende Nummer für "RRR" (Benennung der seriellen
+%   Beinkette), u Nummer der Gestellkoppelgelenk-Orientierung, v Nummer der
+%   Plattformkoppelgelenk-Orientierung und zzz Nummer der Aktuierung.
 % 
 % Siehe auch: serroblib_generate_mapleinput.m
 
@@ -21,29 +22,26 @@ for i = 1:length(Names)
   n = Names{i};
   
   %% Daten für diesen Roboter laden
-  [NLEG, LEG_Names, Actuation, ActNr, ~, EE_FG0] = parroblib_load_robot(n);
+  [NLEG, LEG_Names, Actuation, Coupling, ActNr, ~, EE_FG0, PName_Kin, PName_Legs] = parroblib_load_robot(n);
   % Robotereigenschaften aus dem Namen auslesen.
   % TODO: Einbindung nicht-symmetrischer PKM
-  expression = 'P(\d)([RP]+)(\d+)[V]?(\d*)A(\d+)'; % Format "P3RRR1A1" oder "P3RRR1V1A1"
-  [tokens, ~] = regexp(n,expression,'tokens','match');
-  res = tokens{1};
-
-  if isempty(res{4}) % serielle Kette ist keine abgeleitete Variante
-    PName_Kin = ['P', res{1}, res{2}, res{3}];
-  else % serielle Kette ist eine Variante abgeleitet aus Hauptmodell
-    PName_Kin = ['P', res{1}, res{2}, res{3}, 'V', res{4}];
-  end
-  
   %% Definition der Beinketten-Orientierung
+  % Bei Definition neuer Beinketten-Orientierungen in align_base_coupling
+  % (ParRob-Klasse) müssen die Werte hier angepasst werden.
   leg_frame_entries = {'xA', 'yA', '0', '0', '0', 'gammaLeg'};
   if all(EE_FG0 == [1 1 1 1 1 1])
-    leg_frame_entries = {'xA', 'yA', 'zA', 'alphaLeg', 'betaLeg', 'gammaLeg'};
+    if Coupling(1)==1
+      % Für Koppelpunkt-Methode 1 wird das Basis-KS der Beinkette nur um
+      % die z-Achse gedreht. Lasse obige Standardeinstellung
+    else
+      leg_frame_entries = {'xA', 'yA', '0', 'alphaLeg', 'betaLeg', 'gammaLeg'};
+    end
   end
 
   %% Maple-Toolbox-Eingabe erzeugen
   % Zur Definition des Formats der Eingabedatei; siehe HybrDyn-Repo
-  mapleinputfile=fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Kin, ...
-    sprintf('hd_A%d',ActNr), sprintf('robot_env_par_%s', n));
+  mapleinputfile=fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, ...
+    sprintf('hd_G%dP%dA%d',Coupling(1),Coupling(2),ActNr), sprintf('robot_env_par_%s', n));
   mkdirs(fileparts(mapleinputfile));
   fid = fopen(mapleinputfile, 'w');
   
@@ -63,7 +61,7 @@ for i = 1:length(Names)
 
   % TODO: Anzahl der Parameter der Basis-Koppelpunkte abhängig von den
   % EE-FG. nur die FG bearbeiten, die für EE-FG relevant sind.
-  % Aktuelle Annahme: Gestellt ist eine Ebene, alle Beinketten liegen mit
+  % Aktuelle Annahme: Gestell ist eine Ebene, alle Beinketten liegen mit
   % Basis in dieser Ebene
   % TODO: xA und yA scheinen für die Dynamik gar nicht relevant zu sein.
   fprintf(fid, 'leg_frame := Matrix(7,1,[%s, %s, %s, %s, %s, %s, xyz]):\n', ...

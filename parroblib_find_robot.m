@@ -70,12 +70,24 @@ while ischar(tline)
 end
 fclose(fid);
 
+if isempty(PName_Kin)
+  % Der Kinematikname fehlt bislang in der Datenbank
+  return
+end
+
 % Anzahl der Beingelenke aus Namen der seriellen Beinkette herausfinden
 % (funktioniert nur bei seriellen Ketten. Andernfalls muss man die Abfrage
 % über die Datenbank machen)
 LegJointDOF = str2double(LEG_Names{1}(2)); % Format SxRRPR...
 %% Roboteraktuierung in Tabelle suchen
-acttabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Kin, 'actuation.csv');
+% Bestimme Beinketten-Name durch Entfernen der G- und P-Angabe
+expression = '(P[\d][RP]+[\d+][V]?[\d]*)G[\d+]P[\d+]'; % Format "P3RRR1A1" oder "P3RRR1V1A1"
+[tokens, ~] = regexp(PName_Kin,expression,'tokens','match');
+if isempty(tokens)
+  error('Name %s aus Tabelle passt nicht zum Namensschema', PName_Kin);
+end
+PName_Legs = tokens{1}{1};
+acttabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, 'actuation.csv');
 fid = fopen(acttabfile);
 if fid == -1
   % Diese Aktuierung zu der Kinematik ist noch nicht gespeichert / generiert.
