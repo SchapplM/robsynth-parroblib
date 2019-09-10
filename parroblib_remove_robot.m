@@ -41,24 +41,22 @@ expression_act = [expression_kin,'A(\d+)']; % Format "P3RRR1A1"
 [tokens_kin, ~] = regexp(PName_Input,[expression_kin,'$'],'tokens','match');
 [tokens_act, ~] = regexp(PName_Input,[expression_act,'$'],'tokens','match');
 if ~isempty(tokens_kin)
-  PName_Kin = PName_Input;
   res = tokens_kin{1};
-  PName_Legs = ['P', res{1}, res{2}, res{3}];
   Name_Typ = 1;
 elseif ~isempty(tokens_act)
   res = tokens_act{1};
-  if isempty(res{4}) % serielle Kette ist keine abgeleitete Variante
-    PName_Legs = ['P', res{1}, res{2}, res{3}];
-  else % serielle Kette ist eine Variante abgeleitet aus Hauptmodell
-    PName_Legs = ['P', res{1}, res{2}, res{3}, 'V', res{4}];
-  end
-  PName_Kin = [PName_Legs, 'G', res{5}, 'P', res{6}];
   Name_Typ = 2;
-  Coupling = [str2double(res{5}), str2double(res{6})];
   ActNr = str2double(res{7});
 else
   error('Eingegebener Name %s entspricht nicht dem Namensschema', PName_Input);
 end
+if isempty(res{4}) % serielle Kette ist keine abgeleitete Variante
+  PName_Legs = ['P', res{1}, res{2}, res{3}];
+else % serielle Kette ist eine Variante abgeleitet aus Hauptmodell
+  PName_Legs = ['P', res{1}, res{2}, res{3}, 'V', res{4}];
+end
+PName_Kin = [PName_Legs, 'G', res{5}, 'P', res{6}];
+Coupling = [str2double(res{5}), str2double(res{6})];
 NLEG = str2double(res{1});
 
 %% Tabelle für Kinematik öffnen und Zeile entfernen
@@ -156,15 +154,32 @@ if Name_Typ == 1
   robdirs = dir(fullfile( repopath, sprintf('sym%dleg', NLEG), PName_Legs, ...
     sprintf('hd_G%dP%d*',Coupling(1),Coupling(2)) ));
   for i = 1:length(robdirs)
+    robdir = fullfile(robdirs(i).folder, robdirs(i).name);
     if nofiledelete
-      move(robdir, [robdir, '_delete']);
+      movefile(robdir, [robdir, '_delete']);
     else
       rmdir(robdir, 's');
     end
   end
-  % TODO: Tabelle "actuation.csv" muss noch gelöscht werden, falls
-  % notwendig (falls sie leer ist). Danach muss das Verzeichnis gelöscht
-  % werden
+  % Prüfe, ob die Tabelle "actuation.csv" gelöscht werden kann
+  acttabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, 'actuation.csv');
+  fid = fopen(acttabfile, 'r');
+  if fid ~= -1
+    tmp = textscan(fid, '%s','delimiter','\n');
+    numlines = size(tmp{1},1);
+    fclose(fid);
+    if numlines <= 2 && ~nofiledelete
+      % Falls nur die Überschrift steht ist die Länge 0. Bei zweiter Zeile ist sie 2.
+      delete(acttabfile);
+    end
+  end
+  % Falls der Ordner jetzt leer ist, wird er auch gelöscht
+  PName_Dir = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs);
+  PName_DirContent = dir(fullfile(PName_Dir, '*'));
+  PName_DirContent=PName_DirContent(~ismember({PName_DirContent.name},{'.','..'}));
+  if isempty(PName_DirContent)
+    rmdir(fullfile(PName_Dir));
+  end
 elseif Name_Typ == 2 && ~removed_Kin
   % Aktuierung: Lösche nur den Unterordner, der zu dieser Aktuierung gehört
   % Nur löschen, wenn der Hauptordner des Kinematikmodells noch da ist.
@@ -172,7 +187,7 @@ elseif Name_Typ == 2 && ~removed_Kin
     sprintf('hd_G%dP%dA%s', Coupling(1), Coupling(2), ActNr));
   if exist(codedir, 'file') % Das Verzeichnis wird erst durch Code-Generierung angelegt. Ist eventuell noch nicht erfolgt.
     if nofiledelete
-      move(codedir, [codedir, '_delete']);
+      movefile(codedir, [codedir, '_delete']);
     else
       rmdir(codedir, 's');
     end

@@ -5,6 +5,7 @@
 % Eingabe:
 % Name
 %   Name des Roboters in der Datenbank (Kinematik und Aktuierung)
+%   Format: P6RRPRRR14V3G1P1A1
 % 
 % Ausgabe:
 % NLEG [1x1]
@@ -69,6 +70,7 @@ end
 PName_Kin = [PName_Legs, sprintf('G%dP%d', Coupling(1), Coupling(2))];
 
 ActNr = str2double(res{7});
+PName_Akt = [PName_Kin, sprintf('A%d', ActNr)];
 %% csv-Tabelle öffnen: KinematikEE_dof0 = NaN(6,1);
 % Ergebnis: Tabellenzeile csvline_kin für den gesuchten Roboter
 kintabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), sprintf('sym%dleg_list.csv', NLEG));
@@ -125,7 +127,7 @@ while ischar(tline)
   if isempty(csvline) || strcmp(csvline{1}, '')
     continue
   end
-  if strcmp(csvline{1}, Name)
+  if strcmp(csvline{1}, PName_Akt)
     % gefunden
     csvline_act = csvline;
     break;
@@ -148,7 +150,7 @@ if ~isempty(csvline_act)
     Actuation{iL} = find(ActSel);
   end
 else
-  warning('Aktuierung %d (%s) nicht in Aktuierungstabelle gefunden', ActNr, Name);
+  warning('Aktuierung %d (%s) nicht in Aktuierungstabelle %s gefunden', ActNr, PName_Kin, acttabfile);
 end
 
 %% EE-FG abspeichern

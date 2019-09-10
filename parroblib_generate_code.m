@@ -53,7 +53,7 @@ for i = 1:length(Names)
   
   % Maple-Toolbox-Eingabe laden (wurde an anderer Stelle erzeugt)
   % (durch parroblib_generate_mapleinput.m)
-  mapleinputfile=fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Kin, ...
+  mapleinputfile=fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, ...
     sprintf('hd_G%dP%dA%d',Coupling(1),Coupling(2),ActNr), sprintf('robot_env_par_%s', n));
   if ~exist(mapleinputfile, 'file')
     error('Datei %s existiert nicht. Wurde `parroblib_generate_mapleinput.m` ausgeführt?', fileparts(mapleinputfile) );
