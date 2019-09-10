@@ -23,7 +23,7 @@ for i = 1:length(Names)
   fcn_dir1 = fullfile(parroblibpath, sprintf('sym%dleg', NLEG), PName_Legs, ...
     sprintf('hd_G%dP%dA0', Coupling(1), Coupling(2)));
   fcn_dir2 = fullfile(parroblibpath, sprintf('sym%dleg', NLEG), PName_Legs, ...
-    sprintf('hd_G%dP%A%d', Coupling(1), Coupling(2), ActNr));
+    sprintf('hd_G%dP%dA%d', Coupling(1), Coupling(2), ActNr));
   if exist(fcn_dir1, 'file')
     addpath(fcn_dir1);
   end
