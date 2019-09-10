@@ -1,6 +1,6 @@
 # Bibliothek paralleler Roboter
 
-Dieses Repo enthält eine Sammlung von Modellen paralleler Roboter. Die Modelle beinhalten symbolisch generierte Kinematik und Dynamik der Roboter.
+Dieses Repo enthält eine Sammlung von Modellen paralleler Roboter. Die Modelle beinhalten die Beschreibung funktionierender Systeme und teilweise symbolisch generierte Kinematik und Dynamik der Roboter.
 
 Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2018-12  
 (C) Institut für Mechatronische Systeme, Universität Hannover
@@ -20,7 +20,8 @@ Zum Eintragen, Auslesen und Filtern von Robotermodellen existieren Funktionen.
 
 Im Folgenden wird unterschieden zwischen
 
-* Kinematik-Name: Kennzeichnet die Anzahl und Art der Beinketten.
+* Grundstruktur-Name: Kennzeichnet die Anzahl und Art der Beinketten (nicht aber ihre Orientierung)
+* Kinematik-Name: Kennzeichnet die Anzahl und Art der Beinketten sowie die Art ihrer Befestigung an Gestell und Plattform.
 * Aktuierungs-Name: Kinematik-Name mit Zusatz "A" und laufender Nummer, mit der die Aktuierung in einer Tabelle gefunden werden kann.
 
 ### Funktionen
@@ -39,6 +40,9 @@ Datenbank auslesen und benutzen:
 * `parroblib_generate_code`: Kinematik- und Dynamikfunktionen symbolisch mit der HybrDyn-Toolbox berechnen lassen.
 * `parroblib_addtopath`: Matlab-Funktionen dieses Roboters zum Matlab-Pfad hinzufügen, damit die Funktionsaufrufe funktionieren.
 
+Datenbank ordnen:
+* `parroblib_remove_robot`: Entfernen eines Roboters aus der Datenbank. Das ist nützlich, um im nachhinein unbrauchbare Roboter zu entfernen oder um Roboter zu Testzwecken temporär hinzuzufügen.
+
 ### Übersichtsdateien
 
 Alle Informationen der Roboterbibliothek liegen in csv-Dateien (Trennzeichen: Semikolon) vor. Dadurch ist eine automatische Verarbeitung und eine Versionsverwaltung möglich.
@@ -52,15 +56,21 @@ Der Kinematik-Name des Roboters ergibt sich aus
 * x: Anzahl der Beine
 * R/P die Kennzeichnung für Dreh- oder Schubgelenk.
 * y: Für laufende Nummer der Kinematiken mit dieser Reihenfolge von Dreh- und Schubgelenken.
+* V: Kennung für Variante der Kinematik der Beinkette (optional, siehe SerRobLib)
+* zzz: laufende Nummer der Variante (optional)
+* G: Kennung für Gestell-Koppelgelenkorientierung
+* u: Nummer dazu
+* P: Kennung für Plattform-Koppelgelenkorientierung
+* v: Nummer dazu
 
-Der letzte Teil RRPRRyyy des Namens entspricht den Systemen aus der Bibliothek serieller Roboter.
+Der Teil RRPRRyyy(Vzzz) des Namens entspricht den Systemen aus der Bibliothek serieller Roboter.
 
 #### Liste der möglichen Aktuierungen für ein Robotermodell
 
-Die Datei `symxleg/PxRRRRRRyyyyy/actuation.csv` enthält mögliche Aktuierungen für die Gelenke dieses Robotermodells. Jede kinematische Struktur kann unterschiedliche Aktuierungen haben, die dann einen anderen Roboter ergibt.
+Die Datei `symxleg/PxRRRRRRyyyyy/actuation.csv` enthält mögliche Aktuierungen für die Gelenke der Grundstruktur des Robotermodells. Jede kinematische Struktur kann unterschiedliche Aktuierungen haben, die dann einen anderen Roboter ergibt.
 In der Tabelle sind die Namen der aktuierten Roboter abgelegt, die den Namen der Kinematik mit dem Zusatz A1, A2, ... tragen.
 
 ### Matlab-Code
 
-Matlab-Funktionen für jeden Roboter liegen im Ordner `symxleg/PxRRRRRRyyyyy/hd_Azz`.
+Matlab-Funktionen für jeden Roboter liegen im Ordner `symxleg/PxRRRRRRyyyyy/hd_GuuPvvAzz`.
 Wobei die Dynamik-Funktionen auf die Plattform bezogen im Ordner A0 liegen, in dem die Aktuierung der Gelenk noch keine Rolle spielt. In den Ordnern mit Kennung der Aktuierung (A1, A2, ...) liegen Matlab-Funktionen, die sich auf diese eine mögliche Aktuierung beziehen.
