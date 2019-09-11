@@ -112,6 +112,13 @@ for i = 1:length(PNames_Kin)
     end
     % Daten auslesen
     Name_Akt = csvline{1};
+    
+    % Prüfe, ob Kinematik die gleiche ist (es stehen mehrere
+    % Gestell-Varianten in der gleichen Aktuierungstabelle)
+    if ~contains(Name_Akt, PName_Kin)
+      continue
+    end
+    
     % Roboter in Liste aufnehmen (es gibt keinen Filter für die Aktuierung)
     PNames_Akt = {PNames_Akt{:}, Name_Akt}; %#ok<CCAT>
   end
