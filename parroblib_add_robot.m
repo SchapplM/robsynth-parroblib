@@ -123,7 +123,7 @@ end
 % symmetrische serielle PKM begrenzt
 LegJointDOF = str2double(LEG_Names{1}(2)); % Format SxRRPR...
 % Extrahiere Beinketten-Name der PKM (ohne Ausrichtungs-Nummern G/P)
-expression = '(P[\d][RP]+[\d+][V]?[\d]*)G[\d+]P[\d+]'; % Format "P3RRR1G1P1A1" oder "P3RRR1V1G1P1A1"
+expression = '(P[\d][RP]+[\d]+[V]?[\d]*)G[\d]+P[\d]+'; % Format "P3RRR1G1P1A1" oder "P3RRR1V1G1P1A1"
 [tokens, ~] = regexp(PName_Kin,expression,'tokens','match');
 PName_Legs = tokens{1}{1};
 
