@@ -112,29 +112,30 @@ end
 % Ergebnis: Tabellenzeile csvline_act für den gesuchten Roboter
 acttabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, 'actuation.csv');
 csvline_act = [];
-fid = fopen(acttabfile);
-if fid == -1
-  warning('Aktuierungstabelle %s existiert nicht', acttabfile);
-  % Diese Aktuierung zu der Kinematik ist noch nicht gespeichert / generiert.
-  return
-end
-% Tabelle zeilenweise durchgehen
-tline = fgetl(fid);
-while ischar(tline)
-  % Spaltenweise als Cell-Array
-  csvline = strsplit(tline, ';', 'CollapseDelimiters', false);
-  tline = fgetl(fid); % nächste Zeile
-  if isempty(csvline) || strcmp(csvline{1}, '')
-    continue
+if ActNr ~= 0
+  fid = fopen(acttabfile);
+  if fid == -1
+    warning('Aktuierungstabelle %s existiert nicht', acttabfile);
+    % Diese Aktuierung zu der Kinematik ist noch nicht gespeichert / generiert.
+    return
   end
-  if strcmp(csvline{1}, PName_Akt)
-    % gefunden
-    csvline_act = csvline;
-    break;
+  % Tabelle zeilenweise durchgehen
+  tline = fgetl(fid);
+  while ischar(tline)
+    % Spaltenweise als Cell-Array
+    csvline = strsplit(tline, ';', 'CollapseDelimiters', false);
+    tline = fgetl(fid); % nächste Zeile
+    if isempty(csvline) || strcmp(csvline{1}, '')
+      continue
+    end
+    if strcmp(csvline{1}, PName_Akt)
+      % gefunden
+      csvline_act = csvline;
+      break;
+    end
   end
+  fclose(fid);
 end
-fclose(fid);
-
 %% Aktuierung abspeichern
 Actuation = cell(NLEG,1);
 if ~isempty(csvline_act)
@@ -149,7 +150,7 @@ if ~isempty(csvline_act)
     end
     Actuation{iL} = find(ActSel);
   end
-else
+elseif ActNr ~= 0
   warning('Aktuierung %d (%s) nicht in Aktuierungstabelle %s gefunden', ActNr, PName_Kin, acttabfile);
 end
 
