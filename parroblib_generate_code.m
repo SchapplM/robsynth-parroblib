@@ -105,6 +105,13 @@ for i = 1:length(Names)
     system(sprintf('sed -i "s/codeexport_invdyn := false:/codeexport_invdyn := true:/g" %s', ...
       mapleinputfile_A0 ));
     
+    % Reduziere den Optimierungsgrad bei der Code-Generierung, da es sonst
+    % für 6FG-Systeme zu lange dauert
+    if NLEG == 6
+      system(sprintf('sed -i "s/codegen_opt := 2:/codegen_opt := 1:/g" %s', ...
+        mapleinputfile_A0 ));
+    end
+
     % Definition kopieren und Code-Erstellung starten. Alle Tests für PKM
     % dort durchführen
     copyfile(mapleinputfile_A0, fullfile(mrp, 'robot_codegen_definitions', 'robot_env_par') );
