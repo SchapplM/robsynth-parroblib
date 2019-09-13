@@ -23,6 +23,11 @@ for i = 1:length(Names)
   
   %% Daten für diesen Roboter laden
   [NLEG, LEG_Names, Actuation, Coupling, ActNr, ~, EE_FG0, PName_Kin, PName_Legs] = parroblib_load_robot(n);
+  for j = 1:NLEG
+    if isempty(Actuation{j})
+      error('Beinkette %d ist nicht aktuiert. Das wird aktuell nicht unterstützt', j);
+    end
+  end
   % Robotereigenschaften aus dem Namen auslesen.
   % TODO: Einbindung nicht-symmetrischer PKM
   %% Definition der Beinketten-Orientierung
@@ -81,6 +86,9 @@ for i = 1:length(Names)
     end
   end
   fprintf(fid, ', xyz]):\n');
+  % Wähle standardmäßig den maximalen Optimierungsgrad.
+  fprintf(fid, 'codegen_opt := 2:\n');
+    
   
   % Generierung der Dynamik nur für erstes Aktuierungs-Modell jeder PKM:
   % Die Dynamik in Plattform-Koordinaten ist immer gleich und die

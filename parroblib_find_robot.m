@@ -81,7 +81,7 @@ end
 LegJointDOF = str2double(LEG_Names{1}(2)); % Format SxRRPR...
 %% Roboteraktuierung in Tabelle suchen
 % Bestimme Beinketten-Name durch Entfernen der G- und P-Angabe
-expression = '(P[\d][RP]+[\d]+[V]?[\d]*)G[\d]+P[\d]+'; % Format "P3RRR1A1" oder "P3RRR1V1A1"
+expression = '(P[\d][RP]+[\d]+[V]?[\d]*)G[\d]+P[\d]+'; % Zielformat "P3RRR1A1" oder "P3RRR1V1A1" (ohne G1P1)
 [tokens, ~] = regexp(PName_Kin,expression,'tokens','match');
 if isempty(tokens)
   error('Name %s aus Tabelle passt nicht zum Namensschema', PName_Kin);
@@ -101,7 +101,7 @@ while ischar(tline)
   if isempty(csvline) || strcmp(csvline{1}, '')
     continue
   end
-  if length(csvline) ~= (NLEG*LegJointDOF+1)
+  if length(csvline) ~= (NLEG*LegJointDOF+2)
     % warning('Zeile %s sieht ungültig aus', tline);
     continue % nicht genug Spalten: Ungültiger Datensatz oder Überschrift
   end

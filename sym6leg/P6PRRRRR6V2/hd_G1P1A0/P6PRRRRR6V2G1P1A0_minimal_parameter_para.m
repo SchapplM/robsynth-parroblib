@@ -28,8 +28,8 @@
 %   base parameter vector (minimal parameter vector)
 
 % Quelle: HybrDyn-Toolbox
-% Datum: 2019-05-18 12:11
-% Revision: 36f6366a01c4a552c0708fcd8ed3e0fb9da693e2 (2019-05-16)
+% Datum: 2019-09-11 16:13
+% Revision: 7993d029b5937b704dcf3fc7d8ae322038cdcbdd (2019-09-11)
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
@@ -51,7 +51,7 @@ assert(isreal(koppelP) && all(size(koppelP) == [6 3]), ...
 
 %% Symbolic Calculation
 % From minimal_parameter_parrob_matlab.m
-t16120 = (m(3) * pkin(8));
-t16119 = sin(pkin(5));
-t1 = [m(1) + m(2) + m(3); pkin(2) ^ 2 * m(3) + Ifges(2,3) + (Ifges(3,2) + (2 * mrSges(3,3) + t16120) * pkin(8)) * t16119 ^ 2; m(3) * pkin(2) + mrSges(2,1); mrSges(2,2) + (-mrSges(3,3) - t16120) * t16119; Ifges(3,1) - Ifges(3,2); Ifges(3,4); Ifges(3,5); Ifges(3,6); Ifges(3,3); mrSges(3,1); mrSges(3,2); Ifges(4,1); Ifges(4,4); Ifges(4,5); Ifges(4,2); Ifges(4,6); Ifges(4,3); mrSges(4,1); mrSges(4,2); mrSges(4,3); m(4);];
+t10395 = (m(3) * pkin(8));
+t10394 = sin(pkin(5));
+t1 = [m(1) + m(2) + m(3); pkin(2) ^ 2 * m(3) + Ifges(2,3) + (Ifges(3,2) + (2 * mrSges(3,3) + t10395) * pkin(8)) * t10394 ^ 2; m(3) * pkin(2) + mrSges(2,1); mrSges(2,2) + (-mrSges(3,3) - t10395) * t10394; Ifges(3,1) - Ifges(3,2); Ifges(3,4); Ifges(3,5); Ifges(3,6); Ifges(3,3); mrSges(3,1); mrSges(3,2); Ifges(4,1); Ifges(4,4); Ifges(4,5); Ifges(4,2); Ifges(4,6); Ifges(4,3); mrSges(4,1); mrSges(4,2); mrSges(4,3); m(4);];
 MPV  = t1;

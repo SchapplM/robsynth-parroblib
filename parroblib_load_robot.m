@@ -29,11 +29,16 @@
 % PName_Legs
 %   Eindeutiger Name der Führungsketten-Zusammensetzung (ohne Aktuierung
 %   und Gestell- oder Plattformausrichtung)
+% AdditionalInfo_Akt
+%   Zusätzliche Infos. Spalten:
+%   1: Rangverlust der Jacobi-Matrix (in den vorgesehenen FG der PKM)
 
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2018-12
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
-function [NLEG, LEG_Names, Actuation, Coupling, ActNr, symrob, EE_dof0, PName_Kin, PName_Legs] = parroblib_load_robot(Name)
+function [NLEG, LEG_Names, Actuation, Coupling, ActNr, symrob, EE_dof0, ...
+  PName_Kin, PName_Legs, AdditionalInfo_Akt] = ...
+  parroblib_load_robot(Name)
 %% Initialisierung
 NLEG = 0;
 LEG_Names = {};
@@ -41,7 +46,7 @@ Actuation = {};
 ActNr = 0;
 symrob = true;
 EE_dof0 = NaN(1,6);
-
+AdditionalInfo_Akt = NaN;
 repopath=fileparts(which('parroblib_path_init.m'));
 
 % Name der Kinematischen Struktur von Aktuierung trennen
@@ -150,6 +155,8 @@ if ~isempty(csvline_act)
     end
     Actuation{iL} = find(ActSel);
   end
+  % Zusätzliche Informationen kommen am Ende der Zeile
+  AdditionalInfo_Akt(1) = csvline_act{end};
 elseif ActNr ~= 0
   warning('Aktuierung %d (%s) nicht in Aktuierungstabelle %s gefunden', ActNr, PName_Kin, acttabfile);
 end

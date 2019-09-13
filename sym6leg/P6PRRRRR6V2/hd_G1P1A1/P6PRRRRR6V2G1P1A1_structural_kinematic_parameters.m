@@ -7,8 +7,8 @@
 %   Von der Basis aus gezählt
 
 % Quelle: HybrDyn-Toolbox
-% Datum: 2019-05-18 14:28
-% Revision: 36f6366a01c4a552c0708fcd8ed3e0fb9da693e2 (2019-05-16)
+% Datum: 2019-09-11 17:10
+% Revision: 7993d029b5937b704dcf3fc7d8ae322038cdcbdd (2019-09-11)
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
