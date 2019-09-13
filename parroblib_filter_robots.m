@@ -8,6 +8,10 @@
 % EE_FG_Mask [1x6]
 %   Maske, die festlegt ob die FG exakt wie in `EE_FG` sind, oder ob auch
 %   gesperrte FG wirklich nicht beweglich sind
+% max_rankdeficit [1x1]
+%   Grad des Rangverlustes der PKM-Jacobi-Matrix (Standard: 0)
+%   Wird ein Wert von 1 bis 6 (max.) eingesetzt, werden auch PKM
+%   ausgegeben, deren gewählte Aktuierung keine Mobilität ergibt.
 % 
 % Rückgabe:
 % PNames_Kin
@@ -17,6 +21,10 @@
 %   Cell-Array aller Roboter mit Aktuierung als Namensbestandteil.
 %   Diese Namen können durch die Funktion parroblib_load_robot abgerufen
 %   werden
+% AdditionalInfo_Akt
+%   Array mit zusätzlichen Infos für alle Strukturen aus PNames_Akt (in den Zeilen).
+%   Spalten:
+%   1: Rangverlust der Jacobi-Matrix (in den vorgesehenen FG der PKM)
 % 
 % TODO: Aktuell sind nur symmetrische PKM berücksichtigt.
 % 
@@ -25,13 +33,17 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2019-01
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
-function [PNames_Kin, PNames_Akt] = parroblib_filter_robots(NLEG, EE_FG0, EE_FG_Mask)
+function [PNames_Kin, PNames_Akt, AdditionalInfo_Akt] = parroblib_filter_robots(NLEG, EE_FG0, EE_FG_Mask, max_rankdeficit)
 
 %% Initialisierung
 repopath=fileparts(which('parroblib_path_init.m'));
+if nargin < 4
+  max_rankdeficit = 0;
+end
 %% Kinematik-Tabelle durchsuchen
 PNames_Kin = {};
 PNames_Akt = {};
+AdditionalInfo_Akt = [];
 kintabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), sprintf('sym%dleg_list.csv', NLEG));
 fid = fopen(kintabfile);
 if fid == -1
@@ -118,6 +130,14 @@ for i = 1:length(PNames_Kin)
     if ~contains(Name_Akt, PName_Kin)
       continue
     end
+    % Wert für den Rangverlust (die Datenbank enthält auch PKM, deren
+    % Aktuierung oder Gestell-Anordnung nicht sinnvoll ist)
+    rankdef = str2double(csvline{end});
+    if rankdef > max_rankdeficit
+      % Die Struktur soll nicht ausgegeben werden: Rangverlust ist zu groß
+      continue
+    end
+    AdditionalInfo_Akt = [AdditionalInfo_Akt; rankdef]; %#ok<AGROW>
     
     % Roboter in Liste aufnehmen (es gibt keinen Filter für die Aktuierung)
     PNames_Akt = {PNames_Akt{:}, Name_Akt}; %#ok<CCAT>

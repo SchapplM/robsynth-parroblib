@@ -147,6 +147,7 @@ if ~exist(acttabfile, 'file')
       end
     end
   end
+  c=c+1; csvline_head1{c} = 'Rangverlust Plattform-FG';
   % String aus Cell-Array erzeugen
   line_head1 = csvline_head1{1};
   for i = 2:length(csvline_head1)
@@ -198,13 +199,42 @@ for iL = 1:NLEG
     csv_act_rob{c} = sprintf('%d', ActSel(j));
   end
 end
+c=c+1; csv_act_rob{c} = '?'; % Keine Information über Rangverlust vorliegend
+
 % Cell-Array in csv-Zeile umwandeln
 line_act = csv_act_rob{1};
 for i = 2:length(csv_act_rob)
   line_act = sprintf('%s;%s', line_act, csv_act_rob{i});
 end
-% Füge neuen Eintrag hinzu
-fid = fopen(acttabfile, 'a');
-fwrite(fid, [line_act, newline]);
+% Füge neuen Eintrag hinzu (in alphabetischer Reihenfolge)
+acttabfile_copy = [acttabfile, '.copy']; % Kopie der Tabelle zur Bearbeitung
+fid = fopen(acttabfile, 'r');
+fidc = fopen(acttabfile_copy, 'w');
+tline = fgetl(fid);
+Name_old = '';
+written = false;
+i=0;
+while ischar(tline)
+  i=i+1;
+  csvline = strsplit(tline, ';', 'CollapseDelimiters', false); % Spaltenweise als Cell-Array
+  if isempty(csvline) || strcmp(csvline{1}, ''), continue; end
+  Name_now = csvline{1};
+  if i > 1 && string(Name) > string(Name_old) && string(Name) < string(Name_now) && ~written
+    fwrite(fidc, [line_act, newline]);
+    written = true;
+  end
+  fwrite(fidc, [tline, newline]);
+  Name_old = Name_now;
+  tline = fgetl(fid); % nächste Zeile der ursprünglichen Tabelle
+  if ~ischar(tline) && ~written
+    % Erster Roboter: Nur die Überschriften wurden geschrieben. Schreibe
+    fwrite(fidc, [line_act, newline]);
+  end
+end
 fclose(fid);
+fclose(fidc);
+% Modifizierte Tabelle zurückkopieren
+copyfile(acttabfile_copy, acttabfile);
+% Kopie-Tabelle löschen
+delete(acttabfile_copy);
 
