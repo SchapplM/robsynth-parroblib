@@ -12,6 +12,8 @@ Für die Benutzung des Repos muss mit dem Skript `parroblib_path_init.m` aus dem
 ### Abhängigkeiten
 
 Die Robotermodelle setzen die Toolbox imes-matlab, serrob_mdlbib und imes-matlab-robotics mit initialisiertem Pfad voraus.
+Für die Code-Generierung muss die Datei `maplerepo_path.m` aus der Vorlage `maplerepo_path.m.template` so erstellt werden, dass diese auf den Pfad zur 
+Toolbox robot-dynamics-hybriddyn zeigt (diese muss ebenfalls heruntergeladen werden).
 
 ## Inhalt
 
