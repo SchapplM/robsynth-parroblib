@@ -110,6 +110,9 @@ while ischar(tline)
     % warning('Zeile %s sieht ungültig aus', tline);
     continue % nicht genug Spalten: Ungültiger Datensatz oder Überschrift
   end
+  if ~contains(csvline(1), PName_Kin)
+    continue % Kinematik in Aktuierungs-Tabelle ist andere G-/P-Nummer
+  end
   % Vergleich der Tabellenzeile mit den Eingabedaten
   k=2;
   abort=false;
