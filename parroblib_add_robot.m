@@ -55,7 +55,7 @@ else
 end
 
 % Suche in Datenbank nach dem Roboter
-[found, Name, PName_Kin] = parroblib_find_robot(NLEG, LEG_Names, Actuation, symrob);
+[found, Name, PName_Kin] = parroblib_find_robot(NLEG, LEG_Names, Actuation, Coupling, symrob);
 if found(2)
   new = false;
   return
@@ -64,9 +64,6 @@ end
 % Es wird auf jeden Fall ein neuer Eintrag erstellt.
 new = true;
 %% Erstelle neuen Eintrag: Kinematik-Tabelle
-% TODO: Aktuell wird die Nummerierung nicht angepasst. Für jede serielle
-% Beinkette gibt es nur eine zugehörige PKM, egal wie die Ausrichtung der
-% Gestell-Koppelgelenke ist.
 if ~found(1)
   % Für diese Kinematik gibt es noch keinen Eintrag
   kintabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), sprintf('sym%dleg_list.csv', NLEG));
@@ -89,7 +86,7 @@ if ~found(1)
     fclose(fid);
   end
   % Namen der Kinematik-Struktur generieren
- % Namensschema PxRRPRyyGuuPvv
+  % Namensschema PxRRPRyyGuuPvv
   PName_Kin = sprintf('P%d%sG%dP%d',NLEG,LEG_Names{1}(3:end),Coupling(1),Coupling(2));
   
   % Roboterstruktur an Tabelle anhängen

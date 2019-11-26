@@ -43,9 +43,11 @@ expression_act = [expression_kin,'A(\d+)']; % Format "P3RRR1A1"
 if ~isempty(tokens_kin)
   res = tokens_kin{1};
   Name_Typ = 1;
+  Coupling = [str2double(res{5}), str2double(res{6})];
 elseif ~isempty(tokens_act)
   res = tokens_act{1};
   Name_Typ = 2;
+  Coupling = [str2double(res{5}), str2double(res{6})];
   ActNr = str2double(res{7});
 else
   error('Eingegebener Name %s entspricht nicht dem Namensschema', PName_Input);
@@ -111,7 +113,8 @@ if Name_Typ == 2
   fidc = fopen(acttabfile_copy, 'w');
   tline = fgetl(fid);
   found = false;
-  lines_written = 0;
+  lines_written = 0; % Anzahl der geschriebenen Zeilen für diese Führungs-Beinkette
+  lines_written_kin = 0; % Anzahl der geschriebenen Zeilen mit dieser Kinematik (inkl G/P-Nummer)
   while ischar(tline)
     % Spaltenweise als Cell-Array
     csvline = strsplit(tline, ';', 'CollapseDelimiters', false);
@@ -122,6 +125,9 @@ if Name_Typ == 2
       % Zeile in die Dateikopie schreiben
       fwrite(fidc, [tline, newline()]);
       lines_written = lines_written + 1;
+      if contains(csvline{1}, PName_Kin)
+        lines_written_kin = lines_written_kin + 1;
+      end
     end
     tline = fgetl(fid); % nächste Zeile
   end
@@ -143,6 +149,9 @@ if Name_Typ == 2
   if lines_written == 1
     % Es wurde nur die Überschrift in die Datei geschrieben. Keine
     % Aktuierung mehr übrig.
+    delete(acttabfile);
+  end
+  if lines_written_kin == 0
     removed_Kin = parroblib_remove_robot(PName_Kin);
   end
 end
@@ -168,7 +177,7 @@ if Name_Typ == 1
     tmp = textscan(fid, '%s','delimiter','\n');
     numlines = size(tmp{1},1);
     fclose(fid);
-    if numlines <= 2 && ~nofiledelete
+    if numlines < 2 && ~nofiledelete
       % Falls nur die Überschrift steht ist die Länge 0. Bei zweiter Zeile ist sie 2.
       delete(acttabfile);
     end

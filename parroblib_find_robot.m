@@ -7,6 +7,8 @@
 %   (falls nur ein Wert: Symmetrisch)
 % Actuation [1xNLEG cell-Array]
 %   Nummern der aktuierten Gelenke jeder Beinkette.
+% Coupling [1x2]
+%   Nummern des Gestell- und Plattform-Koppel-Typs (entsprechend ParRob)
 % symrob [1x1 logical]
 %   true, wenn es eine symmetrische PKM ist
 % 
@@ -26,7 +28,7 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2018-12
 % (C) Institut für mechatronische Systeme, Universität Hannover
 
-function [found, Name, PName_Kin, csvline_kin, csvline_act] = parroblib_find_robot(NLEG, LEG_Names, Actuation, symrob)
+function [found, Name, PName_Kin, csvline_kin, csvline_act] = parroblib_find_robot(NLEG, LEG_Names, Actuation, Coupling, symrob)
 
 %% Initialisierung
 found = false(1,2);
@@ -60,6 +62,9 @@ while ischar(tline)
   end
   % Vergleich mit Eingabedaten
   if ~strcmp(csvline{2}, LEG_Names{1})
+    continue
+  end
+  if ~contains(csvline{1}, sprintf('G%dP%d', Coupling(1), Coupling(2)))
     continue
   end
   % Bis hier hin gekommen: Roboter-Kinematik wurde gefunden
