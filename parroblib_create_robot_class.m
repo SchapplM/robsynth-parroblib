@@ -60,8 +60,31 @@ parroblib_addtopath({Name})
 
 RP = ParRob(Name);
 RP.create_symmetric_robot(NLEG, RS);
-RP.align_base_coupling(Coupling(1), p_Base);
-RP.align_platform_coupling(Coupling(2), p_platform);
+% Vervollständige Koppelpunkt-Parameter mit Standard-Einstellungen
+if length(p_Base) > 1
+  % Annahme: Bei Vorgabe mehrere Parameter hat der Benutzer alle
+  % notwendigen Parameter angegeben und weiß was er tut.
+  p_Base_all = p_Base;
+elseif Coupling(1) == 1
+  p_Base_all = p_Base;
+elseif Coupling(1) == 4
+  p_Base_all = [p_Base; p_Base/2];
+else
+  error('Gestell-Methode %d nicht definiert', Coupling(1));
+end
+RP.align_base_coupling(Coupling(1), p_Base_all);
+if length(p_platform) > 1
+  % Annahme: Bei Vorgabe mehrere Parameter hat der Benutzer alle
+  % notwendigen Parameter angegeben und weiß was er tut.
+  p_platform_all = p_platform;
+elseif Coupling(2) == 1
+  p_platform_all = p_platform;
+elseif Coupling(2) == 3
+  p_platform_all = [p_platform; p_platform/2];
+else
+  error('Plattform-Methode %d nicht definiert', Coupling(1));
+end
+RP.align_platform_coupling(Coupling(2), p_platform_all);
 RP.initialize();
 
 % EE-FG eintragen
