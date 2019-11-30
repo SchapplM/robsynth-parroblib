@@ -135,6 +135,8 @@ for i = 1:length(PNames_Kin)
     rankdef = str2double(csvline{end});
     if rankdef > max_rankdeficit
       % Die Struktur soll nicht ausgegeben werden: Rangverlust ist zu groß
+      % Wenn in Tabelle ein "?" steht, dann NaN. Soll aber ausgegeben werden
+      % (Bedeutet, dass noch nicht geprüft ist)
       continue
     end
     AdditionalInfo_Akt = [AdditionalInfo_Akt; rankdef]; %#ok<AGROW>
