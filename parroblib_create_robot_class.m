@@ -67,8 +67,10 @@ if length(p_Base) > 1
   p_Base_all = p_Base;
 elseif Coupling(1) == 1
   p_Base_all = p_Base;
-elseif Coupling(1) == 4
-  p_Base_all = [p_Base; p_Base/2];
+elseif Coupling(1) == 8
+  % Pyramide mit paarweiser Anordnung. Nehme standardmäßig halben
+  % Punktradius als Punktabstand und 45 Grad Steigung
+  p_Base_all = [p_Base; p_Base/2; 45*pi/180];
 else
   error('Gestell-Methode %d nicht definiert', Coupling(1));
 end
