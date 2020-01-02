@@ -9,6 +9,10 @@
 %   * PName_Kin (nur Kinematik, ohne Endung für Aktuierung; z.B. "P3RPR1G1P1")
 %   * PName_Act (Kinematik mit Aktuierung; z.B. "P3RPR1G1P1A2")
 %   Je nachdem welche Art von Name übergeben wird, wird der Eintrag gelöscht
+% nofiledelete (optional)
+%   true: Keine Dateien (mit generiertem Code löschen). Nur umbenennen.
+%   false: Ordner werden als Sicherung nur verschoben anstatt gelöscht
+%   (Standard)
 % 
 % Ausgabe:
 % success
