@@ -65,12 +65,20 @@ if length(p_Base) > 1
   % Annahme: Bei Vorgabe mehrere Parameter hat der Benutzer alle
   % notwendigen Parameter angegeben und weiß was er tut.
   p_Base_all = p_Base;
-elseif Coupling(1) == 1
+elseif any(Coupling(1) == [1,2,3])
   p_Base_all = p_Base;
+elseif Coupling(1) == 4
+  % Pyramide mit paarweiser Anordnung. Nehme standardmäßig halben
+  % Punktradius als Punktabstand und 45 Grad Steigung
+  p_Base_all = [p_Base; 30*pi/180];
+elseif any(Coupling(1) == [5,6,7])
+  % Pyramide mit paarweiser Anordnung. Nehme standardmäßig halben
+  % Punktradius als Punktabstand und 45 Grad Steigung
+  p_Base_all = [p_Base; p_Base/2];
 elseif Coupling(1) == 8
   % Pyramide mit paarweiser Anordnung. Nehme standardmäßig halben
   % Punktradius als Punktabstand und 45 Grad Steigung
-  p_Base_all = [p_Base; p_Base/2; 45*pi/180];
+  p_Base_all = [p_Base; p_Base/2; 30*pi/180];
 else
   error('Gestell-Methode %d nicht definiert', Coupling(1));
 end
@@ -79,9 +87,9 @@ if length(p_platform) > 1
   % Annahme: Bei Vorgabe mehrere Parameter hat der Benutzer alle
   % notwendigen Parameter angegeben und weiß was er tut.
   p_platform_all = p_platform;
-elseif Coupling(2) == 1
+elseif any(Coupling(2) == [1,2,3])
   p_platform_all = p_platform;
-elseif Coupling(2) == 3
+elseif any(Coupling(2) == [4,5,6])
   p_platform_all = [p_platform; p_platform/2];
 else
   error('Plattform-Methode %d nicht definiert', Coupling(1));
