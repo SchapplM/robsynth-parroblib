@@ -68,16 +68,15 @@ if length(p_Base) > 1
 elseif any(Coupling(1) == [1,2,3])
   p_Base_all = p_Base;
 elseif Coupling(1) == 4
-  % Pyramide mit paarweiser Anordnung. Nehme standardmäßig halben
-  % Punktradius als Punktabstand und 45 Grad Steigung
+  % Pyramide symmetrische Anordnung. Nehme standardmäßig halben
+  % Punktradius als Punktabstand und 30 Grad Steigung
   p_Base_all = [p_Base; 30*pi/180];
 elseif any(Coupling(1) == [5,6,7])
-  % Pyramide mit paarweiser Anordnung. Nehme standardmäßig halben
-  % Punktradius als Punktabstand und 45 Grad Steigung
+  % Paarweiser Anordnung. Nehme standardmäßig halben
   p_Base_all = [p_Base; p_Base/2];
 elseif Coupling(1) == 8
   % Pyramide mit paarweiser Anordnung. Nehme standardmäßig halben
-  % Punktradius als Punktabstand und 45 Grad Steigung
+  % Punktradius als Punktabstand und 30 Grad Steigung
   p_Base_all = [p_Base; p_Base/2; 30*pi/180];
 else
   error('Gestell-Methode %d nicht definiert', Coupling(1));
