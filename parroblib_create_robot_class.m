@@ -46,7 +46,6 @@ RS = serroblib_create_robot_class(LEG_Names{1});
 RS.fill_fcn_handles(false);
 RS.update_pkin();
 
-RS.I_EE = logical(EE_dof0); % Für IK der Beinketten mit invkin_ser
 
 % TODO: Das ist keine automatische Lösung
 % EE anpassen für 2T1R-PKM, bei denen die Plattform-KoppelKS falsch gedreht
@@ -65,12 +64,19 @@ if length(p_Base) > 1
   % Annahme: Bei Vorgabe mehrere Parameter hat der Benutzer alle
   % notwendigen Parameter angegeben und weiß was er tut.
   p_Base_all = p_Base;
-elseif Coupling(1) == 1
+elseif any(Coupling(1) == [1,2,3])
   p_Base_all = p_Base;
+elseif Coupling(1) == 4
+  % Pyramide symmetrische Anordnung. Nehme standardmäßig halben
+  % Punktradius als Punktabstand und 30 Grad Steigung
+  p_Base_all = [p_Base; 30*pi/180];
+elseif any(Coupling(1) == [5,6,7])
+  % Paarweiser Anordnung. Nehme standardmäßig halben
+  p_Base_all = [p_Base; p_Base/2];
 elseif Coupling(1) == 8
   % Pyramide mit paarweiser Anordnung. Nehme standardmäßig halben
-  % Punktradius als Punktabstand und 45 Grad Steigung
-  p_Base_all = [p_Base; p_Base/2; 45*pi/180];
+  % Punktradius als Punktabstand und 30 Grad Steigung
+  p_Base_all = [p_Base; p_Base/2; 30*pi/180];
 else
   error('Gestell-Methode %d nicht definiert', Coupling(1));
 end
@@ -79,9 +85,9 @@ if length(p_platform) > 1
   % Annahme: Bei Vorgabe mehrere Parameter hat der Benutzer alle
   % notwendigen Parameter angegeben und weiß was er tut.
   p_platform_all = p_platform;
-elseif Coupling(2) == 1
+elseif any(Coupling(2) == [1,2,3])
   p_platform_all = p_platform;
-elseif Coupling(2) == 3
+elseif any(Coupling(2) == [4,5,6])
   p_platform_all = [p_platform; p_platform/2];
 else
   error('Plattform-Methode %d nicht definiert', Coupling(1));
@@ -91,6 +97,7 @@ RP.initialize();
 
 % EE-FG eintragen
 RP.update_EE_FG(logical(EE_dof0)); % Für IK der PKM
+
 
 % Aktuierung eintragen
 I_qa = false(RP.NJ,1);
