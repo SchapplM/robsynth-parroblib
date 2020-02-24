@@ -46,7 +46,6 @@ RS = serroblib_create_robot_class(LEG_Names{1});
 RS.fill_fcn_handles(false);
 RS.update_pkin();
 
-RS.I_EE = logical(EE_dof0); % Für IK der Beinketten mit invkin_ser
 
 % TODO: Das ist keine automatische Lösung
 % EE anpassen für 2T1R-PKM, bei denen die Plattform-KoppelKS falsch gedreht
@@ -98,6 +97,7 @@ RP.initialize();
 
 % EE-FG eintragen
 RP.update_EE_FG(logical(EE_dof0)); % Für IK der PKM
+
 
 % Aktuierung eintragen
 I_qa = false(RP.NJ,1);
