@@ -25,6 +25,10 @@
 %   Array mit zusätzlichen Infos für alle Strukturen aus PNames_Akt (in den Zeilen).
 %   Spalten:
 %   1: Rangverlust der Jacobi-Matrix (in den vorgesehenen FG der PKM)
+% max_rankdeficit
+%   Maximaler Rangverlust, den die PKM haben darf. Standard: 0 (keine nicht
+%   funktionierenden PKM ausgeben). Sinnvolle Werte: 0 bis 6 (Rangverlust
+%   egal)
 % 
 % TODO: Aktuell sind nur symmetrische PKM berücksichtigt.
 % 
