@@ -108,7 +108,7 @@ for i = 1:length(Names)
     sprintf('hd_G%dP%dA0', Coupling(1), Coupling(2)), sprintf('robot_env_par_%s', n_A0));
   outputdir_local_A0 = fileparts(mapleinputfile_A0);
   if ActNr == 1 && ... % Nur Generierung, wenn noch kein Code vorhanden:
-      (force_par || ~force_par && length(dir(fullfile(outputdir_local_A0, '*.m'))) > 2)
+      (force_par || ~force_par && length(dir(fullfile(outputdir_local_A0, '*.m'))) < 10) % im A0-Ordner sind mehr Dateien
     % Namen des Roboters in A0-Definition nachbearbeiten
     mkdirs(fileparts(mapleinputfile_A0));
     copyfile(mapleinputfile, mapleinputfile_A0);
