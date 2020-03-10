@@ -38,7 +38,7 @@ for i = 1:length(Names)
   n = Names{i};
 
   % Daten über den Roboter zusammenstellen
-  [NLEG, LEG_Names, Actuation, Coupling, ActNr, ~, ~, PName_Kin, PName_Legs, AdditionalInfo_Akt] = parroblib_load_robot(n);
+  [NLEG, LEG_Names, Actuation, Coupling, ActNr, ~, EE_FG0, PName_Kin, PName_Legs, AdditionalInfo_Akt] = parroblib_load_robot(n);
   % Robotereigenschaften aus dem Namen auslesen.
   % TODO: Einbindung nicht-symmetrischer PKM
   
@@ -54,7 +54,7 @@ for i = 1:length(Names)
   legdata = load(fullfile(serrobpath, sprintf('mdl_%sdof', LEG_Names{1}(2)), ...
     sprintf('S%s_list', LEG_Names{1}(2))));
   AddInfo_Leg = legdata.AdditionalInfo(strcmp(legdata.Names_Ndof,LEG_Names{1}),:);
-  if AddInfo_Leg(1) > 3
+  if all(EE_FG0==[1 1 0 0 0 1]) && AddInfo_Leg(1) > 2 || AddInfo_Leg(1) > 3
     warning('Symbolischer Code kann nicht basierend auf %s-Beinkette gebildet werden. Zu viele positionsbeeinflussende Gelenke (%d)', LEG_Names{1}, AddInfo_Leg(1));
     continue
   end
