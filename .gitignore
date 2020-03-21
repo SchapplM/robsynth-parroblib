@@ -9,3 +9,4 @@ maplerepo_path.m
 *A0_Jinv*.m
 *_delete
 *.orig
+*.copy
