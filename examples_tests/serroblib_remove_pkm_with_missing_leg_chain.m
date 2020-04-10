@@ -11,7 +11,13 @@ serroblibpath=fileparts(which('serroblib_path_init.m'));
 Delete_List = {};
 for N = 3:6
   fprintf('Prüfe PKM mit %d FG\n', N);
-  l = load(fullfile(serroblibpath, sprintf('mdl_%ddof', N), sprintf('S%d_list.mat',N)));
+  % Lade Namen aller möglicher Beinketten (mit verschiedener FG-Anzahl
+  l = struct('Names_Ndof', []);
+  for i = N:6 
+    mdllistfile_Ndof = fullfile(serroblibpath, sprintf('mdl_%ddof', i), sprintf('S%d_list.mat',i));
+    l_tmp = load(mdllistfile_Ndof, 'Names_Ndof', 'AdditionalInfo', 'BitArrays_EEdof0');
+    l.Names_Ndof = [l.Names_Ndof,l_tmp.Names_Ndof];
+  end
   % Lade alle Roboter die es gibt (keine Filter wirksam)
   PNames_Kin = parroblib_filter_robots(N, false(1,6), false(1,6));
   for i = 1:length(PNames_Kin)

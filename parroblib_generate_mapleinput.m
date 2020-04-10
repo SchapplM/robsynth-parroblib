@@ -17,27 +17,44 @@
 function parroblib_generate_mapleinput(Names)
 %% Init
 repopath=fileparts(which('parroblib_path_init.m'));
+serrobpath=fileparts(which('serroblib_path_init.m'));
 %% Roboterstrukturen durchgehen
 for i = 1:length(Names)
   n = Names{i};
   
   %% Daten für diesen Roboter laden
-  [NLEG, LEG_Names, Actuation, Coupling, ActNr, ~, EE_FG0, PName_Kin, PName_Legs] = parroblib_load_robot(n);
+  [NLEG, LEG_Names, Actuation, Coupling, ActNr, ~, EE_FG0, PName_Kin, PName_Legs, AdditionalInfo_Akt] = parroblib_load_robot(n);
   for j = 1:NLEG
     if isempty(Actuation{j})
       error('Beinkette %d ist nicht aktuiert. Das wird aktuell nicht unterstützt', j);
     end
   end
-  % Robotereigenschaften aus dem Namen auslesen.
-  % TODO: Einbindung nicht-symmetrischer PKM
+  % Robotereigenschaften der Beinketten prüfen. Siehe serroblib_gen_bitarrays
+  legdata = load(fullfile(serrobpath, sprintf('mdl_%sdof', LEG_Names{1}(2)), ...
+    sprintf('S%s_list', LEG_Names{1}(2))));
+  AddInfo_Leg = legdata.AdditionalInfo(strcmp(legdata.Names_Ndof,LEG_Names{1}),:);
+  if all(EE_FG0==[1 1 0 0 0 1]) && AddInfo_Leg(1) > 2 || AddInfo_Leg(1) > 3
+    warning('Symbolischer Code kann nicht basierend auf %s-Beinkette gebildet werden. Zu viele positionsbeeinflussende Gelenke (%d)', LEG_Names{1}, AddInfo_Leg(1));
+    continue
+  end
+  % Robotereigenschaft der PKM prüfen.
+  if AdditionalInfo_Akt(1) > 0 % Rangverlust
+    warning('PKM hat laut Datenbank/Struktursynthese Rangverlust. Symbolischer Code nicht sinnvoll generierbar.');
+    % continue
+  end
   %% Definition der Beinketten-Orientierung
   % Bei Definition neuer Beinketten-Orientierungen in align_base_coupling
   % (ParRob-Klasse) müssen die Werte hier angepasst werden.
   leg_frame_entries = {'xA', 'yA', '0', '0', '0', 'gammaLeg'};
-  if all(EE_FG0 == [1 1 1 1 1 1])
+  if ~all(EE_FG0 == [1 1 0 0 0 1]) % TODO: Logik ausarbeiten
+    % TODO: Koppelpunkt-Definition konsistent mit align_base_coupling.m
     if Coupling(1)==1
       % Für Koppelpunkt-Methode 1 wird das Basis-KS der Beinkette nur um
       % die z-Achse gedreht. Lasse obige Standardeinstellung
+    elseif Coupling(1)==2
+      leg_frame_entries = {'xA', 'yA', '0', '-Pi/2', 'betaLeg', '-Pi/2'};
+    elseif Coupling(1)==3
+      leg_frame_entries = {'xA', 'yA', '0', '-Pi/2', 'betaLeg', '0'};
     else
       leg_frame_entries = {'xA', 'yA', '0', 'alphaLeg', 'betaLeg', 'gammaLeg'};
     end

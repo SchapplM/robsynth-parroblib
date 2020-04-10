@@ -30,22 +30,33 @@ if nargin < 3
 end
 
 repopath=fileparts(which('parroblib_path_init.m'));
+serrobpath=fileparts(which('serroblib_path_init.m'));
 %% Roboterstrukturen durchgehen
 for i = 1:length(Names)
   
-  %% Vorbereitung
+  %% Vorbereitung und Prüfung
   n = Names{i};
 
   % Daten über den Roboter zusammenstellen
-  [NLEG, LEG_Names, Actuation, Coupling, ActNr, ~, ~, PName_Kin, PName_Legs] = parroblib_load_robot(n);
+  [NLEG, LEG_Names, Actuation, Coupling, ActNr, ~, EE_FG0, PName_Kin, PName_Legs, AdditionalInfo_Akt] = parroblib_load_robot(n);
   % Robotereigenschaften aus dem Namen auslesen.
   % TODO: Einbindung nicht-symmetrischer PKM
   
   % Prüfen, ob der Roboter modelliert werden kann
   for kk = 1:length(Actuation)
     if any(Actuation{kk} == NLEG)
-      error('Der Roboter %s kann nicht modelliert werden. Aktuierte Plattform-Koppelgelenke werden noch nicht unterstützt', n);
+      warning('Der Roboter %s kann nicht modelliert werden. Aktuierte Plattform-Koppelgelenke werden noch nicht unterstützt', n);
+      continue
     end
+  end
+  % Weitere Prüfungen (siehe generate_mapleinput)
+  % Robotereigenschaften der Beinketten prüfen. Siehe serroblib_gen_bitarrays
+  legdata = load(fullfile(serrobpath, sprintf('mdl_%sdof', LEG_Names{1}(2)), ...
+    sprintf('S%s_list', LEG_Names{1}(2))));
+  AddInfo_Leg = legdata.AdditionalInfo(strcmp(legdata.Names_Ndof,LEG_Names{1}),:);
+  if all(EE_FG0==[1 1 0 0 0 1]) && AddInfo_Leg(1) > 2 || AddInfo_Leg(1) > 3
+    warning('Symbolischer Code kann nicht basierend auf %s-Beinkette gebildet werden. Zu viele positionsbeeinflussende Gelenke (%d)', LEG_Names{1}, AddInfo_Leg(1));
+    continue
   end
   
   % Pfad zur Maple-Dynamik-Toolbox (muss im Repo abgelegt werden; s.o.)
@@ -56,7 +67,8 @@ for i = 1:length(Names)
   mapleinputfile=fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, ...
     sprintf('hd_G%dP%dA%d',Coupling(1),Coupling(2),ActNr), sprintf('robot_env_par_%s', n));
   if ~exist(mapleinputfile, 'file')
-    error('Datei %s existiert nicht. Wurde `parroblib_generate_mapleinput.m` ausgeführt?', fileparts(mapleinputfile) );
+    warning('Datei %s existiert nicht. Wurde `parroblib_generate_mapleinput.m` ausgeführt?', fileparts(mapleinputfile) );
+    continue
   end
   % Verzeichnisse für die zu erzeugenden Matlab-Funktionen
   outputdir_tb_par = fullfile(mrp, 'codeexport', n, 'matlabfcn'); % Verzeichnis in der Maple-Toolbox
@@ -64,8 +76,9 @@ for i = 1:length(Names)
   
   % Prüfe, ob Code schon einmal generiert wurde 
   % (und im Zielverzeichnis vorliegt)
-  if ~force_par && length(dir(fullfile(outputdir_local, '*.m'))) > 5
-    % das werden wohl schon genug .m-Dateien sein.
+  if ~force_par && length(dir(fullfile(outputdir_local, '*.m'))) > 2
+    % Annahme: Wenn bereits Code erstellt wurde, ist dieser vollständig.
+    fprintf('Code existiert bereits in %s\n', outputdir_local);
     continue
   end
   
@@ -89,13 +102,13 @@ for i = 1:length(Names)
   % Code-Erstellung für Dynamik nur einmal durchführen, da die Dynamik in
   % Plattformkoordinaten unabhängig von der Aktuierung ist
   n_A0 = [PName_Kin,'A0'];
-  if ActNr == 1
-    % Roboternamen, Datei- und Ordnernamen für allgemeinen Fall definieren
-    mapleinputfile_A0=fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, ...
-      sprintf('hd_G%dP%dA0', Coupling(1), Coupling(2)), sprintf('robot_env_par_%s', n_A0));
-    outputdir_tb_par_A0 = fullfile(mrp, 'codeexport', n_A0, 'matlabfcn'); % Verzeichnis in der Maple-Toolbox
-    outputdir_local_A0 = fileparts(mapleinputfile_A0);
-    
+  % Roboternamen, Datei- und Ordnernamen für allgemeinen Fall definieren
+  outputdir_tb_par_A0 = fullfile(mrp, 'codeexport', n_A0, 'matlabfcn'); % Verzeichnis in der Maple-Toolbox
+  mapleinputfile_A0=fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, ...
+    sprintf('hd_G%dP%dA0', Coupling(1), Coupling(2)), sprintf('robot_env_par_%s', n_A0));
+  outputdir_local_A0 = fileparts(mapleinputfile_A0);
+  if ActNr == 1 && ... % Nur Generierung, wenn noch kein Code vorhanden:
+      (force_par || ~force_par && length(dir(fullfile(outputdir_local_A0, '*.m'))) < 10) % im A0-Ordner sind mehr Dateien
     % Namen des Roboters in A0-Definition nachbearbeiten
     mkdirs(fileparts(mapleinputfile_A0));
     copyfile(mapleinputfile, mapleinputfile_A0);
@@ -125,6 +138,14 @@ for i = 1:length(Names)
   end
 
   %% Code-Generierung dieser PKM (Berücksichtigung der Aktuierung)
+  % Robotereigenschaft der PKM prüfen.
+  if AdditionalInfo_Akt(1) > 0 % Rangverlust
+    warning('PKM hat laut Datenbank/Struktursynthese Rangverlust. Symbolischer Code für aktuierte PKM nicht sinnvoll generierbar.');
+    % Abbruch wegen der Prüfung erst hier. Dadurch werden PKM ohne
+    % Aktuierung noch generiert (zum Testen der Dynamik)
+    continue
+  end
+  
   % Eingabedatei für parallelen Roboter kopieren
   copyfile( mapleinputfile, fullfile(mrp, 'robot_codegen_definitions', 'robot_env_par') );
   

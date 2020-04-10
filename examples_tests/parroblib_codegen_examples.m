@@ -43,6 +43,32 @@ Coupling = [1 1]; % Basis-KS zeigt nach oben. Funktioniert für U-Gelenk
 parroblib_generate_mapleinput({Name})
 parroblib_generate_code({Name})
 
+%% Roboter Bsp 4: 4PUU
+% P4PRRRR1G3P1A1
+NLEG = 4;
+LEG_Names = {'S5PRRRR1'};
+Actuation = {1,1,1,1};
+EEdof0 = [1 1 1 0 0 1];
+Coupling = [3 1]; % Basis-KS zeigt nach oben. Funktioniert für U-Gelenk
+[Name, new] = parroblib_add_robot(NLEG, LEG_Names, Actuation, Coupling, EEdof0);
+parroblib_generate_mapleinput({Name})
+parroblib_generate_code({Name})
+
+%% Alle räumlichen PKM erstellen, deren Beinketten in Kugel- oder Kardangelenk enden
+EEFG_Ges = [1 1 1 0 0 0; ...
+            1 1 1 0 0 1; ...
+            1 1 1 1 1 1];
+for i_FG = 1:size(EEFG_Ges,1)
+  EEdof0 = EEFG_Ges(i_FG,:);
+  [PNames_Kin, PNames_Akt] = parroblib_filter_robots(sum(EEdof0), EEdof0, EEdof0);
+  for j = 1:length(PNames_Akt)
+    fprintf('%d/%d: %s\n', j, length(PNames_Akt), PNames_Akt{j});
+    [NLEG, LEG_Names, Actuation, ActNr, symrob, EE_dof0, PName_Kin] = parroblib_load_robot(PNames_Akt{j});
+    parroblib_generate_mapleinput({PNames_Akt{j}})
+    parroblib_generate_code({PNames_Akt{j}})
+  end
+end
+
 %% Alle 6FG-PKM erstellen, deren Beinketten mit Kugelgelenk enden
 % Zulässige PKM sollten vorher durch die Struktur- und Maßsynthese erzeugt
 % werden. Das Hinzufügen aller möglicher ungeprüfter PKM ist nicht sinnvoll
