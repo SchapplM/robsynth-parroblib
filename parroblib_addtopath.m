@@ -17,19 +17,26 @@ end
 parroblibpath=fileparts(which('parroblib_path_init.m'));
 for i = 1:length(Names)
   Name = Names{i};
-  [NLEG, LEG_Names, ~, Coupling, ActNr, ~, ~, ~, PName_Legs] = parroblib_load_robot(Name);
+  [NLEG, LEG_Names, ~, Coupling, ActNr, ~, ~, PName_Kin, PName_Legs] = parroblib_load_robot(Name);
 
   % Pfade für Matlab-Funktionen der PKM hinzufügen
   fcn_dir1 = fullfile(parroblibpath, sprintf('sym%dleg', NLEG), PName_Legs, ...
     sprintf('hd_G%dP%dA0', Coupling(1), Coupling(2)));
   fcn_dir2 = fullfile(parroblibpath, sprintf('sym%dleg', NLEG), PName_Legs, ...
     sprintf('hd_G%dP%dA%d', Coupling(1), Coupling(2), ActNr));
-  if exist(fcn_dir1, 'file')
+  fcn_dir3 = fullfile(parroblibpath, sprintf('sym%dleg', NLEG), PName_Legs, ...
+    'tpl');
+  if exist(fcn_dir1, 'file') % existiert nur, wenn symbolischer Code generiert
     addpath(fcn_dir1);
   end
-  if exist(fcn_dir2, 'file')
+  if exist(fcn_dir2, 'file') % existiert nur, wenn für diese Aktuierung symbolisch generiert
     addpath(fcn_dir2);
   end
+  if ~exist(fcn_dir3, 'file')
+    fprintf('Vorlagen-Funktion existieren nicht für %s. Erstelle.\n', PName_Kin)
+    parroblib_create_template_functions({PName_Kin});
+  end
+  addpath(fcn_dir3);
   % Zusätzlich Pfade für Funktionen der seriellen Beinketten hinzufügen.
   % Damit wird das Laden eins
   LEG_Names_unique = unique(LEG_Names);

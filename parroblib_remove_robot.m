@@ -187,6 +187,10 @@ if Name_Typ == 1
     end
   end
   % Falls der Ordner jetzt leer ist, wird er auch gelöscht
+  tpldir = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, 'tpl');
+  if ~exist(acttabfile)
+    rmdir(tpldir, 's');
+  end
   PName_Dir = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs);
   PName_DirContent = dir(fullfile(PName_Dir, '*'));
   PName_DirContent=PName_DirContent(~ismember({PName_DirContent.name},{'.','..'}));
