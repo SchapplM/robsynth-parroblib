@@ -34,19 +34,6 @@ if nargin < 1 || isempty(Names) % keine Eingabe einer Liste. Nehme alle.
     [PNames_Kin, ~, ~] = parroblib_filter_robots(N, ones(1,6), zeros(1,6), 6); 
     Names = {Names{:}, PNames_Kin{:}}; %#ok<CCAT>
   end
-else % Liste von Namen wurde übergeben
-  for i = 1:length(Names)
-    Names_i =  Names{i};
-    Ndof = str2double(Names_i(2));
-    [PNames_Kin, ~, ~] = parroblib_filter_robots(Ndof, ones(1,6), zeros(1,6), 6);
-    for ii = 1:length(PNames_Kin)
-      if strcmp(Names_i,PNames_Kin{ii})
-        break % PKM gefunden
-      elseif ii == length(PNames_Kin)
-        error('%s ist nicht in Datenbank gefunden.\n', Names_i);
-      end
-    end
-  end
 end
 if nargin < 2
   skip_existing = true;
@@ -111,16 +98,13 @@ end
 for i = 1:length(Names)
   Name_i = Names{i};
   % Daten zur PKM laden
-  [N, LEG_Names] = parroblib_load_robot([Name_i,'A0']);
-  ser_name_i = LEG_Names{1};
-  namesplit = strsplit(Name_i,'G'); % Name vor Gestell-Kennung extrahieren
-  pkmname = namesplit{1};
-  RS = serroblib_create_robot_class(ser_name_i);
-  fcn_dir = fullfile(repopath, sprintf('sym%dleg', N), pkmname, 'tpl');
+  [N, LEG_Names,~,~,~,~,~,~,PName_Legs] = parroblib_load_robot([Name_i,'A0']);
+  RS = serroblib_create_robot_class(LEG_Names{1});
+  fcn_dir = fullfile(repopath, sprintf('sym%dleg', N), PName_Legs, 'tpl');
   % Platzhalter-Ausdrücke für diese PKM. Werden aus ParRob-Klassen
   % generiert. Ersetze Ausdruck später von Spalte 1 mit Ausdruck in Spalte 2
   subsexp_array = { ...
-     'PN', pkmname; ...
+     'PN', PName_Legs; ...
      'SN', RS.mdlname;...
      'NJ', sprintf('%d',N * RS.NQJ);... % bezogen auf PKM
      'NLEG', sprintf('%d',N);...
@@ -149,7 +133,7 @@ for i = 1:length(Names)
   for tmp = function_list
     tplf = tmp{1};
     file1=fullfile(repopath, 'template_functions', ['pkm_',tplf,'.template']);
-    file2=fullfile(fcn_dir, [pkmname,'_',tplf]);
+    file2=fullfile(fcn_dir, [PName_Legs,'_',tplf]);
 
     fid1 = fopen(file1);
     fid2 = fopen(file2, 'w');
