@@ -9,9 +9,9 @@
 %   Maske, die festlegt ob die FG exakt wie in `EE_FG` sind, oder ob auch
 %   gesperrte FG wirklich nicht beweglich sind
 % max_rankdeficit [1x1]
-%   Grad des Rangverlustes der PKM-Jacobi-Matrix (Standard: 0)
+%   Grad des möglichen Rangverlustes der PKM-Jacobi-Matrix (Standard: 0)
 %   Wird ein Wert von 1 bis 6 (max.) eingesetzt, werden auch PKM
-%   ausgegeben, deren gewählte Aktuierung keine Mobilität ergibt.
+%   ausgegeben, deren gewählte Aktuierung keine Bewegung ergibt.
 % 
 % Rückgabe:
 % PNames_Kin
@@ -25,17 +25,13 @@
 %   Array mit zusätzlichen Infos für alle Strukturen aus PNames_Akt (in den Zeilen).
 %   Spalten:
 %   1: Rangverlust der Jacobi-Matrix (in den vorgesehenen FG der PKM)
-% max_rankdeficit
-%   Maximaler Rangverlust, den die PKM haben darf. Standard: 0 (keine nicht
-%   funktionierenden PKM ausgeben). Sinnvolle Werte: 0 bis 6 (Rangverlust
-%   egal)
 % 
 % TODO: Aktuell sind nur symmetrische PKM berücksichtigt.
 % 
 % Siehe auch: serroblib_filter_robots
 
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2019-01
-% (C) Institut für Mechatronische Systeme, Universität Hannover
+% (C) Institut für Mechatronische Systeme, Leibniz Universität Hannover
 
 function [PNames_Kin, PNames_Akt, AdditionalInfo_Akt] = parroblib_filter_robots(NLEG, EE_FG0, EE_FG_Mask, max_rankdeficit)
 
