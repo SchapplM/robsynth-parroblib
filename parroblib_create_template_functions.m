@@ -114,20 +114,22 @@ for i = 1:length(Names)
                   'template on %s'], datestr(now,'yyyy-mm-dd HH:MM:SS'))};
 
   % Kopiere alle Vorlagen-Funktionen an die Ziel-Orte und Ersetze die
-  % Platzhalter-Ausdrücke
-  mfunk_exist = length(dir([fcn_dir '/*.m'])) == (length(function_list_copy_robotics)+length(function_list_copy_hybrdyn));
-  mexfunk_exist = length(dir([fcn_dir '/*.mex'])) == (length(function_list_copy_robotics)+length(function_list_copy_hybrdyn));
-  
-  if mfunk_exist
-    if skip_existing && ( ~mex_results || mexfunk_exist)
+  % Platzhalter-Ausdrücke.
+  % Prüfe, ob alle Matlab-Funktionen oder Mex-Dateien da sind
+  mfcn_exist = length(dir(fullfile(fcn_dir, '*.m'))) == ...
+    (length(function_list_copy_robotics)+length(function_list_copy_hybrdyn));
+  mexfcn_exist = length(dir(fullfile(fcn_dir, '*.mex*'))) == ...
+    (length(function_list_copy_robotics)+length(function_list_copy_hybrdyn));
+  if mfcn_exist
+    if skip_existing && ( ~mex_results || mexfcn_exist)
       continue % Ordner existiert schon. Überspringe.  
-    elseif skip_existing && mex_results && ~mexfunk_exist
+    elseif skip_existing && mex_results && ~mexfcn_exist
       cd(fcn_dir)
       mex_all_matlabfcn_in_dir(fcn_dir)
       continue
     end
   else
-    mkdir(fcn_dir);  % Ordner existiert noch nicht. Neu erstellen.
+    mkdirs(fcn_dir);  % Ordner existiert vielleicht noch nicht. Neu erstellen.
   end
   cd(fcn_dir); % In Ordner wechseln für kürzeren sed-Befehl (und zum Finden der Dateien)
   for tmp = function_list
