@@ -84,6 +84,8 @@ elseif Coupling(1) == 8
   % Pyramide mit paarweiser Anordnung. Nehme standardmäßig halben
   % Punktradius als Punktabstand und 30 Grad Steigung
   p_Base_all = [p_Base; p_Base/2; 30*pi/180];
+elseif Coupling(1) == 9
+  p_Base_all = p_Base;
 else
   error('Gestell-Methode %d nicht definiert', Coupling(1));
 end
@@ -92,12 +94,12 @@ if length(p_platform) > 1
   % Annahme: Bei Vorgabe mehrere Parameter hat der Benutzer alle
   % notwendigen Parameter angegeben und weiß was er tut.
   p_platform_all = p_platform;
-elseif any(Coupling(2) == [1,2,3])
+elseif any(Coupling(2) == [1,2,3 8])
   p_platform_all = p_platform;
 elseif any(Coupling(2) == [4,5,6])
   p_platform_all = [p_platform; p_platform/2];
 else
-  error('Plattform-Methode %d nicht definiert', Coupling(1));
+  error('Plattform-Methode %d nicht definiert', Coupling(2));
 end
 RP.align_platform_coupling(Coupling(2), p_platform_all);
 
@@ -105,7 +107,7 @@ RP.align_platform_coupling(Coupling(2), p_platform_all);
 if all(EE_dof0 == [1 1 0 0 0 1]) % 2T1R (planar)
   RP.update_EE_FG(logical(EE_dof0), logical(EE_dof0), logical(repmat(logical(EE_dof0),RP.NLEG,1)));
 elseif all(EE_dof0 == [1 1 1 1 1 0])
-  error('3T2R-Aufgaben für PKM noch nicht implementiert');
+  RP.update_EE_FG(logical(EE_dof0)); % Für IK der PKM
 else
   RP.update_EE_FG(logical(EE_dof0), logical(EE_dof0), true(RP.NLEG,6));
 end
