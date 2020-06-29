@@ -156,7 +156,7 @@ if ~isempty(csvline_act)
     Actuation{iL} = find(ActSel);
   end
   % Zusätzliche Informationen kommen am Ende der Zeile
-  AdditionalInfo_Akt(1) = csvline_act{end};
+  AdditionalInfo_Akt(1) = str2double(csvline_act{end});
 elseif ActNr ~= 0
   warning('Aktuierung %d (%s) nicht in Aktuierungstabelle %s gefunden', ActNr, PName_Kin, acttabfile);
 end
