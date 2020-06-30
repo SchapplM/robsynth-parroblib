@@ -11,6 +11,7 @@ clc
 %% Initialisierung
 % Schalter zur Neugenerierung der Template-Funktionen
 tpl_fcn_neu = true;
+max_num_pkm = 20; % Reduziere die Anzahl der geprüften PKM pro FG
 % Speicherort der Parameter
 rob_path = fileparts(which('robotics_toolbox_path_init.m'));
 tmpdir_params = fullfile(rob_path, 'examples_tests', 'tmp_ParRob', 'param_dimsynthres');
@@ -27,8 +28,9 @@ for i_FG = 1:size(EEFG_Ges,1)
   if isempty(PNames_Kin)
     continue % Es gibt keine PKM mit diesen FG.
   end
-
-  for ii =  1:length(PNames_Kin)
+  III = 1:length(PNames_Kin);
+  III = III(randperm(length(III))); % shuffle
+  for ii = III(1:min(max_num_pkm, length(III)))
     PName = [PNames_Kin{ii},'A1']; % Nehme nur die erste Aktuierung (ist egal)
     [~, LEG_Names, ~, ~, ~, ~, ~, ~, PName_Legs, ~] = parroblib_load_robot(PName);
     paramfile_robot = fullfile(tmpdir_params, sprintf('%s_params.mat', PName));
@@ -112,7 +114,7 @@ for i_FG = 1:size(EEFG_Ges,1)
       Traj_0 = cds_rotate_traj(Traj_W, RP.T_W_0);
     end
     % Klassenmethode gegen Templatemethode
-    s = struct('Phit_tol', 1e-9, 'Phir_tol', 1e-9, 'retry_limit', 10, ...
+    s = struct('Phit_tol', 1e-9, 'Phir_tol', 1e-9, 'retry_limit', 0, ...
       'normalize', false, 'n_max', 5000);
     % Teste inverse Kinematik für Einzelpunkte
     for k = 1:size(Traj_0.X,1)
