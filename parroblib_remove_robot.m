@@ -188,7 +188,8 @@ if Name_Typ == 1
   end
   % Falls der Ordner jetzt leer ist, wird er auch gelöscht
   tpldir = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, 'tpl');
-  if ~exist(acttabfile)
+  if ~exist(acttabfile, 'file') && ... % gelöschte PKM war die letzte. Aktuierungs-Datei ist gelöscht
+      exist(tpldir, 'file') % es existieren Vorlagen-Funktionen, die gelöscht werden können.
     rmdir(tpldir, 's');
   end
   PName_Dir = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs);
