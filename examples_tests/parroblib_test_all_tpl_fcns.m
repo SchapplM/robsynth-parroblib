@@ -37,10 +37,9 @@ for i_FG = 1:size(EEFG_Ges,1)
     [~, ~, ~, ~, ~, ~, ~, ~, PName_Legs, ~] = parroblib_load_robot(PName);
     fprintf('Untersuche PKM %s\n', PName);
     
-    % Vorlagen-Funktionen aktualisieren
-    if tpl_fcn_neu 
-      parroblib_create_template_functions({PNames_Kin{ii}}, false, true);
-    end
+    % Vorlagen-Funktionen aktualisieren. Die Funktionen müssen auf jeden
+    % Fall kompiliert werden, da das unten getestet wird.
+    parroblib_create_template_functions({PNames_Kin{ii}}, ~tpl_fcn_neu, true);
     %% Roboter Initialisieren
     R = parroblib_create_robot_class(PName, 1, 0.3);
     % Initialisierung der Funktionen: Kompilierte Funktionen nehmen

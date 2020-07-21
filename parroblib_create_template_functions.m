@@ -85,7 +85,7 @@ function_list_copy_robotics = {...
   {'kinematics', 'constr4gradD_x.m'}};
 
 if ~exist(fullfile(repopath, sprintf('template_functions')), 'dir')
-    mkdir(fullfile(repopath, sprintf('template_functions')))
+  mkdir(fullfile(repopath, sprintf('template_functions')))
 end
 % Alle Vorlagen-Funktionen aus Maple-Repo in Vorlagen-Ordner kopieren
 for tmp = function_list_copy_hybrdyn
@@ -135,37 +135,27 @@ for i = 1:length(Names)
   % Kopiere alle Vorlagen-Funktionen an die Ziel-Orte und Ersetze die
   % Platzhalter-Ausdrücke.
   % Prüfe, ob alle Matlab-Funktionen oder Mex-Dateien da sind
-  mfcn_exist = length(dir(fullfile(fcn_dir, '*.m'))) == ...
-    (length(function_list_copy_robotics)+length(function_list_copy_hybrdyn));
-  mexfcn_exist = length(dir(fullfile(fcn_dir, '*.mex*'))) == ...
-    (length(function_list_copy_robotics)+length(function_list_copy_hybrdyn));
-  if mfcn_exist
-    if skip_existing && ( ~mex_results || mexfcn_exist)
-      continue % Ordner existiert schon. Überspringe.  
-    elseif skip_existing && mex_results && ~mexfcn_exist
-      cd(fcn_dir)
-      mex_all_matlabfcn_in_dir(fcn_dir)
-      continue
-    end
-  else
-    mkdirs(fcn_dir);  % Ordner existiert vielleicht noch nicht. Neu erstellen.
-  end
+  mkdirs(fcn_dir);  % Ordner existiert vielleicht noch nicht. Neu erstellen.
   cd(fcn_dir); % In Ordner wechseln für kürzeren sed-Befehl (und zum Finden der Dateien)
+  function_list_mex = {};
   for tmp = function_list
     tplf = tmp{1};
     file1=fullfile(repopath, 'template_functions', ['pkm_',tplf,'.template']);
     file2=fullfile(fcn_dir, [PName_Legs,'_',tplf]);
-
+    function_list_mex = [function_list_mex(:); [PName_Legs,'_',tplf(1:end-2)]];
+    if skip_existing && exist(file2, 'file')
+      continue % Keine Datei erzeugen. Nur mex-Liste erstellen.
+    end
     fid1 = fopen(file1);
     fid2 = fopen(file2, 'w');
     tline = fgetl(fid1);
     while ischar(tline)
-        % Zeile weiterverarbeiten: Platzhalter-Ausdrücke ersetzen
-        for ii = 1:size(subsexp_array,1)
-            tline = strrep(tline, ['%',subsexp_array{ii,1},'%'], subsexp_array{ii,2});
-        end
-        fwrite(fid2, [tline, newline()]); % Zeile in Zieldatei schreiben
-        tline = fgetl(fid1); % nächste Zeile
+      % Zeile weiterverarbeiten: Platzhalter-Ausdrücke ersetzen
+      for ii = 1:size(subsexp_array,1)
+        tline = strrep(tline, ['%',subsexp_array{ii,1},'%'], subsexp_array{ii,2});
+      end
+      fwrite(fid2, [tline, newline()]); % Zeile in Zieldatei schreiben
+      tline = fgetl(fid1); % nächste Zeile
     end
     fclose(fid1);fclose(fid2);
     
@@ -190,10 +180,10 @@ for i = 1:length(Names)
   end
   fprintf('%d/%d: Vorlagen-Funktionen für %s erstellt.\n', i, length(Names), Name_i);
   
-  % Testen: Kompilieren aller Funktionen im Zielordner
+  % Testen: Kompilieren aller erzeugter Funktionen im Zielordner
   if mex_results
-    cd(fcn_dir)
-    mex_all_matlabfcn_in_dir(fcn_dir)
+    cd(fcn_dir);
+    matlabfcn2mex(function_list_mex);
   end
 end
 % Zurückwechseln in vorheriges Verzeichnis

@@ -44,10 +44,8 @@ for i_FG = 1:size(EEFG_Ges,1)
     [~, LEG_Names, ~, ~, ~, ~, ~, ~, PName_Legs, ~] = parroblib_load_robot(PName);
     paramfile_robot = fullfile(tmpdir_params, sprintf('%s_params.mat', PName));
     fprintf('Untersuche PKM %s\n', PName);
-    if tpl_fcn_neu 
-      serroblib_create_template_functions({LEG_Names{1}},false,recompile_mex)
-      parroblib_create_template_functions({PNames_Kin{ii}},false,recompile_mex);
-    end
+    serroblib_create_template_functions({LEG_Names{1}},  ~tpl_fcn_neu,recompile_mex) %#ok<CCAT1>
+    parroblib_create_template_functions({PNames_Kin{ii}},~tpl_fcn_neu,recompile_mex); %#ok<CCAT1>
     RP = parroblib_create_robot_class(PName, 1, 0.3);
     % Initialisierung der Funktionen: Kompilierte Funktionen nehmen
     % (notwendig für Struktursynthese)
