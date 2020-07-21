@@ -14,7 +14,9 @@
 %   2=Ausschluss wegen parrob_structsynth_check_leg_dof
 %   3=Keine Lösbarkeit der Einzelpunkt-IK in Maßsynthese
 %   4=keine Lösbarkeit der Traj.-IK in Maßsynthese
-%   5=noch nicht geprueft
+%   5=Parasitäre Bewegung
+%   6=noch nicht geprüft
+%   7=Unbehandelter Fall (Fehler)
 % Rangerfolg: 
 %   0: Rangverlust in Jacobi-Matrix. PKM verliert FG und funktioniert nicht.
 %   1: Kein Rangverlust in Jacobi-Matrix. Gültige PKM.
@@ -66,6 +68,13 @@ for i = 1:size(T,1)
     if Status ~= 0  % 0=keine Aktuierung erfolgreich getestet
       if Status_i == Status
         % Keine Änderung an bestehendem Inhalt der Tabelle.
+        return
+      elseif Status == 6
+        % Wurde als "nicht geprüft" angemerkt. Da schon ein Eintrag
+        % vorliegt, wurde die PKM aber bereits mit einem anderem Status
+        % geprüft, der mehr Information beinhält.
+        % Möglich, wenn die Struktursynthese erneut durchgeführt wird (mit
+        % Option "dryrun"). Daher hier Abbruch.
         return
       end
       % Status aktualisieren.
