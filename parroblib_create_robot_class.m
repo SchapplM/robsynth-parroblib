@@ -108,6 +108,7 @@ if all(EE_dof0 == [1 1 0 0 0 1]) % 2T1R (planar)
   RP.update_EE_FG(logical(EE_dof0), logical(EE_dof0), logical(repmat(logical(EE_dof0),RP.NLEG,1)));
 elseif all(EE_dof0 == [1 1 1 1 1 0])
   RP.update_EE_FG(logical(EE_dof0)); % Für IK der PKM
+%   RP.update_EE_FG(logical(EE_dof0), logical(EE_dof0), logical(repmat(logical(EE_dof0),RP.NLEG,1)));
 else
   RP.update_EE_FG(logical(EE_dof0), logical(EE_dof0), true(RP.NLEG,6));
 end
