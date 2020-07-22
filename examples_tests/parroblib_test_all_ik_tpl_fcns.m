@@ -26,6 +26,7 @@ mkdirs(tmpdir_params);
 EEFG_Ges = [1 1 0 0 0 1; ...
             1 1 1 0 0 0; ...
             1 1 1 0 0 1; ...
+            1 1 1 1 1 0; ...
             1 1 1 1 1 1];
 EE_FG_Mask = [1 1 1 1 1 1];
 
@@ -39,6 +40,7 @@ for i_FG = 1:size(EEFG_Ges,1)
   if shuffle_pkm_selection
     III = III(randperm(length(III)));
   end
+%   II = find(strcmp(PNames_Kin, 'P5RPRRR5G1P8'));
   for ii = III(1:min(max_num_pkm, length(III))) % Debug: find(strcmp(PNames_Kin, 'P6RRPRRR14V3G1P4'));
     PName = [PNames_Kin{ii},'A1']; % Nehme nur die erste Aktuierung (ist egal)
     [~, LEG_Names, ~, ~, ~, ~, ~, ~, PName_Legs, ~] = parroblib_load_robot(PName);
@@ -51,6 +53,7 @@ for i_FG = 1:size(EEFG_Ges,1)
     % (notwendig für Struktursynthese)
     RP.fill_fcn_handles(true, true); % zur Prüfung, ob kompilierte Funktionen vorhanden sind
     RP.fill_fcn_handles(test_mex, true); % zur Einstellung mex ja/nein
+    
     %% Kinematikparameter durch Optimierung erzeugen (oder gespeichert laden)
     Set = cds_settings_defaults(struct('DoF', EE_FG));
     Set.task.Ts = 1e-2;
@@ -122,6 +125,7 @@ for i_FG = 1:size(EEFG_Ges,1)
       fprintf('Maßsynthese beendet\n');
       Traj_0 = cds_rotate_traj(Traj_W, RP.T_W_0);
     end
+    
     % Klassenmethode gegen Templatemethode
     s = struct('Phit_tol', 1e-9, 'Phir_tol', 1e-9, 'retry_limit', 0, ...
       'normalize', false, 'n_max', 5000);
@@ -241,7 +245,11 @@ for i_FG = 1:size(EEFG_Ges,1)
     for jj = 1:5
       calctimes = NaN(1,2);
       % Zurücksetzen der Aufgaben-FG auf Standard-Wert
-      RP.update_EE_FG(RP.I_EE, RP.I_EE);
+      if all(RP.I_EE_Task == logical([1 1 1 1 1 0])) && RP.NJ == 25
+        RP.update_EE_FG(RP.I_EE, RP.I_EE, repmat(RP.I_EE, 5, 1));
+      else
+        RP.update_EE_FG(RP.I_EE, RP.I_EE);
+      end
       s_jj = s;
       switch jj
         case 1
