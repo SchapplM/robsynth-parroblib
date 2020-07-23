@@ -38,13 +38,13 @@ end
 assert(isa(EE_FG0, 'logical'), 'Eingabe EE_FG0 muss 1x6 logical sein')
 
 if all(EE_FG0 == logical([1 1 0 0 0 1]))
-  csvtable = fullfile(repopath, sprintf('synthesis_result_lists'), sprintf('2T1R.csv'));
+  csvtable = fullfile(repopath, 'synthesis_result_lists', sprintf('2T1R.csv'));
 elseif all(EE_FG0 == logical([1 1 1 0 0 0]))
-  csvtable = fullfile(repopath, sprintf('synthesis_result_lists'), sprintf('3T0R.csv'));
+  csvtable = fullfile(repopath, 'synthesis_result_lists', sprintf('3T0R.csv'));
 elseif all(EE_FG0 == logical([1 1 1 0 0 1]))
-  csvtable = fullfile(repopath, sprintf('synthesis_result_lists'), sprintf('3T1R.csv'));
+  csvtable = fullfile(repopath, 'synthesis_result_lists', sprintf('3T1R.csv'));
 elseif all(EE_FG0 == logical([1 1 1 1 1 1]))
-  csvtable = fullfile(repopath, sprintf('synthesis_result_lists'), sprintf('3T3R.csv'));
+  csvtable = fullfile(repopath, 'synthesis_result_lists', sprintf('3T3R.csv'));
 else
   error('Fall noch nicht implementiert');
 end
@@ -60,49 +60,58 @@ end
 NLEG = sum(EE_FG0);
 %% PKM in csv-Datei eingeben
 T = readtable(csvtable, 'ReadVariableNames', true);
-for i = 1:size(T,1)
+% Passenden Index der Eingabedaten in der Tabelle herausfinden
+I_name = strcmp(table2cell(T(:,1)), SName);
+I_coupl = table2array(T(:,3))==Coupling(1) & ...
+          table2array(T(:,4))==Coupling(2);
+i = find(I_name&I_coupl);
+if length(i) > 1
+  error('Inkonsistenz in Tabelle %s. Eintrag doppelt: %s, %d, %d', csvtable, ...
+    SName, Coupling(1), Coupling(2));
+elseif ~isempty(i)
   LegName = table2cell(T(i,1));
   Coupling_i = table2array(T(i,3:4));
   Status_i = table2array(T(i,5));
-  if strcmp(LegName,SName{:}) && all(Coupling_i == Coupling)
-    if Status ~= 0  % 0=keine Aktuierung erfolgreich getestet
-      if Status_i == Status
-        % Keine Änderung an bestehendem Inhalt der Tabelle.
-        return
-      elseif Status == 6
-        % Wurde als "nicht geprüft" angemerkt. Da schon ein Eintrag
-        % vorliegt, wurde die PKM aber bereits mit einem anderem Status
-        % geprüft, der mehr Information beinhält.
-        % Möglich, wenn die Struktursynthese erneut durchgeführt wird (mit
-        % Option "dryrun"). Daher hier Abbruch.
-        return
-      end
-      % Status aktualisieren.
-      T(i,5) = {Status}; % Status eintragen
-      T(i,6) = {0}; % Null erfolgreiche Aktuierungen per Definition
-      writetable(T,csvtable,'Delimiter', ';');
-    else % PKM Erfolgreich (schon in Datenbank) 
-      SName_str = cell2str(SName); % Name der Beinkette (aus Gesamttabelle)
-      % Name der PKM-Kinematik zusammenstellen
-      PName = sprintf('P%d%sG%dP%d', NLEG, SName_str(3:end),Coupling(1),Coupling(2));
-      % Finde alle Roboter in der Datenbank mit dieser Anzahl Beinen
-      [~, PNames_Akt, AdditionalInfo_Akt] = parroblib_filter_robots( ...
-        NLEG, EE_FG0, [1 1 1 1 1 1], 6);
-      % Finde alle Aktuierungen zu dieser Kinematik
-      AnzahlErfolgAkt_i = 0;
-      for j = 1:length(PNames_Akt)
-        if strcmp( PName, PNames_Akt{j}(1:length(PName)) )
-          if AdditionalInfo_Akt(j) == 0 % kein Rangverlust
-            AnzahlErfolgAkt_i = AnzahlErfolgAkt_i + 1;
-          end
+  if ~strcmp(LegName,SName{:}) || ~all(Coupling_i == Coupling)
+    error('Inkonsistenz beim Laden der Datei %s', csvtable);
+  end
+  if Status ~= 0  % 0=keine Aktuierung erfolgreich getestet
+    if Status_i == Status
+      % Keine Änderung an bestehendem Inhalt der Tabelle.
+      return
+    elseif Status == 6
+      % Wurde als "nicht geprüft" aufgerufen. Da schon ein Eintrag
+      % vorliegt, wurde die PKM aber bereits mit einem anderem Status
+      % geprüft, der mehr Information beinhält.
+      % Möglich, wenn die Struktursynthese erneut durchgeführt wird (mit
+      % Option "dryrun"). Daher hier Abbruch.
+      return
+    end
+    % Status aktualisieren.
+    T(i,5) = {Status}; % Status eintragen
+    T(i,6) = {0}; % Null erfolgreiche Aktuierungen per Definition
+    writetable(T,csvtable,'Delimiter', ';');
+  else % PKM Erfolgreich (schon in Datenbank) 
+    SName_str = cell2str(SName); % Name der Beinkette (aus Gesamttabelle)
+    % Name der PKM-Kinematik zusammenstellen
+    PName = sprintf('P%d%sG%dP%d', NLEG, SName_str(3:end),Coupling(1),Coupling(2));
+    % Finde alle Roboter in der Datenbank mit dieser Anzahl Beinen
+    [~, PNames_Akt, AdditionalInfo_Akt] = parroblib_filter_robots( ...
+      NLEG, EE_FG0, [1 1 1 1 1 1], 6);
+    % Finde alle Aktuierungen zu dieser Kinematik
+    AnzahlErfolgAkt_i = 0;
+    for j = 1:length(PNames_Akt)
+      if strcmp( PName, PNames_Akt{j}(1:length(PName)) )
+        if AdditionalInfo_Akt(j) == 0 % kein Rangverlust
+          AnzahlErfolgAkt_i = AnzahlErfolgAkt_i + 1;
         end
       end
-      T(i,5) = {num2str(0)}; 
-      T(i,6) = {num2str(AnzahlErfolgAkt_i)};
-      writetable(T,csvtable,'Delimiter', ';');
     end
-    return % hinzuzufügende PKM ist schon in Datenbank. Abbruch.
+    T(i,5) = {num2str(0)}; 
+    T(i,6) = {num2str(AnzahlErfolgAkt_i)};
+    writetable(T,csvtable,'Delimiter', ';');
   end
+  return % hinzuzufügende PKM ist schon in Datenbank. Abbruch.
 end
 
 % Bis hierhin gekommen. Also ist die PKM noch nicht drin gewesen.
