@@ -15,7 +15,7 @@ clc
 tpl_fcn_neu = true;
 test_mex = true; % Benutze mex-Funktionen beim Testen (schneller, aber kein Debuggen möglich)
 recompile_mex = true; % nur notwendig, falls Template-Dateien geändert wurden.
-max_num_pkm = 20; % Reduziere die Anzahl der geprüften PKM pro FG
+max_num_pkm = 3; % Reduziere die Anzahl der geprüften PKM pro FG
 shuffle_pkm_selection = true; % Zufällige Auswahl der PKM
 max_single_points = 50; % Anzahl der zu prüfenden Einzelpunkte
 % Speicherort der Parameter
@@ -112,6 +112,9 @@ for i_FG = 1:size(EEFG_Ges,1)
         % Die Wahl der aktuierten Gelenke muss nicht zu vollem Rang führen.
         % Kriterium ist daher nur die Bestimmbarkeit des Rangs (fval <1000)
         warning('Etwas ist bei der Maßsynthese schiefgelaufen');
+        load('D:\HiWi_imes\Repos\parrob_mdlbib\examples_tests\failed_PKM.mat')
+        failed_pkm = {failed_pkm{:},RobotOptRes.R.mdlname};
+        save('failed_PKM.mat','failed_pkm');
         continue
       end
       RP = RobotOptRes.R;
