@@ -100,15 +100,21 @@ elseif ~isempty(i)
       NLEG, EE_FG0, [1 1 1 1 1 1], 6);
     % Finde alle Aktuierungen zu dieser Kinematik
     AnzahlErfolgAkt_i = 0;
+    AnzahlErfolglosAkt_i = 0; % nur zur Probe
     for j = 1:length(PNames_Akt)
       if strcmp( PName, PNames_Akt{j}(1:length(PName)) )
         if AdditionalInfo_Akt(j) == 0 % kein Rangverlust
           AnzahlErfolgAkt_i = AnzahlErfolgAkt_i + 1;
+        else
+          AnzahlErfolglosAkt_i = AnzahlErfolglosAkt_i + 1;
         end
       end
     end
-    T(i,5) = {num2str(0)}; 
-    T(i,6) = {num2str(AnzahlErfolgAkt_i)};
+    if AnzahlErfolglosAkt_i+AnzahlErfolgAkt_i==0
+      error('Datenbank ist nicht konsistent (Kinematik erfolgreich, aber keine Aktuierung enthalten.');
+    end
+    T(i,5) = {0}; 
+    T(i,6) = {AnzahlErfolgAkt_i};
     writetable(T,csvtable,'Delimiter', ';');
   end
   return % hinzuzufügende PKM ist schon in Datenbank. Abbruch.
