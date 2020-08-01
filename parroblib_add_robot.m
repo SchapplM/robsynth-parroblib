@@ -67,24 +67,24 @@ new = true;
 if ~found(1)
   % Für diese Kinematik gibt es noch keinen Eintrag
   kintabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), sprintf('sym%dleg_list.csv', NLEG));
-  if ~exist(kintabfile, 'file')
-    % Tabelle existiert nicht. Erstellen
-    mkdirs(fileparts(kintabfile));
-    csvline_head1 = {'Name','Beinkette','EE-FG (Basis-KS)','','','','',''};
-    csvline_head2 = {'','','vx0','vy0','vz0','wx0','wy0','wz0'};
-    % String aus Cell-Array erzeugen
-    line_head1 = csvline_head1{1};
-    line_head2 = csvline_head2{1};
-    for i = 2:length(csvline_head1)
-      line_head1 = sprintf('%s;%s', line_head1, csvline_head1{i});
-      line_head2 = sprintf('%s;%s', line_head2, csvline_head2{i});
-    end
-    % Kopfzeile in csv-Tabelle schreiben
-    fid = fopen(kintabfile, 'a');
-    fwrite(fid, [line_head1, newline]);
-    fwrite(fid, [line_head2, newline]);
-    fclose(fid);
+  kintabtmp1file = fullfile(repopath, sprintf('sym%dleg', NLEG), sprintf('sym%dleg_list.tmp1.csv', NLEG));
+  kintabtmp2file = fullfile(repopath, sprintf('sym%dleg', NLEG), sprintf('sym%dleg_list.tmp2.csv', NLEG));
+  % Kopfzeilendatei erstellen (Temp-Datei zum Kopieren)
+  mkdirs(fileparts(kintabfile));
+  csvline_head1 = {'Name','Beinkette','EE-FG (Basis-KS)','','','','',''};
+  csvline_head2 = {'','','vx0','vy0','vz0','wx0','wy0','wz0'};
+  % String aus Cell-Array erzeugen
+  line_head1 = csvline_head1{1};
+  line_head2 = csvline_head2{1};
+  for i = 2:length(csvline_head1)
+    line_head1 = sprintf('%s;%s', line_head1, csvline_head1{i});
+    line_head2 = sprintf('%s;%s', line_head2, csvline_head2{i});
   end
+  % Kopfzeile in csv-Tabelle schreiben
+  fid = fopen(kintabtmp1file, 'w');
+  fwrite(fid, [line_head1, newline]);
+  fwrite(fid, [line_head2, newline]);
+  fclose(fid);
   % Namen der Kinematik-Struktur generieren
   % Namensschema PxRRPRyyGuuPvv
   PName_Kin = sprintf('P%d%sG%dP%d',NLEG,LEG_Names{1}(3:end),Coupling(1),Coupling(2));
@@ -96,20 +96,29 @@ if ~found(1)
   for i = 1:6
     c = c+1; 
     if ~isempty(EEdof0)
-      csvline_robkin{c} = sprintf('%d',EEdof0(i));
+      csvline_robkin{c} = EEdof0(i);
     else
-      csvline_robkin{c} = '';
+      csvline_robkin{c} = 0; % Setze FG auf Null. Wenn alle 0 sind, ist der unbekannte Status gekennzeichnet.
     end
   end
-  % Cell-Array in csv-Zeile umwandeln
-  line_robot = csvline_robkin{1};
-  for i = 2:length(csvline_robkin)
-    line_robot = sprintf('%s;%s', line_robot, csvline_robkin{i});
-  end
-  % Zeile in Datei anhängen
-  fid = fopen(kintabfile, 'a');
-  fwrite(fid, [line_robot, newline]);
+  % Tabelle in Matlab öffnen
+  T = readtable(kintabfile, 'NumHeaderLines', 0, 'ReadVariableNames', 0, 'Delimiter', ';');
+  % Zeile ans Ende der temporären Datentabelle einfügen
+  newrow = cell2table(csvline_robkin);
+  newrow.Properties.VariableNames = T.Properties.VariableNames;
+  T = [T;newrow];
+  % Daten alphabetisch sortieren
+  T_sort = sortrows(T,1);
+  % Tabelle temporär schreiben
+  writetable(T_sort, kintabtmp2file, 'WriteVariableNames', 0, 'Delimiter', ';');
+  % Beide Dateien (Kopfzeilen und Daten) kombinieren
+  fid = fopen(kintabtmp1file, 'a') ;
+  fwrite(fid, fileread(kintabtmp2file)) ;
   fclose(fid);
+  % Kopieren der temporären Dateien und löschen
+  copyfile(kintabtmp1file, kintabfile);
+  delete(kintabtmp1file);
+  delete(kintabtmp2file);
 else
   % Roboter ist in Kinematik-Tabelle, aber noch nicht in
   % Aktuierungs-Tabelle
