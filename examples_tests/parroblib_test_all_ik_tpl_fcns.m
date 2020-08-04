@@ -130,8 +130,9 @@ for i_FG = 1:size(EEFG_Ges,1)
     II_traj = 1:size(Traj_0.X,1);
     II_traj = II_traj(randperm(length(II_traj)));
     max_single_points = min(max_single_points, length(II_traj));
-    for jj = 1:2
+    for jj = 1:3
       s_jj = s;
+      q0_jj = q0;
       % Führe die IK mehrfach mit unterschiedlichen Einstelungen durch.
       % Dadurch werden möglichst viele unterschiedliche Testfälle in den
       % Funktionen abgedeckt
@@ -139,6 +140,9 @@ for i_FG = 1:size(EEFG_Ges,1)
         case 1
           % Standard-Einstellungen
         case 2
+          % Nehme IK-Ergebnis der ersten Beinkette als Anfangswert für folgende
+          q0_jj(RP.I1J_LEG(2):end) = NaN;
+        case 3
           if all(EE_FG == [1 1 1 1 1 1])
             s_jj.I_EE = logical([1 1 1 1 1 0]);
           else
@@ -150,10 +154,10 @@ for i_FG = 1:size(EEFG_Ges,1)
       for i = 1:max_single_points
         k = II_traj(i);
         t1=tic();
-        [q_kls, Phi_kls, Tc_stack_kls]=RP.invkin_ser(Traj_0.X(k,:)', q0, s); % Klassen
+        [q_kls, Phi_kls, Tc_stack_kls]=RP.invkin_ser(Traj_0.X(k,:)', q0_jj, s); % Klassen
         calctimes(i,1)=toc(t1);
         t1=tic();
-        [q_tpl, Phi_tpl, Tc_stack_tpl]=RP.invkin2(Traj_0.X(k,:)', q0, s); % Template
+        [q_tpl, Phi_tpl, Tc_stack_tpl]=RP.invkin2(Traj_0.X(k,:)', q0_jj, s); % Template
         calctimes(i,2)=toc(t1);
         ik_res_ik2 = (all(abs(Phi_tpl(RP.I_constr_t_red))<s.Phit_tol) && ...
                       all(abs(Phi_tpl(RP.I_constr_r_red))<s.Phir_tol));% IK-Status Funktionsdatei
