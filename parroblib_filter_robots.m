@@ -25,6 +25,8 @@
 %   Array mit zusätzlichen Infos für alle Strukturen aus PNames_Akt (in den Zeilen).
 %   Spalten:
 %   1: Rangverlust der Jacobi-Matrix (in den vorgesehenen FG der PKM)
+%   (2): Möglicher Wertebereich für den ersten frei wählbaren Strukturwinkel
+%      (wird hier nicht gesetzt, aber in anderen Funktionen so verwendet)
 % 
 % TODO: Aktuell sind nur symmetrische PKM berücksichtigt.
 % 
@@ -132,7 +134,7 @@ for i = 1:length(PNames_Kin)
     end
     % Wert für den Rangverlust (die Datenbank enthält auch PKM, deren
     % Aktuierung oder Gestell-Anordnung nicht sinnvoll ist)
-    rankdef = str2double(csvline{end});
+    rankdef = str2double(csvline{end-1});
     if rankdef > max_rankdeficit
       % Die Struktur soll nicht ausgegeben werden: Rangverlust ist zu groß
       % Wenn in Tabelle ein "?" steht, dann NaN. Soll aber ausgegeben werden
