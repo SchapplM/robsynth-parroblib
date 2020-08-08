@@ -154,6 +154,7 @@ if ~exist(acttabfile, 'file')
     end
   end
   c=c+1; csvline_head1{c} = 'Rangverlust Plattform-FG';
+  c=c+1; csvline_head1{c} = 'Wertebereich Winkel1';
   % String aus Cell-Array erzeugen
   line_head1 = csvline_head1{1};
   for i = 2:length(csvline_head1)
@@ -206,7 +207,7 @@ for iL = 1:NLEG
   end
 end
 c=c+1; csv_act_rob{c} = '?'; % Keine Information über Rangverlust vorliegend
-
+c=c+1; csv_act_rob{c} = ''; % Keine Information über beschränkten Wertebereich vorliegend
 % Cell-Array in csv-Zeile umwandeln
 line_act = csv_act_rob{1};
 for i = 2:length(csv_act_rob)

@@ -32,6 +32,8 @@
 % AdditionalInfo_Akt
 %   Zusätzliche Infos. Spalten:
 %   1: Rangverlust der Jacobi-Matrix (in den vorgesehenen FG der PKM)
+%   2: Möglicher Wertebereich für den ersten frei wählbaren Strukturwinkel
+%      (z.B. für theta1)
 
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2018-12
 % (C) Institut für Mechatronische Systeme, Universität Hannover
@@ -46,7 +48,7 @@ Actuation = {};
 ActNr = 0;
 symrob = true;
 EE_dof0 = NaN(1,6);
-AdditionalInfo_Akt = NaN;
+AdditionalInfo_Akt = NaN(1,2);
 repopath=fileparts(which('parroblib_path_init.m'));
 
 % Name der Kinematischen Struktur von Aktuierung trennen
@@ -156,7 +158,26 @@ if ~isempty(csvline_act)
     Actuation{iL} = find(ActSel);
   end
   % Zusätzliche Informationen kommen am Ende der Zeile
-  AdditionalInfo_Akt(1) = str2double(csvline_act{end});
+  % Rangverlust der Jacobi-Matrix
+  AdditionalInfo_Akt(1) = str2double(csvline_act{k});
+  % Mögliche Zahlenwerte für frei einstellbare Winkel wie theta1.
+  AdditionalInfo_Akt(2) = 0; % nicht definiert
+  if length(csvline_act) == k+1
+    % Die Werte sind gesetzt (ist vorerst optional).
+    if strcmp(csvline_act{k+1}, '0')
+      AdditionalInfo_Akt(2) = 1;
+    elseif strcmp(csvline_act{k+1}, '90')
+      AdditionalInfo_Akt(2) = 2;
+    elseif strcmp(csvline_act{k+1}, '090')
+      AdditionalInfo_Akt(2) = 3;
+    elseif strcmp(csvline_act{k+1}, '*') || strcmp(csvline_act{k+1}, '')
+      AdditionalInfo_Akt(2) = 4;
+    else
+      error('Wert "%s" ist nicht definiert für Wertebereich eines freien Winkels', csvline_act{k+1});
+    end
+  else % TODO: Ermögliche Wertebereiche für mehrere Winkel vorzugeben
+    error('Länge %d der Zeile ist nicht definiert', length(csvline_act));
+  end
 elseif ActNr ~= 0
   warning('Aktuierung %d (%s) nicht in Aktuierungstabelle %s gefunden', ActNr, PName_Kin, acttabfile);
 end
