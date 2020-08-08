@@ -33,7 +33,12 @@
 %   Zusätzliche Infos. Spalten:
 %   1: Rangverlust der Jacobi-Matrix (in den vorgesehenen FG der PKM)
 %   2: Möglicher Wertebereich für den ersten frei wählbaren Strukturwinkel
-%      (z.B. für theta1)
+%      (theta1). Kodierung:
+%      0: Nicht definiert
+%      1: Nur 0°
+%      2: nur 90°
+%      3: 0° oder 90°
+%      4: Alle Werte möglich.
 
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2018-12
 % (C) Institut für Mechatronische Systeme, Universität Hannover
@@ -163,7 +168,7 @@ if ~isempty(csvline_act)
   % Mögliche Zahlenwerte für frei einstellbare Winkel wie theta1.
   AdditionalInfo_Akt(2) = 0; % nicht definiert
   if length(csvline_act) == k+1
-    % Die Werte sind gesetzt (ist vorerst optional).
+    % Die Werte sind gesetzt
     if strcmp(csvline_act{k+1}, '0')
       AdditionalInfo_Akt(2) = 1;
     elseif strcmp(csvline_act{k+1}, '90')

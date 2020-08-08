@@ -101,13 +101,13 @@ end
 tline = fgetl(fid);
 while ischar(tline)
   % Spaltenweise als Cell-Array
-  csvline = strsplit(tline, ';');
+  csvline = strsplit(tline, ';', 'CollapseDelimiters', false);
   tline = fgetl(fid); % nächste Zeile
   if isempty(csvline) || strcmp(csvline{1}, '')
     continue
   end
-  if length(csvline) ~= (NLEG*LegJointDOF+2)
-    % warning('Zeile %s sieht ungültig aus', tline);
+  if length(csvline) ~= (1+NLEG*LegJointDOF+2)
+    warning('Zeile %s... sieht ungültig aus (Länge: %d)', csvline{1}, length(csvline));
     continue % nicht genug Spalten: Ungültiger Datensatz oder Überschrift
   end
   if ~contains(csvline(1), PName_Kin)
