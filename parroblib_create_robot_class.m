@@ -45,11 +45,16 @@ end
 RS = serroblib_create_robot_class(LEG_Names{1});
 RS.fill_fcn_handles(false);
 RS.update_pkin();
+% Entferne die gespeicherte EE-Transformation der seriellen Kette.
+% Diese Transformation ist nur für serielle Roboter relevant. Für PKM wird
+% die Transformation durch die virtuellen KS "P->Bi" erledigt.
+% Nur eine Drehung um 180° ist teilweise noch notwendig. Das betrifft 
+% Beinketten mit nur einem rotatorischen FG.
+if sum(RS.I_EE(4:6)) > 1
+  RS.update_EE(zeros(3,1),zeros(3,1));
+end
 
-
-% TODO: Das ist keine automatische Lösung
-% EE anpassen für 2T1R-PKM, bei denen die Plattform-KoppelKS falsch gedreht
-% sind.
+% Manuelle Eingabe verarbeiten
 if ~isempty(phi_RS_EE)
   RS.update_EE([], phi_RS_EE);
 end
