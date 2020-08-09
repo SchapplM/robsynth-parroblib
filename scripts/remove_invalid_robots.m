@@ -16,7 +16,7 @@ for NLEG = [3 4 6]
     fprintf('%d/%d: Prüfe PKM %s\n', i, length(PNames_Akt), PNames_Akt{i});
     [~, LEG_Names, Actuation, Coupling, ActNr, symrob, EE_dof0, ...
       PName_Kin, PName_Legs, AdditionalInfo_Akt] = parroblib_load_robot(PNames_Akt{i});
-    if isnan(AdditionalInfo_Akt)
+    if isnan(AdditionalInfo_Akt(1))
       warning('Rangverlust hat keinen abgespeicherten Zahlenwert für %s', PNames_Akt{i});
       PKM_List_invalid = [PKM_List_invalid(:)', PNames_Akt{i}];
     end

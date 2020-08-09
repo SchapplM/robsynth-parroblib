@@ -100,7 +100,7 @@ elseif ~isempty(i)
       if length(PName) > length(PNames_Akt{j})
         continue; % Namen können nicht passen
       elseif strcmp( PName, PNames_Akt{j}(1:length(PName)) )
-        if AdditionalInfo_Akt(j) == 0 % kein Rangverlust
+        if AdditionalInfo_Akt(j,1) == 0 % kein Rangverlust
           AnzahlErfolgAkt_i = AnzahlErfolgAkt_i + 1;
         else
           AnzahlErfolglosAkt_i = AnzahlErfolglosAkt_i + 1;
@@ -166,7 +166,7 @@ for i = 1:length(PNames_Kin)
     end
     if strcmp( PNames_Kin{i}, PNames_Akt{j}(1:length(PNames_Kin{i})) )
       % j-Aktuierung passt zu i-Kinematik
-      if AdditionalInfo_Akt(j) == 0 % kein Rangverlust
+      if AdditionalInfo_Akt(j,1) == 0 % kein Rangverlust
         AnzahlErfolgAkt_i = AnzahlErfolgAkt_i + 1;
       end
     end
