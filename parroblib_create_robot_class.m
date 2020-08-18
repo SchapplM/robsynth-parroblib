@@ -64,6 +64,7 @@ parroblib_addtopath({Name})
 
 RP = ParRob(Name);
 RP.create_symmetric_robot(NLEG, RS);
+RP.initialize();
 % Vervollständige Koppelpunkt-Parameter mit Standard-Einstellungen
 if length(p_Base) > 1
   % Annahme: Bei Vorgabe mehrere Parameter hat der Benutzer alle
@@ -98,7 +99,6 @@ else
   error('Plattform-Methode %d nicht definiert', Coupling(1));
 end
 RP.align_platform_coupling(Coupling(2), p_platform_all);
-RP.initialize();
 
 % EE-FG eintragen
 if all(EE_dof0 == [1 1 0 0 0 1]) % 2T1R (planar)
