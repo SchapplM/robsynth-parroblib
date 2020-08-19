@@ -196,6 +196,7 @@ if Name_Typ == 1
   PName_DirContent = dir(fullfile(PName_Dir, '*'));
   PName_DirContent=PName_DirContent(~ismember({PName_DirContent.name},{'.','..'}));
   if isempty(PName_DirContent)
+    rmpath_genpath(fullfile(PName_Dir));
     rmdir(fullfile(PName_Dir));
   end
 elseif Name_Typ == 2 && ~removed_Kin
