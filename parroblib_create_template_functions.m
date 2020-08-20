@@ -46,6 +46,7 @@ end
 % Alle Funktionen dieser Liste werden roboterspezifisch aus der Liste
 % erstellt. Die Anpassung sind nur geringfügig und ermöglichen Kompilierung
 function_list_copy_robotics = {...
+  {'kinematics', 'fkineEE_traj.m'},...
   {'kinematics', 'invkin.m'},...
   {'kinematics', 'invkin_traj.m'},...
   {'kinematics', 'constr1grad_rt.m'},...
@@ -92,6 +93,10 @@ end
 for tmp = function_list_copy_robotics
   tplf = tmp{1};
   file1 = fullfile(rtp, tplf{1}, ['pkm_',tplf{2},'.template']);
+  if ~exist(file1, 'file')
+    warning('Die Vorlagen-Datei %s existiert nicht. Vermutlich Inkonsistenz der Repo-Versionen', tplf{2});
+    continue
+  end
   file2 = fullfile(repopath, 'template_functions');
   % Prüfe nur lesend, ob die Dateien identisch sind. Nur dann in
   % Sammel-Ordner kopieren. Das verringert die Gefahr von Dateikonflikten.
