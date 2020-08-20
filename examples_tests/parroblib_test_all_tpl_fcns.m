@@ -60,13 +60,12 @@ for i_FG = 1:size(EEFG_Ges,1)
     R.update_EE(rand(3,1), rand(3,1));
     %% Test-Szenario definieren
     qlim_pkm = cat(1,R.Leg(:).qlim);
-    q = qlim_pkm(:,1) + (qlim_pkm(:,2)-qlim_pkm(:,1)).*rand(R.NJ,1);
-    
     n = 20;
-    Q_test = qlim_pkm(:,1) + (qlim_pkm(:,2)-qlim_pkm(:,1)).*rand(R.NJ,n);
-    QD_test = rand(R.NJ,n);
-    X_test = rand(6, n);
-    XD_test = rand(6, n);
+    Q_test = qlim_pkm(:,1)' + (qlim_pkm(:,2)-qlim_pkm(:,1))'.*rand(n, R.NJ);
+    QD_test = rand(n, R.NJ);
+    QDD_test = rand(n, R.NJ);
+    X_test = rand(n, 6);
+    XD_test = rand(n, 6);
     X_test(:,~R.I_EE) = 0;
     XD_test(:,~R.I_EE) = 0;
     %% Initialisierung der Parameter-Strukturen
@@ -147,6 +146,22 @@ for i_FG = 1:size(EEFG_Ges,1)
       'Phit_tol', 1e-8, ... % Toleranz für translatorischen Fehler
       'Phir_tol', 1e-8, ... % Toleranz für rotatorischen Fehler
       'retry_limit', 100);
+    % Struktur aus fkineEE_traj
+    s_fkine = struct( ...
+      'NLEG', s.NLEG,...
+      'NJ', s.NJ,...
+      'T_P_E', s.T_P_E, ...
+      'I1J_LEG', s.I1J_LEG,...
+      'I2J_LEG', s.I2J_LEG,...
+      'r_P_B_all', s.r_P_B_all,...
+      'phi_P_B_all', R.phi_P_B_all,...
+      'Leg_pkin_gen', s.Leg_pkin_gen,...
+      'Leg_T_N_E_vec', s.Leg_T_N_E_vec,...
+      'Leg_T_0_W_vec', Leg_T_0_W_vec, ...
+      'Leg_I_EElink', uint8(s.Leg_I_EElink),...
+      'Leg_phi_W_0', s.Leg_phi_W_0,...
+      'Leg_phiconv_W_0', s.Leg_phiconv_W_0,...
+      'Leg_NQJ', s.Leg_NQJ);
     % Struktur aus constr1grad_tq
     s_q_1 = struct(   'I_EE', s.I_EE,...
       'I_constr_t_red', s.I_constr_t_red,...
@@ -328,11 +343,37 @@ for i_FG = 1:size(EEFG_Ges,1)
       'Leg_phiconv_W_0', s.Leg_phiconv_W_0);
     %% Rufe Funktionen auf und vergleiche Implementierungen
     for mextest = 1:(1+test_mex) % mextest = 2: mex-Datei aufrufen
+      % Teste Trajektorien-Funktionen
+      %% Teste fkineEE_traj
+      for ll = 1:R.NLEG
+        if mextest == 1
+          eval(sprintf('[X_file, XD_file, XDD_file]=%s_fkineEE_traj(Q_test, QD_test, QDD_test, uint8(ll), s_fkine);', PName_Legs));
+        else
+          eval(sprintf('[X_file, XD_file, XDD_file]=%s_fkineEE_traj_mex(Q_test, QD_test, QDD_test, uint8(ll), s_fkine);', PName_Legs));
+        end
+        [X_class, XD_class, XDD_class] = R.fkineEE_traj(Q_test, QD_test, QDD_test, uint8(ll));
+        test_X = X_class - X_file;
+        test_XD = XD_class - XD_file;
+        test_XDD = XDD_class - XDD_file;
+        if any(abs([test_X(:);test_XD(:);test_XDD(:)]) > 1e-10) || ...
+           any(isnan([test_X(:);test_XD(:);test_XDD(:)]))
+          error('Berechnung von fkineEE_traj stimmt nicht zwischen Template-Funktion und Klasse');
+        end
+        [X_class2, XD_class2, XDD_class2] = R.fkineEE2_traj(Q_test, QD_test, QDD_test, uint8(ll));
+        test_X2 = X_class - X_class2;
+        test_XD2 = XD_class - XD_class2;
+        test_XDD2 = XDD_class - XDD_class2;
+        if any(abs([test_X2(:);test_XD2(:);test_XDD2(:)]) > 1e-10) || ...
+           any(isnan([test_X2(:);test_XD2(:);test_XDD2(:)]))
+          error('Berechnung von fkineEE_traj stimmt nicht als Aufruf der Template-Funktion in der Klasse');
+        end
+      end
+      %% Teste Einzelpunkt-Funktionen
       for jj = 1:n
-        q = Q_test(:,jj);
-        qD = QD_test(:,jj);
-        x = X_test(:,jj);
-        xD = XD_test(:,jj);
+        q = Q_test(jj,:)';
+        qD = QD_test(jj,:)';
+        x = X_test(jj,:)';
+        xD = XD_test(jj,:)';
         %% Teste constr1grad_tq
         if mextest == 1
           eval(sprintf('Phi1t_dq_file=%s_constr1grad_tq(q, s_q_1);', PName_Legs));
