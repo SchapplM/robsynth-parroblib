@@ -29,9 +29,9 @@ acttabfile_copy = [acttabfile, '.copy']; % Kopie der Tabelle zur Bearbeitung
 fid = fopen(acttabfile, 'r');
 fidc = fopen(acttabfile_copy, 'w');
 tline = fgetl(fid);
-while ischar(tline)
+while ischar(tline) && ~isempty(tline)
   csvline = strsplit(tline, ';', 'CollapseDelimiters', false); % Spaltenweise als Cell-Array
-  if isempty(csvline) || strcmp(csvline{1}, '')
+  if strcmp(csvline{1}, '')
     % ursprüngliche Zeile direkt schreiben
   elseif strcmp(csvline{1}, PName_Akt)
     % Zeile gehört zum gesuchten Roboter. Verändere die Eigenschaft und

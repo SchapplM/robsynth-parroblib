@@ -54,7 +54,7 @@ if fid == -1
 end
 % Tabelle zeilenweise durchgehen
 tline = fgetl(fid);
-while ischar(tline)
+while ischar(tline) && ~isempty(tline)
   % Zeile spaltenweise als Cell-Array
   csvline = strsplit(tline, ';');
   tline = fgetl(fid); % nächste Zeile
@@ -113,7 +113,7 @@ for i = 1:length(PNames_Kin)
   end
   tline = fgetl(fid);
   firstline = true;
-  while ischar(tline)
+  while ischar(tline) && ~isempty(tline)
     % Zeile spaltenweise als Cell-Array
     csvline = strsplit(tline, ';');
     tline = fgetl(fid); % nächste Zeile
@@ -121,7 +121,7 @@ for i = 1:length(PNames_Kin)
       firstline = false;
       continue % TODO: Robustere Methode zur Erkennung richtiger Zeilen
     end
-    if isempty(csvline) || strcmp(csvline{1}, '')
+    if strcmp(csvline{1}, '')
       continue
     end
     % Daten auslesen

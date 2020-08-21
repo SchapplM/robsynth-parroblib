@@ -93,7 +93,7 @@ end
 % Tabelle zeilenweise durchgehen
 tline = fgetl(fid);
 found = false;
-while ischar(tline)
+while ischar(tline) && ~isempty(tline)
   % Spaltenweise als Cell-Array
   csvline = strsplit(tline, ';');
   tline = fgetl(fid); % nächste Zeile
@@ -133,7 +133,7 @@ if ActNr ~= 0
   end
   % Tabelle zeilenweise durchgehen
   tline = fgetl(fid);
-  while ischar(tline)
+  while ischar(tline) && ~isempty(tline)
     % Spaltenweise als Cell-Array
     csvline = strsplit(tline, ';', 'CollapseDelimiters', false);
     tline = fgetl(fid); % nächste Zeile

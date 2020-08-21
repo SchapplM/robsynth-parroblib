@@ -171,7 +171,7 @@ end
 A_lfdNr = 0;
 fid = fopen(acttabfile);
 tline = fgetl(fid);
-while ischar(tline)
+while ischar(tline) && ~isempty(tline)
   % Spaltenweise als Cell-Array
   csvline = strsplit(tline, ';');
   tline = fgetl(fid); % nächste Zeile
@@ -221,10 +221,10 @@ tline = fgetl(fid);
 Name_old = '';
 written = false;
 i=0;
-while ischar(tline)
+while ischar(tline) && ~isempty(tline)
   i=i+1;
   csvline = strsplit(tline, ';', 'CollapseDelimiters', false); % Spaltenweise als Cell-Array
-  if isempty(csvline) || strcmp(csvline{1}, ''), continue; end
+  if strcmp(csvline{1}, ''), continue; end
   Name_now = csvline{1};
   if i > 1 && string(Name) > string(Name_old) && string(Name) < string(Name_now) && ~written
     fwrite(fidc, [line_act, newline]);
