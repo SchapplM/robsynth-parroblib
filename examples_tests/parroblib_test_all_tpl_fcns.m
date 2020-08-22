@@ -2,6 +2,9 @@
 % Dadurch wird sichergestellt, dass alles vorhanden ist und funktioniert.
 % Fokus liegt hier auf den Template-Funktionen und deren Korrektheit
 % (es erfolgt keine inhaltliche Prüfung der Ergebnisse).
+% Geprüfte Szenarien:
+% * kompilierte und nicht kompilierte Version
+% * Kinematik mit und ohne Aufgabenredundanz (nicht definierte z-Drehung am EE)
 
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2020-04
 % (C) Institut für Mechatronische Systeme, Leibniz Universität Hannover
@@ -14,6 +17,7 @@ repopath=fileparts(which('serroblib_path_init.m'));
 % Schalter zur Neugenerierung der Template-Funktionen
 tpl_fcn_neu = true;
 test_mex = true;
+test_taskred = true;
 recompile_mex = true; % nur notwendig, falls Template-Dateien geändert wurden.
 max_num_pkm = 1; % Reduziere die Anzahl der geprüften PKM pro FG
 shuffle_pkm_selection = true; % Zufällige Auswahl der PKM. Zum Debuggen deaktivieren.
@@ -35,6 +39,10 @@ for i_FG = 1:size(EEFG_Ges,1)
   III = 1:length(PNames_Kin);
   if shuffle_pkm_selection
     III = III(randperm(length(III)));
+  end
+%  % Debug:
+%   if i_FG == 4
+%     III = find(strcmp(PNames_Kin, 'P5RPRRR8V1G9P8'));
   end
   for ii =  III(1:min(max_num_pkm, length(III))) % Debug: find(strcmp(PNames_Kin, 'P6RRPRRR14V3G1P4'));
     PName = [PNames_Kin{ii},'A1']; % Nehme nur die erste Aktuierung (ist egal)
@@ -68,6 +76,16 @@ for i_FG = 1:size(EEFG_Ges,1)
     XD_test = rand(n, 6);
     X_test(:,~R.I_EE) = 0;
     XD_test(:,~R.I_EE) = 0;
+    for trtest = 1:(1+test_taskred) % trtest = 2: mit Aufgabenredundanz
+    if trtest == 2
+      if all(EE_FG == [1 1 1 1 1 1])
+        R.I_EE_Task = logical([1 1 1 1 1 0]);
+      else
+        % Aufgabenredundanz für diese Struktur-FG noch nicht definiert.
+        continue
+      end
+      R.update_EE_FG(R.I_EE, R.I_EE_Task);
+    end
     %% Initialisierung der Parameter-Strukturen
     % Struktur aus ParRob/invkin2_traj
     Leg_I_EE_Task = true(R.NLEG,6);
@@ -367,6 +385,7 @@ for i_FG = 1:size(EEFG_Ges,1)
       'NLEG', s.NLEG,...
       'I1J_LEG', s.I1J_LEG,...
       'I2J_LEG', s.I2J_LEG,...
+      'I_constr_red', R.I_constr_red, ...
       'phi_P_B_all', R.phi_P_B_all,...
       'T_P_E', s.T_P_E, ...
       'phiconv_W_E', s.phiconv_W_E,...
@@ -383,6 +402,7 @@ for i_FG = 1:size(EEFG_Ges,1)
       'NJ', s.NJ,...
       'I1J_LEG', s.I1J_LEG,...
       'I2J_LEG', s.I2J_LEG,...
+      'I_constr_red', R.I_constr_red,...
       'I_constr_t_red', s.I_constr_t_red,...
       'phi_P_B_all', R.phi_P_B_all,...
       'T_P_E', s.T_P_E, ...
@@ -420,7 +440,7 @@ for i_FG = 1:size(EEFG_Ges,1)
         test_X2 = X_class - X_class2;
         test_XD2 = XD_class - XD_class2;
         test_XDD2 = XDD_class - XDD_class2;
-        if any(abs([test_X2(:);test_XD2(:);test_XDD2(:)]) > 1e-10) || ...
+        if any(abs([test_X2(:);test_XD2(:);test_XDD2(:)]) > 1e-8) || ...
            any(isnan([test_X2(:);test_XD2(:);test_XDD2(:)]))
           error('Berechnung von fkineEE_traj stimmt nicht als Aufruf der Template-Funktion in der Klasse');
         end
@@ -429,7 +449,7 @@ for i_FG = 1:size(EEFG_Ges,1)
       if mextest == 1
         eval(sprintf('PHID_file=%s_constr4D_traj(Q_test, QD_test, X_test, XD_test, s_qD_4);', PName_Legs));
       else
-        matlabfcn2mex({sprintf('%s_constr4D_traj',PName_Legs)});
+        % matlabfcn2mex({sprintf('%s_constr4D_traj',PName_Legs)});
         eval(sprintf('PHID_file=%s_constr4D_traj_mex(Q_test, QD_test, X_test, XD_test, s_qD_4);', PName_Legs));
       end
       PHID_class = NaN(n,6*R.NLEG);
@@ -454,151 +474,189 @@ for i_FG = 1:size(EEFG_Ges,1)
         xD = XD_test(jj,:)';
         %% Teste constr1D_trans
         if mextest == 1
-          eval(sprintf('Phi1Dt_file=%s_constr1D_trans(q, qD, x, xD, s_qD_1);', PName_Legs));
+          eval(sprintf('[Phi1Dt_file, Phi1Dt_file_full]=%s_constr1D_trans(q, qD, x, xD, s_qD_1);', PName_Legs));
         else
           % if jj == 1, matlabfcn2mex({sprintf('%s_constr1D_trans',PName_Legs)}); end
-          eval(sprintf('Phi1Dt_file=%s_constr1D_trans_mex(q, qD, x, xD, s_qD_1);', PName_Legs));
+          eval(sprintf('[Phi1Dt_file, Phi1Dt_file_full]=%s_constr1D_trans_mex(q, qD, x, xD, s_qD_1);', PName_Legs));
         end
-        Phi1Dt_class = R.constr1D_trans(q, qD, x, xD);
+        [Phi1Dt_class, Phi1Dt_class_full] = R.constr1D_trans(q, qD, x, xD);
         test_Phi1Dt = Phi1Dt_class - Phi1Dt_file;
-        if any(abs(test_Phi1Dt(:)) > 1e-10)
+        test_Phi1Dt_full = Phi1Dt_class_full - Phi1Dt_file_full;
+        if any(abs([test_Phi1Dt(:); test_Phi1Dt_full(:)]) > 1e-10) || ...
+            any(isnan([test_Phi1Dt(:); test_Phi1Dt_full(:)]))
           error('Berechnung von constr1D_trans stimmt nicht zwischen Template-Funktion und Klasse');
         end
         %% Teste constr4D_rot
         if mextest == 1
-          eval(sprintf('Phi4Dr_file=%s_constr4D_rot(q, qD, x, xD, s_qD_4r);', PName_Legs));
+          eval(sprintf('[Phi4Dr_file,Phi4Dr_file_full]=%s_constr4D_rot(q, qD, x, xD, s_qD_4r);', PName_Legs));
         else
           % if jj == 1, matlabfcn2mex({sprintf('%s_constr4D_rot',PName_Legs)}); end
-          eval(sprintf('Phi4Dr_file=%s_constr4D_rot_mex(q, qD, x, xD, s_qD_4r);', PName_Legs));
+          eval(sprintf('[Phi4Dr_file,Phi4Dr_file_full]=%s_constr4D_rot_mex(q, qD, x, xD, s_qD_4r);', PName_Legs));
         end
-        Phi4Dr_class = R.constr4D_rot(q, qD, x, xD);
+        [Phi4Dr_class, Phi4Dr_class_full] = R.constr4D_rot(q, qD, x, xD);
         test_Phi4Dr = Phi4Dr_class - Phi4Dr_file;
-        if any(abs(test_Phi4Dr(:)) > 1e-10)
+        test_Phi4Dr_full = Phi4Dr_class_full - Phi4Dr_file_full;
+        if any(abs([test_Phi4Dr(:); test_Phi4Dr_full(:)]) > 1e-10)
           error('Berechnung von constr4D_rot stimmt nicht zwischen Template-Funktion und Klasse');
         end
         %% Teste constr1grad_tq
         if mextest == 1
-          eval(sprintf('Phi1t_dq_file=%s_constr1grad_tq(q, s_q_1);', PName_Legs));
+          eval(sprintf('[Phi1t_dq_file, Phi1t_dq_file_full]=%s_constr1grad_tq(q, s_q_1);', PName_Legs));
         else
-          eval(sprintf('Phi1t_dq_file=%s_constr1grad_tq_mex(q, s_q_1);', PName_Legs));
+          eval(sprintf('[Phi1t_dq_file, Phi1t_dq_file_full]=%s_constr1grad_tq_mex(q, s_q_1);', PName_Legs));
         end
-        Phi1t_dq_class = R.constr1grad_tq(q);
+        [Phi1t_dq_class, Phi1t_dq_class_full] = R.constr1grad_tq(q);
         test_Phi1tdq = Phi1t_dq_class - Phi1t_dq_file;
-        if any(abs(test_Phi1tdq(:)) > 1e-10)
+        test_Phi1tdq_full = Phi1t_dq_class_full - Phi1t_dq_file_full;
+        if any(abs([test_Phi1tdq(:);test_Phi1tdq_full(:)]) > 1e-10) || ...
+           any(isnan([test_Phi1tdq(:);test_Phi1tdq_full(:)]))
           error('Berechnung von constr1grad_tq stimmt nicht zwischen Template-Funktion und Klasse');
         end
         %% Teste constr4grad_q
         if mextest == 1
-          eval(sprintf('Phi4_dq_file=%s_constr4grad_q(q, s_q);', PName_Legs));
+          eval(sprintf('[Phi4_dq_file,Phi4_dq_file_full]=%s_constr4grad_q(q, s_q);', PName_Legs));
         else
-          eval(sprintf('Phi4_dq_file=%s_constr4grad_q_mex(q, s_q);', PName_Legs));
+          eval(sprintf('[Phi4_dq_file,Phi4_dq_file_full]=%s_constr4grad_q_mex(q, s_q);', PName_Legs));
         end
-        Phi4_dq_class = R.constr4grad_q(q);
+        [Phi4_dq_class, Phi4_dq_class_full] = R.constr4grad_q(q);
         test_Phi4dq = Phi4_dq_class - Phi4_dq_file;
-        if any(abs(test_Phi4dq(:)) > 1e-10)
+        test_Phi4dq_full = Phi4_dq_class_full - Phi4_dq_file_full;
+        if any(abs([test_Phi4dq(:);test_Phi4dq_full(:)]) > 1e-10) || ...
+            any(isnan([test_Phi4dq(:);test_Phi4dq_full(:)]))
           error('Berechnung von constr4grad_q stimmt nicht zwischen Template-Funktion und Klasse');
         end
         %% Teste constr4gradD_q
         if mextest == 1
-          eval(sprintf('Phi4_dqD_file=%s_constr4gradD_q(q, qD, s_q);', PName_Legs));
+          eval(sprintf('[Phi4_dqD_file,Phi4_dqD_file_full]=%s_constr4gradD_q(q, qD, s_q);', PName_Legs));
         else
-          eval(sprintf('Phi4_dqD_file=%s_constr4gradD_q_mex(q, qD, s_q);', PName_Legs));
+          eval(sprintf('[Phi4_dqD_file,Phi4_dqD_file_full]=%s_constr4gradD_q_mex(q, qD, s_q);', PName_Legs));
         end
-        Phi4_dqD_class = R.constr4gradD_q(q, qD);
+        [Phi4_dqD_class,Phi4_dqD_class_full] = R.constr4gradD_q(q, qD);
         test_Phi4dqD = Phi4_dqD_class - Phi4_dqD_file;
-        if any(abs(test_Phi4dqD(:)) > 1e-10)
+        test_Phi4dqD_full = Phi4_dqD_class_full - Phi4_dqD_file_full;
+        if any(abs([test_Phi4dqD(:);test_Phi4dqD_full(:)]) > 1e-10) || ...
+            any(isnan([test_Phi4dqD(:);test_Phi4dqD_full(:)]))
           error('Berechnung von constr4gradD_q stimmt nicht zwischen Template-Funktion und Klasse');
         end
         %% Teste constr4grad_x
         if mextest == 1
-          eval(sprintf('Phi4_dx_file=%s_constr4grad_x(x, s_x);', PName_Legs));
+          eval(sprintf('[Phi4_dx_file,Phi4_dx_file_full]=%s_constr4grad_x(x, s_x);', PName_Legs));
         else
-          eval(sprintf('Phi4_dx_file=%s_constr4grad_x_mex(x, s_x);', PName_Legs));
+          eval(sprintf('[Phi4_dx_file,Phi4_dx_file_full]=%s_constr4grad_x_mex(x, s_x);', PName_Legs));
         end
-        Phi4_dx_class = R.constr4grad_x(x);
+        [Phi4_dx_class,Phi4_dx_class_full] = R.constr4grad_x(x);
         test_Phi4dx = Phi4_dx_class - Phi4_dx_file;
-        if any(abs(test_Phi4dx(:)) > 1e-10)
+        test_Phi4dx_full = Phi4_dx_class_full - Phi4_dx_file_full;
+        if any(abs([test_Phi4dx(:);test_Phi4dx_full(:)]) > 1e-10) || ...
+            any(isnan([test_Phi4dx(:);test_Phi4dx_full(:)]))
           error('Berechnung von constr4grad_x stimmt nicht zwischen Template-Funktion und Klasse');
         end
         %% Teste constr4gradD_x
         if mextest == 1
-          eval(sprintf('Phi4_dxD_file=%s_constr4gradD_x(x, xD, s_x);', PName_Legs));
+          eval(sprintf('[Phi4_dxD_file,Phi4_dxD_file_full]=%s_constr4gradD_x(x, xD, s_x);', PName_Legs));
         else
-          eval(sprintf('Phi4_dxD_file=%s_constr4gradD_x_mex(x, xD, s_x);', PName_Legs));
+          eval(sprintf('[Phi4_dxD_file,Phi4_dxD_file_full]=%s_constr4gradD_x_mex(x, xD, s_x);', PName_Legs));
         end
-        Phi4_dxD_class = R.constr4gradD_x(x, xD);
+        [Phi4_dxD_class,Phi4_dxD_class_full] = R.constr4gradD_x(x, xD);
         test_Phi4dxD = Phi4_dxD_class - Phi4_dxD_file;
-        if any(abs(test_Phi4dxD(:)) > 1e-10)
+        test_Phi4dxD_full = Phi4_dxD_class_full - Phi4_dxD_file_full;
+        if any(abs([test_Phi4dxD(:);test_Phi4dxD(:)]) > 1e-10) || ...
+            any(isnan([test_Phi4dxD(:);test_Phi4dxD(:)]))
           error('Berechnung von constr4gradD_x stimmt nicht zwischen Template-Funktion und Klasse');
         end
-        if i_FG == 2 || i_FG == 3
-          continue % Für 3T0R oder 3T1R noch nicht definiert.
+        if i_FG == 1 || i_FG == 2 || i_FG == 3
+          continue % Für 2T1R, 3T0R oder 3T1R noch nicht definiert.
         end
         %% Teste constr3grad_q
         if mextest == 1
-          eval(sprintf('[~,Phi3_dq_file]=%s_constr3grad_q(q, x, s_q_3);', PName_Legs));
+          eval(sprintf('[Phi3_dq_file,Phi3_dq_file_full]=%s_constr3grad_q(q, x, s_q_3);', PName_Legs));
         else
-          eval(sprintf('[~,Phi3_dq_file]=%s_constr3grad_q_mex(q, x, s_q_3);', PName_Legs));
+          eval(sprintf('[Phi3_dq_file,Phi3_dq_file_full]=%s_constr3grad_q_mex(q, x, s_q_3);', PName_Legs));
         end
-        [~,Phi3_dq_class] = R.constr3grad_q(q, x);
+        [Phi3_dq_class,Phi3_dq_class_full] = R.constr3grad_q(q, x);
         test_Phi3dq = Phi3_dq_class - Phi3_dq_file;
-        if any(abs(test_Phi3dq(:)) > 1e-10)
+        test_Phi3dq_full = Phi3_dq_class_full - Phi3_dq_file_full;
+        if any(abs([test_Phi3dq(:); test_Phi3dq_full(:)]) > 1e-10) || ...
+            any(isnan([test_Phi3dq(:); test_Phi3dq_full(:)]))
           error('Berechnung von constr3grad_q stimmt nicht zwischen Template-Funktion und Klasse');
         end
         %% Teste constr3gradD_q
         if mextest == 1
-          eval(sprintf('Phi3_dqD_file=%s_constr3gradD_q(q, qD, x, xD, s_qD_3);', PName_Legs));
+          eval(sprintf('[Phi3_dqD_file, Phi3_dqD_file_full]=%s_constr3gradD_q(q, qD, x, xD, s_qD_3);', PName_Legs));
         else
-          eval(sprintf('Phi3_dqD_file=%s_constr3gradD_q_mex(q, qD, x, xD, s_qD_3);', PName_Legs));
+          eval(sprintf('[Phi3_dqD_file, Phi3_dqD_file_full]=%s_constr3gradD_q_mex(q, qD, x, xD, s_qD_3);', PName_Legs));
         end
-        Phi3_dqD_class = R.constr3gradD_q(q, qD, x, xD);
+        [Phi3_dqD_class, Phi3_dqD_class_full] = R.constr3gradD_q(q, qD, x, xD);
         test_Phi3dqD = Phi3_dqD_class - Phi3_dqD_file;
-        if any(abs(test_Phi3dqD(:)) > 1e-10)
+        test_Phi3dqD_full = Phi3_dqD_class_full - Phi3_dqD_file_full;
+        if any(abs([test_Phi3dqD(:);test_Phi3dqD_full(:)]) > 1e-10) || ...
+            any(isnan([test_Phi3dqD(:);test_Phi3dqD_full(:)]))
           error('Berechnung von constr3gradD_q stimmt nicht zwischen Template-Funktion und Klasse');
         end
         %% Teste constr3grad_x
         if mextest == 1
-          eval(sprintf('[~,Phi3_dx_file]=%s_constr3grad_x(q, x, s_x_3);', PName_Legs));
+          eval(sprintf('[Phi3_dx_file,Phi3_dx_file_full]=%s_constr3grad_x(q, x, s_x_3);', PName_Legs));
         else
-          eval(sprintf('[~,Phi3_dx_file]=%s_constr3grad_x_mex(q, x, s_x_3);', PName_Legs));
+          eval(sprintf('[Phi3_dx_file,Phi3_dx_file_full]=%s_constr3grad_x_mex(q, x, s_x_3);', PName_Legs));
         end
-        [~,Phi3_dx_class] = R.constr3grad_x(q, x);
+        [Phi3_dx_class,Phi3_dx_class_full] = R.constr3grad_x(q, x);
         test_Phi3dx = Phi3_dx_class - Phi3_dx_file;
-        if any(abs(test_Phi3dx(:)) > 1e-10)
+        test_Phi3dx_full = Phi3_dx_class_full - Phi3_dx_file_full;
+        if any(abs([test_Phi3dx(:);test_Phi3dx_full(:)]) > 1e-10) || ...
+            any(isnan([test_Phi3dx(:);test_Phi3dx_full(:)]))
           error('Berechnung von constr3grad_x stimmt nicht zwischen Template-Funktion und Klasse');
         end
         %% Teste constr3gradD_x
         if mextest == 1
-          eval(sprintf('[~,Phi3_dxD_file]=%s_constr3gradD_x(q, qD, x, xD, s_xD_3);', PName_Legs));
+          eval(sprintf('[Phi3_dxD_file,Phi3_dxD_file_full]=%s_constr3gradD_x(q, qD, x, xD, s_xD_3);', PName_Legs));
         else
-          eval(sprintf('[~,Phi3_dxD_file]=%s_constr3gradD_x_mex(q, qD, x, xD, s_xD_3);', PName_Legs));
+          eval(sprintf('[Phi3_dxD_file,Phi3_dxD_file_full]=%s_constr3gradD_x_mex(q, qD, x, xD, s_xD_3);', PName_Legs));
         end
-        [~,Phi3_dxD_class] = R.constr3gradD_x(q, qD, x, xD);
+        [Phi3_dxD_class,Phi3_dxD_class_full] = R.constr3gradD_x(q, qD, x, xD);
         test_Phi3dxD = Phi3_dxD_class - Phi3_dxD_file;
-        if any(abs(test_Phi3dxD(:)) > 1e-10)
+        test_Phi3dxD_full = Phi3_dxD_class_full - Phi3_dxD_file_full;
+        if any(abs([test_Phi3dxD(:);test_Phi3dxD_full(:)]) > 1e-10) || ...
+            any(isnan([test_Phi3dxD(:);test_Phi3dxD_full(:)]))
           error('Berechnung von constr3gradD_x stimmt nicht zwischen Template-Funktion und Klasse');
         end
         %% Teste constr2grad_q
         if mextest == 1
-          eval(sprintf('Phi2_dq_file=%s_constr2grad_q(q, x, s_q_2);', PName_Legs));
+          eval(sprintf('[Phi2_dq_file,Phi2_dq_file_full]=%s_constr2grad_q(q, x, s_q_2);', PName_Legs));
         else
-          eval(sprintf('Phi2_dq_file=%s_constr2grad_q_mex(q, x, s_q_2);', PName_Legs));
+          eval(sprintf('[Phi2_dq_file,Phi2_dq_file_full]=%s_constr2grad_q_mex(q, x, s_q_2);', PName_Legs));
         end
-        Phi2_dq_class = R.constr2grad_q(q, x);
+        [Phi2_dq_class, Phi2_dq_class_full] = R.constr2grad_q(q, x);
         test_Phi2dq = Phi2_dq_class - Phi2_dq_file;
-        if any(abs(test_Phi2dq(:)) > 1e-10)
+        test_Phi2dq_full = Phi2_dq_class_full - Phi2_dq_file_full;
+        if any(abs([test_Phi2dq(:); test_Phi2dq_full(:)]) > 1e-10) || ...
+            any(isnan([test_Phi2dq(:); test_Phi2dq_full(:)]))
           error('Berechnung von constr2grad_q stimmt nicht zwischen Template-Funktion und Klasse');
         end
         %% Teste constr2gradD_q
         if mextest == 1
-          eval(sprintf('Phi2D_dq_file=%s_constr2gradD_q(q, qD, x, xD, s_qD_2);', PName_Legs));
+          eval(sprintf('[Phi2D_dq_file,Phi2D_dq_file_full]=%s_constr2gradD_q(q, qD, x, xD, s_qD_2);', PName_Legs));
         else
-          eval(sprintf('Phi2D_dq_file=%s_constr2gradD_q_mex(q, qD, x, xD, s_qD_2);', PName_Legs));
+          eval(sprintf('[Phi2D_dq_file,Phi2D_dq_file_full]=%s_constr2gradD_q_mex(q, qD, x, xD, s_qD_2);', PName_Legs));
         end
-        Phi2D_dq_class = R.constr2gradD_q(q, qD, x, xD);
+        [Phi2D_dq_class,Phi2D_dq_class_full] = R.constr2gradD_q(q, qD, x, xD);
         test_Phi2Ddq = Phi2D_dq_class - Phi2D_dq_file;
-        if any(abs(test_Phi2Ddq(:)) > 1e-10)
+        test_Phi2Ddq_full = Phi2D_dq_class_full - Phi2D_dq_file_full;
+        if any(abs([test_Phi2Ddq(:);test_Phi2Ddq_full(:)]) > 1e-10) || ...
+            any(isnan([test_Phi2Ddq(:);test_Phi2Ddq_full(:)]))
           error('Berechnung von constr2grad_q stimmt nicht zwischen Template-Funktion und Klasse');
+        end
+        %% Teste constr2grad_rr
+        if mextest == 1
+          eval(sprintf('[Phi2_rr_file,Phi2_rr_full_file]=%s_constr2grad_rr(q, x, s_x_2);', PName_Legs));
+        else
+          eval(sprintf('[Phi2_rr_file,Phi2_rr_full_file]=%s_constr2grad_rr_mex(q, x, s_x_2);', PName_Legs));
+        end
+        [Phi2_rr_class, Phi2_rr_full_class] = R.constr2grad_rr(q, x);
+        test_Phi2rr = Phi2_rr_class - Phi2_rr_file;
+        test_Phi2rr_full = Phi2_rr_full_class - Phi2_rr_full_file;
+        if any(abs([test_Phi2rr(:);test_Phi2rr_full(:)]) > 1e-10) || ...
+            any(isnan([test_Phi2rr(:);test_Phi2rr_full(:)]))
+          error('Berechnung von constr2grad_rr stimmt nicht zwischen Template-Funktion und Klasse');
         end
         %% Teste constr2grad_x
         if mextest == 1
@@ -606,14 +664,25 @@ for i_FG = 1:size(EEFG_Ges,1)
         else
           eval(sprintf('[Phi2_dx_file,Phi2_dx_full_file]=%s_constr2grad_x_mex(q, x, s_x_2);', PName_Legs));
         end
-        [Phi2_dx_class,Phi2_dx_full_class] = R.constr2grad_x(q, x);
-        test_Phi2dx_full = Phi2_dx_full_class - Phi2_dx_full_file;
-        if any(abs(test_Phi2dx_full(:)) > 1e-10)
-          error('Berechnung von constr2grad_x (alle Einträge) stimmt nicht zwischen Template-Funktion und Klasse');
-        end
+        [Phi2_dx_class, Phi2_dx_full_class] = R.constr2grad_x(q, x);
         test_Phi2dx = Phi2_dx_class - Phi2_dx_file;
-        if any(abs(test_Phi2dx(:)) > 1e-10)
-          error('Berechnung von constr2grad_x (reduzierte Einträge) stimmt nicht zwischen Template-Funktion und Klasse');
+        test_Phi2dx_full = Phi2_dx_full_class - Phi2_dx_full_file;
+        if any(abs([test_Phi2dx(:);test_Phi2dx_full(:)]) > 1e-10) || ...
+            any(isnan([test_Phi2dx(:);test_Phi2dx_full(:)]))
+          error('Berechnung von constr2grad_x stimmt nicht zwischen Template-Funktion und Klasse');
+        end
+        %% Teste constr2gradD_rr
+        if mextest == 1
+          eval(sprintf('[Phi2D_rr_file,Phi2D_rr_file_full]=%s_constr2gradD_rr(q, qD, x, xD, s_xD_2);', PName_Legs));
+        else
+          eval(sprintf('[Phi2D_rr_file,Phi2D_rr_file_full]=%s_constr2gradD_rr_mex(q, qD, x, xD, s_xD_2);', PName_Legs));
+        end
+        [Phi2D_rr_class, Phi2D_rr_class_full] = R.constr2gradD_rr(q, qD, x, xD);
+        test_Phi2Drr = Phi2D_rr_class - Phi2D_rr_file;
+        test_Phi2Drr_full = Phi2D_rr_class_full - Phi2D_rr_file_full;
+        if any(abs([test_Phi2Drr(:);test_Phi2Drr_full(:)]) > 1e-10) || ...
+            any(isnan([test_Phi2Drr(:);test_Phi2Drr_full(:)]))
+          error('Berechnung von constr2grad_r stimmt nicht zwischen Template-Funktion und Klasse');
         end
         %% Teste constr2gradD_x
         if mextest == 1
@@ -621,16 +690,15 @@ for i_FG = 1:size(EEFG_Ges,1)
         else
           eval(sprintf('[Phi2D_dx_file,Phi2D_dx_file_full]=%s_constr2gradD_x_mex(q, qD, x, xD, s_xD_2);', PName_Legs));
         end
-        [Phi2D_dx_class,Phi2D_dx_class_full] = R.constr2gradD_x(q, qD, x, xD);
-        test_Phi2Ddx_full = Phi2D_dx_class_full - Phi2D_dx_file_full;
-        if any(abs(test_Phi2Ddx_full(:)) > 1e-10)
-          error('Berechnung von constr2grad_x  (alle Einträge) stimmt nicht zwischen Template-Funktion und Klasse');
-        end
+        [Phi2D_dx_class, Phi2D_dx_class_full] = R.constr2gradD_x(q, qD, x, xD);
         test_Phi2Ddx = Phi2D_dx_class - Phi2D_dx_file;
-        if any(abs(test_Phi2Ddx(:)) > 1e-10)
-          error('Berechnung von constr2grad_x (reduzierte Einträge) stimmt nicht zwischen Template-Funktion und Klasse');
+        test_Phi2Ddx_full = Phi2D_dx_class_full - Phi2D_dx_file_full;
+        if any(abs([test_Phi2Ddx(:);test_Phi2Ddx_full(:)]) > 1e-10) || ...
+            any(isnan([test_Phi2Ddx(:);test_Phi2Ddx_full(:)]))
+          error('Berechnung von constr2grad_x stimmt nicht zwischen Template-Funktion und Klasse');
         end
       end
+    end
     end
     fprintf('PKM %s erfolgreich getestet\n', PName);
   end

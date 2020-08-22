@@ -40,7 +40,12 @@ for i_FG = 1:size(EEFG_Ges,1)
   if shuffle_pkm_selection
     III = III(randperm(length(III)));
   end
-%   II = find(strcmp(PNames_Kin, 'P5RPRRR5G1P8'));
+%  % Debug:
+%  if i_FG == 1
+%    III = find(strcmp(PNames_Kin, 'P3RRR1G1P1'));
+%  elseif i_FG == 4
+%    III = find(strcmp(PNames_Kin, 'P5RPRRR8V1G9P8'));
+%  end
   for ii = III(1:min(max_num_pkm, length(III))) % Debug: find(strcmp(PNames_Kin, 'P6RRPRRR14V3G1P4'));
     PName = [PNames_Kin{ii},'A1']; % Nehme nur die erste Aktuierung (ist egal)
     [~, LEG_Names, ~, ~, ~, ~, ~, ~, PName_Legs, ~] = parroblib_load_robot(PName);
@@ -89,7 +94,7 @@ for i_FG = 1:size(EEFG_Ges,1)
     end
     if ~params_success
       % Führe Maßsynthese neu aus. Parameter nicht erfolgreich geladen
-      Set.optimization.objective = 'valid_act';
+      Set.optimization.objective = 'valid_act'; % TODO: Bei freiem theta-Parameter werden mehrere Optimierungen gemacht. Soll nur eine sein.
       Set.optimization.ee_rotation = false;
       Set.optimization.ee_translation = false;
       Set.optimization.movebase = false;
@@ -112,9 +117,6 @@ for i_FG = 1:size(EEFG_Ges,1)
         % Die Wahl der aktuierten Gelenke muss nicht zu vollem Rang führen.
         % Kriterium ist daher nur die Bestimmbarkeit des Rangs (fval <1000)
         warning('Etwas ist bei der Maßsynthese schiefgelaufen');
-        load('D:\HiWi_imes\Repos\parrob_mdlbib\examples_tests\failed_PKM.mat')
-        failed_pkm = {failed_pkm{:},RobotOptRes.R.mdlname};
-        save('failed_PKM.mat','failed_pkm');
         continue
       end
       RP = RobotOptRes.R;
@@ -248,11 +250,7 @@ for i_FG = 1:size(EEFG_Ges,1)
     for jj = 1:5
       calctimes = NaN(1,2);
       % Zurücksetzen der Aufgaben-FG auf Standard-Wert
-      if all(RP.I_EE_Task == logical([1 1 1 1 1 0])) && RP.NJ == 25
-        RP.update_EE_FG(RP.I_EE, RP.I_EE, repmat(RP.I_EE, 5, 1));
-      else
-        RP.update_EE_FG(RP.I_EE, RP.I_EE);
-      end
+      RP.update_EE_FG(RP.I_EE, RP.I_EE);
       s_jj = s;
       switch jj
         case 1
