@@ -11,3 +11,4 @@ maplerepo_path.m
 *.orig
 *.copy
 tpl
+*.lock
