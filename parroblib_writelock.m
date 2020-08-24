@@ -15,12 +15,14 @@
 % patience
 %   Zeitdauer, bis die Schreibsperre ignoriert und trotzdem geschrieben
 %   wird. Kann sinnvoll sein, falls der sperrende Parallelprozess
-%   abgestürzt ist.
+%   abgestürzt ist. Bezieht sich auf den Zeitpunkt der letzten Sperrung.
+% verbosity
+%   Bei true werden Textausgaben gemacht.
 
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 20120-08
 % (C) Institut für Mechatronische Systeme, Leibniz Universität Hannover
 
-function parroblib_writelock(mode, content, EEFG, patience)
+function parroblib_writelock(mode, content, EEFG, patience, verbosity)
 
 assert(isa(EEFG, 'logical') && all(size(EEFG)==[1 6]), 'EEFG muss 1x6 logical sein');
 if nargin < 4
@@ -30,6 +32,9 @@ else
   % Instanzen parallel starten, warten sonst alle auf die blockierte
   % Ressourcen und geben gleichzeitig das Warten auf
   patience = patience + 0.2*patience*rand(1,1);
+end
+if nargin < 5
+  verbosity = false;
 end
 %% Initialisierung
 folder = sprintf('sym%dleg', sum(EEFG));
@@ -46,7 +51,9 @@ else
 end
 %% Sperrung aufheben (falls gefordert)
 if strcmp(mode, 'free')
-  % fprintf('Ressource %s/%dT%dR ist wieder frei.\n', content, sum(EEFG(1:3)), sum(EEFG(4:6)));
+  if verbosity
+    fprintf('Ressource %s/%dT%dR ist wieder frei.\n', content, sum(EEFG(1:3)), sum(EEFG(4:6)));
+  end
   delete(lockfile);
   return
 end
@@ -54,13 +61,30 @@ end
 t_start = tic();
 while true
   if exist(lockfile, 'file')
-    % Sperrdatei existiert. Warte ab, bis Sperre vorbei ist
-    pause(2+10*rand(1,1));
-    if toc(t_start) > patience
-      fprintf('Es wurde %1.1fs auf die Ressource %s/%dT%dR gewartet. Das reicht. Ignoriere Schreibsperre\n', ...
-        toc(t_start), content, sum(EEFG(1:3)), sum(EEFG(4:6)));
-      break;
+    % Lese aus, wann die Sperre zuletzt gesetzt wurde
+    fid=fopen(lockfile, 'r');
+    try
+      l = textscan(fid, '%d-%d-%d %d:%d:%d');
+      locktime = datenum(sprintf('%04d-%02d-%02d %02d:%02d:%02d',l{1},l{2},l{3},l{4},l{5},l{6}));
+    catch
+      warning('Fehler beim Interpretieren der Sperrdatei %s', lockfile);
+      locktime = now()+1; % Dadurch wird weiter gewartet.
     end
+    fclose(fid);
+    % Sperrdatei existiert. Warte ab, bis Sperre vorbei ist
+    if (now()-locktime)*24*3600 > patience
+      if verbosity
+        fprintf(['Es wurde %1.1fs auf die Ressource %s/%dT%dR gewartet. ', ...
+          'Ignoriere Schreibsperre mit Zeitstempel %s.\n'], ...
+          toc(t_start), content, sum(EEFG(1:3)), sum(EEFG(4:6)), ...
+          datestr(locktime,'yyyy-mm-dd HH:MM:SS'));
+      end
+      break;
+    elseif verbosity
+      fprintf('Ressource %s/%dT%dR ist gesperrt (Zeitstempel %s). Warte ab bis sie frei wird.\n', ...
+        content, sum(EEFG(1:3)), sum(EEFG(4:6)), datestr(locktime,'yyyy-mm-dd HH:MM:SS'));
+    end
+    pause(2+10*rand(1,1)); % Wartezeit bis zur nächten Prüfung.
   else
     % Sperrdatei existiert nicht. Ressource ist frei.
     break;
@@ -80,4 +104,6 @@ if fid == -1
 end
 fprintf(fid, '%s', datestr(now,'yyyy-mm-dd HH:MM:SS'));
 fclose(fid);
-% fprintf('Ressource %s/%dT%dR ist gesperrt.\n', content, sum(EEFG(1:3)), sum(EEFG(4:6)));
+if verbosity
+  fprintf('Ressource %s/%dT%dR wurde gesperrt.\n', content, sum(EEFG(1:3)), sum(EEFG(4:6)));
+end
