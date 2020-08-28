@@ -24,7 +24,7 @@ for NLEG = [3 4 6]
 end
 fprintf('Lösche %d PKM:\n', length(PKM_List_invalid));
 for i = 1:length(PKM_List_invalid)
-  fprintf('Lösche %s\n', PKM_List_invalid{i});
+  fprintf('Lösche %d/%d: %s\n', i, length(PKM_List_invalid), PKM_List_invalid{i});
   success = parroblib_remove_robot(PKM_List_invalid{i});
   if ~success
     error('Fehler beim Löschen von %s', PKM_List_invalid{i});
