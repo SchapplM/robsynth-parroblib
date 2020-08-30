@@ -49,7 +49,7 @@ if fid == -1
   return
 end
 tline = fgetl(fid);
-while ischar(tline)
+while ischar(tline) && ~isempty(tline)
   % Spaltenweise als Cell-Array
   csvline = strsplit(tline, ';');
   tline = fgetl(fid); % nächste Zeile
@@ -99,11 +99,11 @@ if fid == -1
   return
 end
 tline = fgetl(fid);
-while ischar(tline)
+while ischar(tline) && ~isempty(tline)
   % Spaltenweise als Cell-Array
   csvline = strsplit(tline, ';', 'CollapseDelimiters', false);
   tline = fgetl(fid); % nächste Zeile
-  if isempty(csvline) || strcmp(csvline{1}, '')
+  if strcmp(csvline{1}, '')
     continue
   end
   if length(csvline) ~= (1+NLEG*LegJointDOF+2)

@@ -45,7 +45,6 @@ end
 %% Alle Vorlagen-Funktionen aus HybrDyn-Repo kopieren
 % Alle Funktionen dieser Liste werden roboterspezifisch aus der Liste
 % erstellt. Die Anpassung sind nur geringfügig und ermöglichen Kompilierung
-function_list_copy_hybrdyn = {};
 function_list_copy_robotics = {...
   {'kinematics', 'invkin.m'},...
   {'kinematics', 'invkin_traj.m'},...
@@ -84,15 +83,7 @@ function_list_copy_robotics = {...
   {'kinematics', 'constr4gradD_rr.m'},...
   {'kinematics', 'constr4gradD_x.m'}};
 
-if ~exist(fullfile(repopath, sprintf('template_functions')), 'dir')
-  mkdir(fullfile(repopath, sprintf('template_functions')))
-end
-% Alle Vorlagen-Funktionen aus Maple-Repo in Vorlagen-Ordner kopieren
-for tmp = function_list_copy_hybrdyn
-  tplf = tmp{1};
-  copyfile(fullfile(mrp, 'robot_codegen_scripts', 'templates_num', ['robot_',tplf,'.template']), ...
-    fullfile(repopath, 'template_functions') );
-end
+mkdirs(fullfile(repopath, sprintf('template_functions')))
 rtp = fileparts(which('robotics_toolbox_path_init.m'));
 if isempty(rtp)
   warning('Die Robotik-Toolbox muss im Pfad sein (siehe README.MD)');
@@ -100,8 +91,16 @@ if isempty(rtp)
 end
 for tmp = function_list_copy_robotics
   tplf = tmp{1};
-  copyfile(fullfile(rtp, tplf{1}, ['pkm_',tplf{2},'.template']), ...
-           fullfile(repopath, 'template_functions') );
+  file1 = fullfile(rtp, tplf{1}, ['pkm_',tplf{2},'.template']);
+  file2 = fullfile(repopath, 'template_functions');
+  % Prüfe nur lesend, ob die Dateien identisch sind. Nur dann in
+  % Sammel-Ordner kopieren. Das verringert die Gefahr von Dateikonflikten.
+  data1 = dir(file1);
+  data2 = dir(fullfile(file2, ['pkm_',tplf{2},'.template']));
+  if ~isempty(data2) && ... % Die Zieldatei existiert schon
+      (data1.datenum ~= data2.datenum || data1.bytes ~= data2.bytes) % beide Dateien sind nicht identisch
+    copyfile(file1, file2); % Nur in diesem Fall die Vorlagen im Ordner anpassen
+  end
 end
 
 % Generiere die Liste der Vorlagen-Funktionen aus den tatsächlich

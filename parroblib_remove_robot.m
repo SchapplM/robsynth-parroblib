@@ -79,7 +79,7 @@ if Name_Typ == 1
   fidc = fopen(kintabfile_copy, 'w');
   tline = fgetl(fid);
   found = false;
-  while ischar(tline)
+  while ischar(tline) && ~isempty(tline)
     % Spaltenweise als Cell-Array
     csvline = strsplit(tline, ';', 'CollapseDelimiters', false);
     if strcmp(csvline{1}, PName_Input)
@@ -119,7 +119,7 @@ if Name_Typ == 2
   found = false;
   lines_written = 0; % Anzahl der geschriebenen Zeilen für diese Führungs-Beinkette
   lines_written_kin = 0; % Anzahl der geschriebenen Zeilen mit dieser Kinematik (inkl G/P-Nummer)
-  while ischar(tline)
+  while ischar(tline) && ~isempty(tline)
     % Spaltenweise als Cell-Array
     csvline = strsplit(tline, ';', 'CollapseDelimiters', false);
     if strcmp(csvline{1}, PName_Input)

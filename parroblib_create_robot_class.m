@@ -45,11 +45,16 @@ end
 RS = serroblib_create_robot_class(LEG_Names{1});
 RS.fill_fcn_handles(false);
 RS.update_pkin();
+% Entferne die gespeicherte EE-Transformation der seriellen Kette.
+% Diese Transformation ist nur für serielle Roboter relevant. Für PKM wird
+% die Transformation durch die virtuellen KS "P->Bi" erledigt.
+% Nur eine Drehung um 180° ist teilweise noch notwendig. Das betrifft 
+% Beinketten mit nur einem rotatorischen FG.
+if sum(RS.I_EE(4:6)) > 1
+  RS.update_EE(zeros(3,1),zeros(3,1));
+end
 
-
-% TODO: Das ist keine automatische Lösung
-% EE anpassen für 2T1R-PKM, bei denen die Plattform-KoppelKS falsch gedreht
-% sind.
+% Manuelle Eingabe verarbeiten
 if ~isempty(phi_RS_EE)
   RS.update_EE([], phi_RS_EE);
 end
@@ -59,6 +64,7 @@ parroblib_addtopath({Name})
 
 RP = ParRob(Name);
 RP.create_symmetric_robot(NLEG, RS);
+RP.initialize();
 % Vervollständige Koppelpunkt-Parameter mit Standard-Einstellungen
 if length(p_Base) > 1
   % Annahme: Bei Vorgabe mehrere Parameter hat der Benutzer alle
@@ -93,7 +99,6 @@ else
   error('Plattform-Methode %d nicht definiert', Coupling(1));
 end
 RP.align_platform_coupling(Coupling(2), p_platform_all);
-RP.initialize();
 
 % EE-FG eintragen
 if all(EE_dof0 == [1 1 0 0 0 1]) % 2T1R (planar)
