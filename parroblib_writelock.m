@@ -73,34 +73,34 @@ end
 %% Sperrung prüfen
 t_start = tic();
 while true
-  if exist(lockfile, 'file')
-    % Lese aus, wann die Sperre zuletzt gesetzt wurde
-    fid=fopen(lockfile, 'r');
-    try
-      l = textscan(fid, '%d-%d-%d %d:%d:%d');
-      locktime = datenum(sprintf('%04d-%02d-%02d %02d:%02d:%02d',l{1},l{2},l{3},l{4},l{5},l{6}));
-    catch
-      warning('Fehler beim Interpretieren der Sperrdatei %s', lockfile);
-      locktime = now()+1; % Dadurch wird weiter gewartet.
-    end
-    fclose(fid);
-    % Sperrdatei existiert. Warte ab, bis Sperre vorbei ist
-    if (now()-locktime)*24*3600 > patience
-      if verbosity
-        fprintf(['Es wurde %1.1fs auf die Ressource %s gewartet. ', ...
-          'Ignoriere Schreibsperre mit Zeitstempel %s.\n'], ...
-          toc(t_start),ressource_name, datestr(locktime,'yyyy-mm-dd HH:MM:SS'));
-      end
-      break;
-    elseif verbosity
-      fprintf('Ressource %s ist gesperrt (Zeitstempel %s). Warte ab bis sie frei wird.\n', ...
-        ressource_name, datestr(locktime,'yyyy-mm-dd HH:MM:SS'));
-    end
-    pause(2+10*rand(1,1)); % Wartezeit bis zur nächten Prüfung.
-  else
-    % Sperrdatei existiert nicht. Ressource ist frei.
-    break;
+  fid=fopen(lockfile, 'r');
+  if fid == -1
+    break; % Sperrdatei existiert nicht. Ressource ist frei.
   end
+  % Lese aus, wann die Sperre zuletzt gesetzt wurde
+  try
+    l = textscan(fid, '%d-%d-%d %d:%d:%d');
+    locktime = datenum(sprintf('%04d-%02d-%02d %02d:%02d:%02d',l{1},l{2},l{3},l{4},l{5},l{6}));
+  catch
+    % Fehler: Ursache entweder nicht erwarteter Inhalt oder Verschwinden
+    % der gerade noch vorhandenen Datei.
+    warning('Fehler beim Interpretieren der Sperrdatei %s', lockfile);
+    locktime = now()+1; % Dadurch wird weiter gewartet.
+  end
+  fclose(fid);
+  % Sperrdatei existiert. Warte ab, bis Sperre vorbei ist
+  if (now()-locktime)*24*3600 > patience
+    if verbosity
+      fprintf(['Es wurde %1.1fs auf die Ressource %s gewartet. ', ...
+        'Ignoriere Schreibsperre mit Zeitstempel %s.\n'], ...
+        toc(t_start),ressource_name, datestr(locktime,'yyyy-mm-dd HH:MM:SS'));
+    end
+    break;
+  elseif verbosity
+    fprintf('Ressource %s ist gesperrt (Zeitstempel %s). Warte ab bis sie frei wird.\n', ...
+      ressource_name, datestr(locktime,'yyyy-mm-dd HH:MM:SS'));
+  end
+  pause(2+10*rand(1,1)); % Wartezeit bis zur nächten Prüfung.
 end
 if strcmp(mode, 'check')
   % Nur prüfen, ob zum Schreiben gesperrt, wenn nicht. Erfolg.
