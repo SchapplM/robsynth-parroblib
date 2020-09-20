@@ -1,5 +1,5 @@
 % Calculate minimal parameter regressor of Gravitation load for parallel robot
-% P4PRRRR1G3P1A0
+% P4PRRRR1G3A0
 % Use Code from Maple symbolic Code Generation
 %
 % Input:
@@ -27,7 +27,7 @@
 %   columns: x-, y-, z-coordinates
 % MDP [15x1]
 %   Minimal dynamic parameter vector for parallel robot(fixed base model)
-%   see P4PRRRR1G3P1A0_convert_par2_MPV_fixb.m
+%   see P4PRRRR1G3A0_convert_par2_MPV_fixb.m
 
 % Output:
 % taugX [4x1]
@@ -40,25 +40,25 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
-function taugX = P4PRRRR1G3P1A0_gravload_para_pf_mdp(xP, qJ, g, legFrame, ...
+function taugX = P4PRRRR1G3A0_gravload_para_pf_mdp(xP, qJ, g, legFrame, ...
   koppelP, pkin, MDP)
 %% Coder Information
 %#codegen
 %$cgargs {zeros(4,1),zeros(3,4),zeros(3,1),zeros(4,3),zeros(4,3),zeros(2,1),zeros(15,1)}
 assert(isreal(xP) && all(size(xP) == [4 1]), ...
-  'P4PRRRR1G3P1A0_gravload_para_pf_mdp: xP has to be [4x1] (double)');
+  'P4PRRRR1G3A0_gravload_para_pf_mdp: xP has to be [4x1] (double)');
 assert(isreal(qJ) && all(size(qJ) == [3 4]), ...
-  'P4PRRRR1G3P1A0_gravload_para_pf_mdp: qJ has to be [3x4] (double)');
+  'P4PRRRR1G3A0_gravload_para_pf_mdp: qJ has to be [3x4] (double)');
 assert(isreal(g) && all(size(g) == [3 1]), ...
-  'P4PRRRR1G3P1A0_gravload_para_pf_mdp: g has to be [3x1] (double)');
+  'P4PRRRR1G3A0_gravload_para_pf_mdp: g has to be [3x1] (double)');
 assert(isreal(pkin) && all(size(pkin) == [2 1]), ...
-  'P4PRRRR1G3P1A0_gravload_para_pf_mdp: pkin has to be [2x1] (double)');
+  'P4PRRRR1G3A0_gravload_para_pf_mdp: pkin has to be [2x1] (double)');
 assert(isreal(legFrame) && all(size(legFrame) == [4 3]), ...
-  'P4PRRRR1G3P1A0_gravload_para_pf_mdp: legFrame has to be [4x1] (double)');
+  'P4PRRRR1G3A0_gravload_para_pf_mdp: legFrame has to be [4x1] (double)');
 assert(isreal(koppelP) && all(size(koppelP) == [4 3]), ...
-  'P4PRRRR1G3P1A0_gravload_para_pf_mdp: Koppelpunkt has to be [4x3] (double)');
+  'P4PRRRR1G3A0_gravload_para_pf_mdp: Koppelpunkt has to be [4x3] (double)');
 assert(isreal(MDP) && all(size(MDP) == [15 1]), ...
-  'P4PRRRR1G3P1A0_gravload_para_pf_mdp: MDP has to be [15x1] (double)'); 
+  'P4PRRRR1G3A0_gravload_para_pf_mdp: MDP has to be [15x1] (double)'); 
 
 %% Symbolic Calculation
 % From invdyn_para_plfcoord_taugreg_mdp_matlab.m

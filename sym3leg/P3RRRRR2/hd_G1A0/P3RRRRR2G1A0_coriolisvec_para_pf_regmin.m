@@ -1,5 +1,5 @@
 % Calculate minimal parameter regressor of vector of centrifugal and coriolis load for parallel robot
-% P3RRRRR2G1P1A0
+% P3RRRRR2G1A0
 % Use Code from Maple symbolic Code Generation
 %
 % Input:
@@ -37,23 +37,23 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
-function tau_reg = P3RRRRR2G1P1A0_coriolisvec_para_pf_regmin(xP, xDP, qJ, legFrame, ...
+function tau_reg = P3RRRRR2G1A0_coriolisvec_para_pf_regmin(xP, xDP, qJ, legFrame, ...
   koppelP, pkin)
 %% Coder Information
 %#codegen
 %$cgargs {zeros(3,1),zeros(3,1),zeros(3,3),zeros(3,3),zeros(3,3),zeros(2,1)}
 assert(isreal(xP) && all(size(xP) == [3 1]), ...
-  'P3RRRRR2G1P1A0_coriolisvec_para_pf_regmin: xP has to be [3x1] (double)');
+  'P3RRRRR2G1A0_coriolisvec_para_pf_regmin: xP has to be [3x1] (double)');
 assert(isreal(xDP) && all(size(xDP) == [3 1]), ...
-  'P3RRRRR2G1P1A0_coriolisvec_para_pf_regmin: xDP has to be [3x1] (double)');
+  'P3RRRRR2G1A0_coriolisvec_para_pf_regmin: xDP has to be [3x1] (double)');
 assert(isreal(qJ) && all(size(qJ) == [3 3]), ...
-  'P3RRRRR2G1P1A0_coriolisvec_para_pf_regmin: qJ has to be [3x3] (double)');
+  'P3RRRRR2G1A0_coriolisvec_para_pf_regmin: qJ has to be [3x3] (double)');
 assert(isreal(pkin) && all(size(pkin) == [2 1]), ...
-  'P3RRRRR2G1P1A0_coriolisvec_para_pf_regmin: pkin has to be [2x1] (double)');
+  'P3RRRRR2G1A0_coriolisvec_para_pf_regmin: pkin has to be [2x1] (double)');
 assert(isreal(legFrame) && all(size(legFrame) == [3 3]), ...
-  'P3RRRRR2G1P1A0_coriolisvec_para_pf_regmin: legFrame has to be [3x1] (double)');
+  'P3RRRRR2G1A0_coriolisvec_para_pf_regmin: legFrame has to be [3x1] (double)');
 assert(isreal(koppelP) && all(size(koppelP) == [3 3]), ...
-  'P3RRRRR2G1P1A0_coriolisvec_para_pf_regmin: Koppelpunkt has to be [3x3] (double)');
+  'P3RRRRR2G1A0_coriolisvec_para_pf_regmin: Koppelpunkt has to be [3x3] (double)');
 
 %% Symbolic Calculation
 % From invdyn_para_plfcoord_tauCreg_matlab.m

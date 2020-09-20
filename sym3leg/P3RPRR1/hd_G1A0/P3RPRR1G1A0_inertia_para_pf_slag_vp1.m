@@ -1,5 +1,5 @@
 % Calculate inertia matrix for parallel robot
-% P3RPRR1G1P1A0
+% P3RPRR1G1A0
 % Use Code from Maple symbolic Code Generation
 %
 % Input:
@@ -44,27 +44,27 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
-function MX = P3RPRR1G1P1A0_inertia_para_pf_slag_vp1(xP, qJ, legFrame, ...
+function MX = P3RPRR1G1A0_inertia_para_pf_slag_vp1(xP, qJ, legFrame, ...
   koppelP, pkin, m, rSges, Icges)
 %% Coder Information
 %#codegen
 %$cgargs {zeros(3,1),zeros(3,3),zeros(3,3),zeros(3,3),zeros(7,1),zeros(3+1,1),zeros(3+1,3),zeros(3+1,6)}
 assert(isreal(xP) && all(size(xP) == [3 1]), ...
-  'P3RPRR1G1P1A0_inertia_para_pf_slag_vp1: xP has to be [3x1] (double)');
+  'P3RPRR1G1A0_inertia_para_pf_slag_vp1: xP has to be [3x1] (double)');
 assert(isreal(qJ) && all(size(qJ) == [3 3]), ...
-  'P3RPRR1G1P1A0_inertia_para_pf_slag_vp1: qJ has to be [3x3] (double)');
+  'P3RPRR1G1A0_inertia_para_pf_slag_vp1: qJ has to be [3x3] (double)');
 assert(isreal(pkin) && all(size(pkin) == [7 1]), ...
-  'P3RPRR1G1P1A0_inertia_para_pf_slag_vp1: pkin has to be [7x1] (double)');
+  'P3RPRR1G1A0_inertia_para_pf_slag_vp1: pkin has to be [7x1] (double)');
 assert(isreal(m) && all(size(m) == [4 1]), ...
-  'P3RPRR1G1P1A0_inertia_para_pf_slag_vp1: m has to be [4x1] (double)'); 
+  'P3RPRR1G1A0_inertia_para_pf_slag_vp1: m has to be [4x1] (double)'); 
 assert(isreal(rSges) && all(size(rSges) == [4,3]), ...
-  'P3RPRR1G1P1A0_inertia_para_pf_slag_vp1: rSges has to be [4x3] (double)');
+  'P3RPRR1G1A0_inertia_para_pf_slag_vp1: rSges has to be [4x3] (double)');
 assert(isreal(Icges) && all(size(Icges) == [4 6]), ...
-  'P3RPRR1G1P1A0_inertia_para_pf_slag_vp1: Icges has to be [4x6] (double)'); 
+  'P3RPRR1G1A0_inertia_para_pf_slag_vp1: Icges has to be [4x6] (double)'); 
 assert(isreal(legFrame) && all(size(legFrame) == [3 3]), ...
-  'P3RPRR1G1P1A0_inertia_para_pf_slag_vp1: legFrame has to be [3x1] (double)');
+  'P3RPRR1G1A0_inertia_para_pf_slag_vp1: legFrame has to be [3x1] (double)');
 assert(isreal(koppelP) && all(size(koppelP) == [3 3]), ...
-  'P3RPRR1G1P1A0_inertia_para_pf_slag_vp1: Koppelpunkt has to be [3x3] (double)');
+  'P3RPRR1G1A0_inertia_para_pf_slag_vp1: Koppelpunkt has to be [3x3] (double)');
 
 %% Symbolic Calculation
 % From inertia_para_plfcoord_par1_matlab.m

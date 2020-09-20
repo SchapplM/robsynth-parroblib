@@ -1,5 +1,5 @@
 % Return the minimum parameter vector for
-% P4PRRRR1G3P1A0
+% P4PRRRR1G3A0
 % Use Code from Maple symbolic Code Generation
 % 
 % Input:
@@ -33,21 +33,21 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
-function MPV = P4PRRRR1G3P1A0_minimal_parameter_para(pkin, m, mrSges, Ifges, koppelP)
+function MPV = P4PRRRR1G3A0_minimal_parameter_para(pkin, m, mrSges, Ifges, koppelP)
 
 %% Coder Information
 %#codegen
 %$cgargs {zeros(2,1),zeros(3+1,1),zeros(3+1,3),zeros(3+1,6),zeros(4,3)}
 assert(isreal(pkin) && all(size(pkin) == [2 1]), ...
-  'P4PRRRR1G3P1A0_minimal_parameter_para: pkin has to be [2x1] (double)');
+  'P4PRRRR1G3A0_minimal_parameter_para: pkin has to be [2x1] (double)');
 assert(isreal(m) && all(size(m) == [4 1]), ...
-  'P4PRRRR1G3P1A0_minimal_parameter_para: m has to be [4x1] (double)'); 
+  'P4PRRRR1G3A0_minimal_parameter_para: m has to be [4x1] (double)'); 
 assert(isreal(mrSges) && all(size(mrSges) == [4,3]), ...
-  'P4PRRRR1G3P1A0_minimal_parameter_para: mrSges has to be [4x3] (double)');
+  'P4PRRRR1G3A0_minimal_parameter_para: mrSges has to be [4x3] (double)');
 assert(isreal(Ifges) && all(size(Ifges) == [4 6]), ...
-  'P4PRRRR1G3P1A0_minimal_parameter_para: Ifges has to be [4x6] (double)'); 
+  'P4PRRRR1G3A0_minimal_parameter_para: Ifges has to be [4x6] (double)'); 
 assert(isreal(koppelP) && all(size(koppelP) == [4 3]), ...
-  'P4PRRRR1G3P1A0_minimal_parameter_para: Koppelpunkt has to be [4x3] (double)');
+  'P4PRRRR1G3A0_minimal_parameter_para: Koppelpunkt has to be [4x3] (double)');
 
 %% Symbolic Calculation
 % From minimal_parameter_parrob_matlab.m

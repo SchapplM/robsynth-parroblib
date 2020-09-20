@@ -1,5 +1,5 @@
 % Calculate minimal parameter regressor of inverse dynamics forces for
-% P6RRPRRR14V3G8P1A0
+% P6RRPRRR14V3G8A0
 % Use Code from Maple symbolic Code Generation
 %
 % Input:
@@ -41,27 +41,27 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
-function tauX_reg = P6RRPRRR14V3G8P1A0_invdyn_para_pf_regmin(xP, xDP, xDDP, qJ, g, legFrame, ...
+function tauX_reg = P6RRPRRR14V3G8A0_invdyn_para_pf_regmin(xP, xDP, xDDP, qJ, g, legFrame, ...
   koppelP, pkin)
 %% Coder Information
 %#codegen
 %$cgargs {zeros(6,1),zeros(6,1),zeros(6,1),zeros(3,6),zeros(3,1),zeros(6,3),zeros(6,3),zeros(1,1)}
 assert(isreal(xP) && all(size(xP) == [6 1]), ...
-  'P6RRPRRR14V3G8P1A0_invdyn_para_pf_regmin: xP has to be [6x1] (double)');
+  'P6RRPRRR14V3G8A0_invdyn_para_pf_regmin: xP has to be [6x1] (double)');
 assert(isreal(xDP) && all(size(xDP) == [6 1]), ...
-  'P6RRPRRR14V3G8P1A0_invdyn_para_pf_regmin: xDP has to be [6x1] (double)');
+  'P6RRPRRR14V3G8A0_invdyn_para_pf_regmin: xDP has to be [6x1] (double)');
 assert(isreal(xDDP) && all(size(xDDP) == [6 1]), ...
-  'P6RRPRRR14V3G8P1A0_invdyn_para_pf_regmin: xDDP has to be [6x1] (double)');
+  'P6RRPRRR14V3G8A0_invdyn_para_pf_regmin: xDDP has to be [6x1] (double)');
 assert(isreal(qJ) && all(size(qJ) == [3 6]), ...
-  'P6RRPRRR14V3G8P1A0_invdyn_para_pf_regmin: qJ has to be [3x6] (double)');
+  'P6RRPRRR14V3G8A0_invdyn_para_pf_regmin: qJ has to be [3x6] (double)');
 assert(isreal(g) && all(size(g) == [3 1]), ...
-  'P6RRPRRR14V3G8P1A0_invdyn_para_pf_regmin: g has to be [3x1] (double)');
+  'P6RRPRRR14V3G8A0_invdyn_para_pf_regmin: g has to be [3x1] (double)');
 assert(isreal(pkin) && all(size(pkin) == [1 1]), ...
-  'P6RRPRRR14V3G8P1A0_invdyn_para_pf_regmin: pkin has to be [1x1] (double)');
+  'P6RRPRRR14V3G8A0_invdyn_para_pf_regmin: pkin has to be [1x1] (double)');
 assert(isreal(legFrame) && all(size(legFrame) == [6 3]), ...
-  'P6RRPRRR14V3G8P1A0_invdyn_para_pf_regmin: legFrame has to be [6x1] (double)');
+  'P6RRPRRR14V3G8A0_invdyn_para_pf_regmin: legFrame has to be [6x1] (double)');
 assert(isreal(koppelP) && all(size(koppelP) == [6 3]), ...
-  'P6RRPRRR14V3G8P1A0_invdyn_para_pf_regmin: Koppelpunkt has to be [6x3] (double)');
+  'P6RRPRRR14V3G8A0_invdyn_para_pf_regmin: Koppelpunkt has to be [6x3] (double)');
 
 %% Symbolic Calculation
 % From invdyn_para_plfcoord_reg_matlab.m

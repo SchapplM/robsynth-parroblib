@@ -1,5 +1,5 @@
 % Calculate minimal parameter regressor of inertia matrix for parallel robot
-% P6RRPRRR14V2G1P4A0
+% P6RRPRRR14V2G1A0
 % Use Code from Maple symbolic Code Generation
 %
 % Input:
@@ -35,21 +35,21 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
-function tau_reg = P6RRPRRR14V2G1P4A0_inertia_para_pf_regmin(xP, qJ, legFrame, ...
+function tau_reg = P6RRPRRR14V2G1A0_inertia_para_pf_regmin(xP, qJ, legFrame, ...
   koppelP, pkin)
 %% Coder Information
 %#codegen
 %$cgargs {zeros(6,1),zeros(3,6),zeros(6,3),zeros(6,3),zeros(10,1)}
 assert(isreal(xP) && all(size(xP) == [6 1]), ...
-  'P6RRPRRR14V2G1P4A0_inertia_para_pf_regmin: xP has to be [6x1] (double)');
+  'P6RRPRRR14V2G1A0_inertia_para_pf_regmin: xP has to be [6x1] (double)');
 assert(isreal(qJ) && all(size(qJ) == [3 6]), ...
-  'P6RRPRRR14V2G1P4A0_inertia_para_pf_regmin: qJ has to be [3x6] (double)');
+  'P6RRPRRR14V2G1A0_inertia_para_pf_regmin: qJ has to be [3x6] (double)');
 assert(isreal(pkin) && all(size(pkin) == [10 1]), ...
-  'P6RRPRRR14V2G1P4A0_inertia_para_pf_regmin: pkin has to be [10x1] (double)');
+  'P6RRPRRR14V2G1A0_inertia_para_pf_regmin: pkin has to be [10x1] (double)');
 assert(isreal(legFrame) && all(size(legFrame) == [6 3]), ...
-  'P6RRPRRR14V2G1P4A0_inertia_para_pf_regmin: legFrame has to be [6x1] (double)');
+  'P6RRPRRR14V2G1A0_inertia_para_pf_regmin: legFrame has to be [6x1] (double)');
 assert(isreal(koppelP) && all(size(koppelP) == [6 3]), ...
-  'P6RRPRRR14V2G1P4A0_inertia_para_pf_regmin: Koppelpunkt has to be [6x3] (double)');
+  'P6RRPRRR14V2G1A0_inertia_para_pf_regmin: Koppelpunkt has to be [6x3] (double)');
 
 %% Symbolic Calculation
 % From invdyn_para_plfcoord_MMreg_matlab.m

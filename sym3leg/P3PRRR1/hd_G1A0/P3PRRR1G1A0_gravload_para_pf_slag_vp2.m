@@ -1,5 +1,5 @@
 % Calculate Gravitation load for parallel robot
-% P3PRRR1G1P1A0
+% P3PRRR1G1A0
 % Use Code from Maple symbolic Code Generation
 %
 % Input:
@@ -43,27 +43,27 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
-function taugX = P3PRRR1G1P1A0_gravload_para_pf_slag_vp2(xP, qJ, g, legFrame, ...
+function taugX = P3PRRR1G1A0_gravload_para_pf_slag_vp2(xP, qJ, g, legFrame, ...
   koppelP, pkin, m, mrSges)
 %% Coder Information
 %#codegen
 %$cgargs {zeros(3,1),zeros(3,3),zeros(3,1),zeros(3,3),zeros(3,3),zeros(7,1),zeros(3+1,1),zeros(3+1,3)}
 assert(isreal(xP) && all(size(xP) == [3 1]), ...
-  'P3PRRR1G1P1A0_gravload_para_pf_slag_vp2: xP has to be [3x1] (double)');
+  'P3PRRR1G1A0_gravload_para_pf_slag_vp2: xP has to be [3x1] (double)');
 assert(isreal(qJ) && all(size(qJ) == [3 3]), ...
-  'P3PRRR1G1P1A0_gravload_para_pf_slag_vp2: qJ has to be [3x3] (double)');
+  'P3PRRR1G1A0_gravload_para_pf_slag_vp2: qJ has to be [3x3] (double)');
 assert(isreal(pkin) && all(size(pkin) == [7 1]), ...
-  'P3PRRR1G1P1A0_gravload_para_pf_slag_vp2: pkin has to be [7x1] (double)');
+  'P3PRRR1G1A0_gravload_para_pf_slag_vp2: pkin has to be [7x1] (double)');
 assert(isreal(m) && all(size(m) == [4 1]), ...
-  'P3PRRR1G1P1A0_gravload_para_pf_slag_vp2: m has to be [4x1] (double)'); 
+  'P3PRRR1G1A0_gravload_para_pf_slag_vp2: m has to be [4x1] (double)'); 
 assert(isreal(g) && all(size(g) == [3 1]), ...
-  'P3PRRR1G1P1A0_gravload_para_pf_slag_vp2: g has to be [3x1] (double)');
+  'P3PRRR1G1A0_gravload_para_pf_slag_vp2: g has to be [3x1] (double)');
 assert(isreal(mrSges) && all(size(mrSges) == [4,3]), ...
-  'P3PRRR1G1P1A0_gravload_para_pf_slag_vp2: mrSges has to be [4x3] (double)');
+  'P3PRRR1G1A0_gravload_para_pf_slag_vp2: mrSges has to be [4x3] (double)');
 assert(isreal(legFrame) && all(size(legFrame) == [3 3]), ...
-  'P3PRRR1G1P1A0_gravload_para_pf_slag_vp2: legFrame has to be [3x1] (double)');
+  'P3PRRR1G1A0_gravload_para_pf_slag_vp2: legFrame has to be [3x1] (double)');
 assert(isreal(koppelP) && all(size(koppelP) == [3 3]), ...
-  'P3PRRR1G1P1A0_gravload_para_pf_slag_vp2: Koppelpunkt has to be [3x3] (double)');
+  'P3PRRR1G1A0_gravload_para_pf_slag_vp2: Koppelpunkt has to be [3x3] (double)');
 
 %% Symbolic Calculation
 % From gravvec_para_plfcoord_par2_matlab.m

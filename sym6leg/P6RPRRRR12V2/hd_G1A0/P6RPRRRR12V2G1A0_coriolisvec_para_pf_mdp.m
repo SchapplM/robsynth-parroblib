@@ -1,5 +1,5 @@
 % Calculate minimal parameter regressor of vector of centrifugal and coriolis load for parallel robot
-% P6RPRRRR12V2G1P4A0
+% P6RPRRRR12V2G1A0
 % Use Code from Maple symbolic Code Generation
 %
 % Input:
@@ -27,7 +27,7 @@
 %   columns: x-, y-, z-coordinates
 % MDP [24x1]
 %   Minimal dynamic parameter vector for parallel robot(fixed base model)
-%   see P6RPRRRR12V2G1P4A0_convert_par2_MPV_fixb.m
+%   see P6RPRRRR12V2G1A0_convert_par2_MPV_fixb.m
 
 % Output:
 % taucX [6x1]
@@ -40,25 +40,25 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
-function taucX = P6RPRRRR12V2G1P4A0_coriolisvec_para_pf_mdp(xP, xDP, qJ, legFrame, ...
+function taucX = P6RPRRRR12V2G1A0_coriolisvec_para_pf_mdp(xP, xDP, qJ, legFrame, ...
   koppelP, pkin, MDP)
 %% Coder Information
 %#codegen
 %$cgargs {zeros(6,1),zeros(6,1),zeros(3,6),zeros(6,3),zeros(6,3),zeros(10,1),zeros(24,1)}
 assert(isreal(xP) && all(size(xP) == [6 1]), ...
-  'P6RPRRRR12V2G1P4A0_coriolisvec_para_pf_mdp: xP has to be [6x1] (double)');
+  'P6RPRRRR12V2G1A0_coriolisvec_para_pf_mdp: xP has to be [6x1] (double)');
 assert(isreal(xDP) && all(size(xDP) == [6 1]), ...
-  'P6RPRRRR12V2G1P4A0_coriolisvec_para_pf_mdp: xDP has to be [6x1] (double)');
+  'P6RPRRRR12V2G1A0_coriolisvec_para_pf_mdp: xDP has to be [6x1] (double)');
 assert(isreal(qJ) && all(size(qJ) == [3 6]), ...
-  'P6RPRRRR12V2G1P4A0_coriolisvec_para_pf_mdp: qJ has to be [3x6] (double)');
+  'P6RPRRRR12V2G1A0_coriolisvec_para_pf_mdp: qJ has to be [3x6] (double)');
 assert(isreal(pkin) && all(size(pkin) == [10 1]), ...
-  'P6RPRRRR12V2G1P4A0_coriolisvec_para_pf_mdp: pkin has to be [10x1] (double)');
+  'P6RPRRRR12V2G1A0_coriolisvec_para_pf_mdp: pkin has to be [10x1] (double)');
 assert(isreal(legFrame) && all(size(legFrame) == [6 3]), ...
-  'P6RPRRRR12V2G1P4A0_coriolisvec_para_pf_mdp: legFrame has to be [6x1] (double)');
+  'P6RPRRRR12V2G1A0_coriolisvec_para_pf_mdp: legFrame has to be [6x1] (double)');
 assert(isreal(koppelP) && all(size(koppelP) == [6 3]), ...
-  'P6RPRRRR12V2G1P4A0_coriolisvec_para_pf_mdp: Koppelpunkt has to be [6x3] (double)');
+  'P6RPRRRR12V2G1A0_coriolisvec_para_pf_mdp: Koppelpunkt has to be [6x3] (double)');
 assert(isreal(MDP) && all(size(MDP) == [24 1]), ...
-  'P6RPRRRR12V2G1P4A0_coriolisvec_para_pf_mdp: MDP has to be [24x1] (double)'); 
+  'P6RPRRRR12V2G1A0_coriolisvec_para_pf_mdp: MDP has to be [24x1] (double)'); 
 
 %% Symbolic Calculation
 % From invdyn_para_plfcoord_tauCreg_mdp_matlab.m

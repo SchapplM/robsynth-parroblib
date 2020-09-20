@@ -1,5 +1,5 @@
 % Calculate minimal parameter regressor of Gravitation load for parallel robot
-% P4PRRR1G1P1A0
+% P4PRRR1G1A0
 % Use Code from Maple symbolic Code Generation
 %
 % Input:
@@ -37,23 +37,23 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
-function tau_reg = P4PRRR1G1P1A0_gravload_para_pf_regmin(xP, qJ, g, legFrame, ...
+function tau_reg = P4PRRR1G1A0_gravload_para_pf_regmin(xP, qJ, g, legFrame, ...
   koppelP, pkin)
 %% Coder Information
 %#codegen
 %$cgargs {zeros(4,1),zeros(3,4),zeros(3,1),zeros(4,3),zeros(4,3),zeros(7,1)}
 assert(isreal(xP) && all(size(xP) == [4 1]), ...
-  'P4PRRR1G1P1A0_gravload_para_pf_regmin: xP has to be [4x1] (double)');
+  'P4PRRR1G1A0_gravload_para_pf_regmin: xP has to be [4x1] (double)');
 assert(isreal(qJ) && all(size(qJ) == [3 4]), ...
-  'P4PRRR1G1P1A0_gravload_para_pf_regmin: qJ has to be [3x4] (double)');
+  'P4PRRR1G1A0_gravload_para_pf_regmin: qJ has to be [3x4] (double)');
 assert(isreal(g) && all(size(g) == [3 1]), ...
-  'P4PRRR1G1P1A0_gravload_para_pf_regmin: g has to be [3x1] (double)');
+  'P4PRRR1G1A0_gravload_para_pf_regmin: g has to be [3x1] (double)');
 assert(isreal(pkin) && all(size(pkin) == [7 1]), ...
-  'P4PRRR1G1P1A0_gravload_para_pf_regmin: pkin has to be [7x1] (double)');
+  'P4PRRR1G1A0_gravload_para_pf_regmin: pkin has to be [7x1] (double)');
 assert(isreal(legFrame) && all(size(legFrame) == [4 3]), ...
-  'P4PRRR1G1P1A0_gravload_para_pf_regmin: legFrame has to be [4x1] (double)');
+  'P4PRRR1G1A0_gravload_para_pf_regmin: legFrame has to be [4x1] (double)');
 assert(isreal(koppelP) && all(size(koppelP) == [4 3]), ...
-  'P4PRRR1G1P1A0_gravload_para_pf_regmin: Koppelpunkt has to be [4x3] (double)');
+  'P4PRRR1G1A0_gravload_para_pf_regmin: Koppelpunkt has to be [4x3] (double)');
 
 %% Symbolic Calculation
 % From invdyn_para_plfcoord_taugreg_matlab.m

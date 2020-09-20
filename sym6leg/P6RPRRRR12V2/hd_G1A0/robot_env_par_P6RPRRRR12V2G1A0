@@ -1,4 +1,4 @@
-robot_name := "P6RPRRRR12V2G1P4A0":
+robot_name := "P6RPRRRR12V2G1A0":
 leg_name := "S6RPRRRR12V2":
 AKTIV := Matrix(6,1,[2, 2, 2, 2, 2, 2]);
 N_LEGS := 6:
