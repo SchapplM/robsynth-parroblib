@@ -46,17 +46,19 @@ for i = 1:length(Names)
   % Bei Definition neuer Beinketten-Orientierungen in align_base_coupling
   % (ParRob-Klasse) müssen die Werte hier angepasst werden.
   leg_frame_entries = {'xA', 'yA', '0', '0', '0', 'gammaLeg'};
-  if ~all(EE_FG0 == [1 1 0 0 0 1]) % TODO: Logik ausarbeiten
-    % TODO: Koppelpunkt-Definition konsistent mit align_base_coupling.m
-    if Coupling(1)==1
+  if ~all(EE_FG0 == [1 1 0 0 0 1])
+    if Coupling(1)==1 || Coupling(1)==5
       % Für Koppelpunkt-Methode 1 wird das Basis-KS der Beinkette nur um
       % die z-Achse gedreht. Lasse obige Standardeinstellung
-    elseif Coupling(1)==2
+    elseif Coupling(1)==2  || Coupling(1)==6
       leg_frame_entries = {'xA', 'yA', '0', '-Pi/2', 'betaLeg', '-Pi/2'};
-    elseif Coupling(1)==3
+    elseif Coupling(1)==3  || Coupling(1)==7
       leg_frame_entries = {'xA', 'yA', '0', '-Pi/2', 'betaLeg', '0'};
-    else
+    elseif Coupling(1)==4  || Coupling(1)==8
       leg_frame_entries = {'xA', 'yA', '0', 'alphaLeg', 'betaLeg', 'gammaLeg'};
+    else
+      warning('Methode %d noch nicht für Code-Generierung definiert.', Coupling(1));
+      continue;
     end
   end
 
