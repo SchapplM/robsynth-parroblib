@@ -1,0 +1,8 @@
+robot_name := "P4PRRRR8V2G2A0":
+leg_name := "S5PRRRR8V2":
+AKTIV := Matrix(4,1,[1, 1, 1, 1]);
+N_LEGS := 4:
+leg_frame := Matrix(7,1,[xA, yA, 0, -Pi/2, betaLeg, -Pi/2, xyz]):
+xE_s := Matrix(7,1,[x_all[1], x_all[2], x_all[3], 0, 0, x_all[4], xyz]):
+codegen_opt := 2:
+codeexport_invdyn := true:
