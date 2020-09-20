@@ -20,8 +20,32 @@ for i = 1:length(Names)
   [NLEG, LEG_Names, ~, Coupling, ActNr, ~, ~, PName_Kin, PName_Legs] = parroblib_load_robot(Name);
 
   % Pfade für Matlab-Funktionen der PKM hinzufügen
-  fcn_dir1 = fullfile(parroblibpath, sprintf('sym%dleg', NLEG), PName_Legs, ...
-    sprintf('hd_G%dP%dA0', Coupling(1), Coupling(2)));
+  switch Coupling(1) % siehe align_base_coupling.m
+    case 1
+      basecoupling_equiv = [5,4,8];
+    case 2
+      basecoupling_equiv = [6,4,8];
+    case 3
+      basecoupling_equiv = [7,4,8];
+    case 4
+      basecoupling_equiv = 8;
+    case 5
+      basecoupling_equiv = [1 4 8];
+    case 6
+      basecoupling_equiv = [2 4 8];
+    case 7
+      basecoupling_equiv = [3 4 8];
+    case 8
+      basecoupling_equiv = 4;
+  end
+  % Code für die eigentlich gesuchte Darstellung vorne anstellen (zuerst
+  % suchen)
+  basecoupling_equiv = [Coupling(1), basecoupling_equiv]; %#ok<AGROW>
+  for k = basecoupling_equiv
+    fcn_dir1 = fullfile(parroblibpath, sprintf('sym%dleg', NLEG), PName_Legs, ...
+      sprintf('hd_G%dA0', k)); % keine P-Nummer für A0-Code
+    if exist(fcn_dir1, 'file'), break; end % nehme den existierenden Ordner
+  end
   fcn_dir2 = fullfile(parroblibpath, sprintf('sym%dleg', NLEG), PName_Legs, ...
     sprintf('hd_G%dP%dA%d', Coupling(1), Coupling(2), ActNr));
   fcn_dir3 = fullfile(parroblibpath, sprintf('sym%dleg', NLEG), PName_Legs, ...
