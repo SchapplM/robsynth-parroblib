@@ -105,7 +105,7 @@ for tmp = function_list_copy_robotics
   % Sammel-Ordner kopieren. Das verringert die Gefahr von Dateikonflikten.
   data1 = dir(file1);
   data2 = dir(fullfile(file2, ['pkm_',tplf{2},'.template']));
-  if ~isempty(data2) && ... % Die Zieldatei existiert schon
+  if isempty(data2) || ... % Die Zieldatei existiert noch nicht
       (data1.datenum ~= data2.datenum || data1.bytes ~= data2.bytes) % beide Dateien sind nicht identisch
     copyfile(file1, file2); % Nur in diesem Fall die Vorlagen im Ordner anpassen
   end
@@ -145,6 +145,7 @@ for i = 1:length(Names)
   mkdirs(fcn_dir);  % Ordner existiert vielleicht noch nicht. Neu erstellen.
   cd(fcn_dir); % In Ordner wechseln für kürzeren sed-Befehl (und zum Finden der Dateien)
   function_list_mex = {};
+  num_files_written = 0;
   for tmp = function_list
     tplf = tmp{1};
     file1=fullfile(repopath, 'template_functions', ['pkm_',tplf,'.template']);
@@ -183,9 +184,12 @@ for i = 1:length(Names)
       fprintf('%d/%d: Datei %s konnte nicht erzeugt werden (Einige Variablen nicht definiert)\n', ...
         i, length(Names), tplf);
       delete(file2);
+      continue;
     end
+    num_files_written = num_files_written + 1;
   end
-  fprintf('%d/%d: Vorlagen-Funktionen für %s erstellt.\n', i, length(Names), Name_i);
+  fprintf('%d/%d: Vorlagen-Funktionen für %s erstellt (%d/%d).\n', i, ...
+    length(Names), Name_i, num_files_written, length(function_list));
   
   % Testen: Kompilieren aller erzeugter Funktionen im Zielordner
   if mex_results
