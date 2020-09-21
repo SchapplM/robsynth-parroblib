@@ -35,6 +35,7 @@ function RP = parroblib_create_robot_class(Name, p_Base, p_platform, phi_RS_EE)
 if nargin < 4
   phi_RS_EE = [];
 end
+assert(isa(Name,'char'), 'Eingabe Name muss Name als char sein');
 
 %% Daten laden
 
