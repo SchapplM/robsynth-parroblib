@@ -55,17 +55,19 @@ parroblib_generate_mapleinput({Name})
 parroblib_generate_code({Name})
 
 %% Alle räumlichen PKM erstellen, deren Beinketten in Kugel- oder Kardangelenk enden
+% (also so gut wie alle symbolisch modellierbaren PKM)
 EEFG_Ges = [1 1 1 0 0 0; ...
             1 1 1 0 0 1; ...
             1 1 1 1 1 1];
 for i_FG = 1:size(EEFG_Ges,1)
   EEdof0 = EEFG_Ges(i_FG,:);
-  [PNames_Kin, PNames_Akt] = parroblib_filter_robots(sum(EEdof0), EEdof0, EEdof0);
+  [~, PNames_Akt] = parroblib_filter_robots(sum(EEdof0), EEdof0, EEdof0);
   for j = 1:length(PNames_Akt)
     fprintf('%d/%d: %s\n', j, length(PNames_Akt), PNames_Akt{j});
+    if contains(PNames_Akt{j}, '3RRPRR'), continue; end % TODO: Hier gibt es Probleme.
     [NLEG, LEG_Names, Actuation, ActNr, symrob, EE_dof0, PName_Kin] = parroblib_load_robot(PNames_Akt{j});
-    parroblib_generate_mapleinput({PNames_Akt{j}})
-    parroblib_generate_code({PNames_Akt{j}})
+    parroblib_generate_mapleinput(PNames_Akt(j))
+    parroblib_generate_code(PNames_Akt(j))
   end
 end
 
