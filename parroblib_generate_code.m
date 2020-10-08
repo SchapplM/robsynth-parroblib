@@ -76,8 +76,9 @@ for i = 1:length(Names)
   
   % Prüfe, ob Code schon einmal generiert wurde 
   % (und im Zielverzeichnis vorliegt)
-  if ~force_par && length(dir(fullfile(outputdir_local, '*.m'))) > 2
+  if ~force_par && length(dir(fullfile(outputdir_local, '*.m'))) > 1
     % Annahme: Wenn bereits Code erstellt wurde, ist dieser vollständig.
+    % Für A1... Modelle gibt es nur zwei Matlab-Funktionen
     fprintf('Code existiert bereits in %s\n', outputdir_local);
     continue
   end
@@ -191,7 +192,7 @@ for i = 1:length(Names)
   % Beinketten; das wurde oben schon gemacht). Daher auch Tests
   % deaktivieren (die Dynamik wird für diesen Roboter nicht generiert)
   fprintf('Starte Kinematik Code-Generierung %d/%d für %s\n', i, length(Names), n);
-  system( sprintf('cd %s && ./robot_codegen_start.sh --fixb_only --parrob --not_gen_serial --notest', mrp) );
+  system( sprintf('cd %s && ./robot_codegen_start.sh --fixb_only --parrob --not_gen_serial --notest --kinematics_only', mrp) );
   
   % generierten Code zurückkopieren (alle .m-Dateien)
   for f = dir(fullfile(outputdir_tb_par, '*.m'))'
@@ -207,6 +208,10 @@ for i = 1:length(Names)
       n, n_A0, fullfile(outputdir_local, f.name) ));
   end
   % Dateien löschen, die für alle Aktuierungsvarianten gleich sind, aber
-  % trotzdem doppelt erzeugt werden.
-  delete(fullfile(outputdir_local, [n, '_minimal_parameter_para.m']));
+  % trotzdem doppelt erzeugt werden könnten.
+  % (wird aktuell nicht doppelt erzeugt wegen "--kinematics_only")
+  minparfile = fullfile(outputdir_local, [n, '_minimal_parameter_para.m']);
+  if exist(minparfile, 'file')
+    delete(minparfile);
+  end
 end
