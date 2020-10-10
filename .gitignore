@@ -7,7 +7,7 @@ codegen
 maplerepo_path.m
 *A0_*_para_qa_*.m
 *A0_Jinv*.m
-*invdyn_para_qa_slagn_vp1.m
+*invdyn_para_qa_slagn*.m
 *_delete
 *.orig
 *.copy
