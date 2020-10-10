@@ -76,8 +76,9 @@ for i = 1:length(Names)
   
   % Prüfe, ob Code schon einmal generiert wurde 
   % (und im Zielverzeichnis vorliegt)
-  if ~force_par && length(dir(fullfile(outputdir_local, '*.m'))) > 2
+  if ~force_par && length(dir(fullfile(outputdir_local, '*.m'))) > 1
     % Annahme: Wenn bereits Code erstellt wurde, ist dieser vollständig.
+    % Für A1... Modelle gibt es nur zwei Matlab-Funktionen
     fprintf('Code existiert bereits in %s\n', outputdir_local);
     continue
   end
@@ -85,27 +86,65 @@ for i = 1:length(Names)
   %% Code-Generierung serielle Beinkette
   % Code-Erstellung für serielle Beinkette starten, falls diese nicht
   % vorliegt
-  for k = 1:length(LEG_Names)
+  LEG_Names_unique = unique(LEG_Names);
+  for k = 1:length(LEG_Names_unique)
     % Suche nach temporären Dateien im Arbeitsverzeichnis von HybrDyn
-    tmpdir_tb_ser = fullfile(mrp, 'codeexport', LEG_Names{k}, 'tmp'); % tmp-Verzeichnis in der Maple-Toolbox
-    if ~force_ser && length(dir(fullfile(tmpdir_tb_ser, '*_maple.m'))) > 20
-      % Die serielle Beinkette wurde wahrscheinlich schon generiert.
+    tmpdir_tb_ser = fullfile(mrp, 'codeexport', LEG_Names_unique{k}, 'tmp'); % tmp-Verzeichnis in der Maple-Toolbox
+    if ~force_ser && length(dir(fullfile(tmpdir_tb_ser, '*_maple.m'))) > 30
+      % Die serielle Beinkette wurde wahrscheinlich schon generiert (auch
+      % mit Dynamik)
       continue
     end
     % Generiere diese Beinkette neu (ohne Rückkopieren der
     % Matlab-Funktionen ins SerRobLib-Repo)
-    serroblib_generate_mapleinput({LEG_Names{k}});
-    serroblib_generate_code({LEG_Names{k}}, true, true, 3);
+    serroblib_generate_mapleinput(LEG_Names_unique(k));
+    serroblib_generate_code(LEG_Names_unique(k), true, true, 3);
   end
 
   %% Code-Generierung für allgemeine PKM dieses Kinematik-Typs
   % Code-Erstellung für Dynamik nur einmal durchführen, da die Dynamik in
-  % Plattformkoordinaten unabhängig von der Aktuierung ist
-  n_A0 = [PName_Kin,'A0'];
+  % Plattformkoordinaten unabhängig von der Aktuierung ist. Gebe
+  % gleichwertige Gestell-Methoden an (mit gleichem symbolischen Code)
+  switch Coupling(1) % siehe align_base_coupling.m
+    case 1
+      basecoupling_equiv = [5,4,8];
+    case 2
+      basecoupling_equiv = [6,4,8];
+    case 3
+      basecoupling_equiv = [7,4,8];
+    case 4
+      basecoupling_equiv = 8;
+    case 5
+      basecoupling_equiv = [1 4 8];
+    case 6
+      basecoupling_equiv = [2 4 8];
+    case 7
+      basecoupling_equiv = [3 4 8];
+    case 8
+      basecoupling_equiv = 4;
+  end
+  % Der Code für diese Gestell-Kinematik wird zuletzt hinzugefügt (damit
+  % wird existierender Code mit einer anderen Nummer bevorzugt)
+  basecoupling_equiv = [basecoupling_equiv, Coupling(1)]; %#ok<AGROW>
+  G_num = Coupling(1);
+  % Suche in den anderen Code-Ordnern nach bestehenden Robotern
+  if ~force_par
+    for k = basecoupling_equiv
+      outputdir_local_A0_k = fullfile(repopath, sprintf('sym%dleg', NLEG), ...
+        PName_Legs, sprintf('hd_G%dA0', k));
+      if length(dir(fullfile(outputdir_local_A0_k, '*.m'))) > 10
+        G_num = k;
+        fprintf(['Bereits passendes allgemeines Plattform-Dynamikmodell ', ...
+          'für Gestell %d gefunden. Benutze dieses. Keine Neu-Generierung.\n'], k);
+        break;
+      end
+    end
+  end
+  n_A0 = [PName_Kin(1:end-4),sprintf('G%d',G_num),'A0']; % Entferne P-Nummer wieder. Ist für A0-Modell egal.
   % Roboternamen, Datei- und Ordnernamen für allgemeinen Fall definieren
   outputdir_tb_par_A0 = fullfile(mrp, 'codeexport', n_A0, 'matlabfcn'); % Verzeichnis in der Maple-Toolbox
   mapleinputfile_A0=fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, ...
-    sprintf('hd_G%dP%dA0', Coupling(1), Coupling(2)), sprintf('robot_env_par_%s', n_A0));
+    sprintf('hd_G%dA0', G_num), sprintf('robot_env_par_%s', n_A0));
   outputdir_local_A0 = fileparts(mapleinputfile_A0);
   if ActNr == 1 && ... % Nur Generierung, wenn noch kein Code vorhanden:
       (force_par || ~force_par && length(dir(fullfile(outputdir_local_A0, '*.m'))) < 10) % im A0-Ordner sind mehr Dateien
@@ -153,7 +192,7 @@ for i = 1:length(Names)
   % Beinketten; das wurde oben schon gemacht). Daher auch Tests
   % deaktivieren (die Dynamik wird für diesen Roboter nicht generiert)
   fprintf('Starte Kinematik Code-Generierung %d/%d für %s\n', i, length(Names), n);
-  system( sprintf('cd %s && ./robot_codegen_start.sh --fixb_only --parrob --not_gen_serial --notest', mrp) );
+  system( sprintf('cd %s && ./robot_codegen_start.sh --fixb_only --parrob --not_gen_serial --notest --kinematics_only', mrp) );
   
   % generierten Code zurückkopieren (alle .m-Dateien)
   for f = dir(fullfile(outputdir_tb_par, '*.m'))'
@@ -169,6 +208,10 @@ for i = 1:length(Names)
       n, n_A0, fullfile(outputdir_local, f.name) ));
   end
   % Dateien löschen, die für alle Aktuierungsvarianten gleich sind, aber
-  % trotzdem doppelt erzeugt werden.
-  delete(fullfile(outputdir_local, [n, '_minimal_parameter_para.m']));
+  % trotzdem doppelt erzeugt werden könnten.
+  % (wird aktuell nicht doppelt erzeugt wegen "--kinematics_only")
+  minparfile = fullfile(outputdir_local, [n, '_minimal_parameter_para.m']);
+  if exist(minparfile, 'file')
+    delete(minparfile);
+  end
 end
