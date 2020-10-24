@@ -80,7 +80,7 @@ for i_FG = 1:size(EEFG_Ges,1)
       RP.update_base(params.r_W_0, params.phi_W_0);
       RP.align_base_coupling(params.DesPar_ParRob.base_method, params.DesPar_ParRob.base_par);
       RP.align_platform_coupling(params.DesPar_ParRob.platform_method, params.DesPar_ParRob.platform_par(1:end-1));
-      Traj_0 = cds_rotate_traj(Traj_W, RP.T_W_0);
+      Traj_0 = cds_transform_traj(RP, Traj_W);
       % Prüfe die Lösbarkeit der IK
       [q_test,Phi]=RP.invkin_ser(Traj_0.X(1,:)', q0);
       if all(abs(Phi)<1e-6) && ~any(isnan(Phi))
@@ -110,25 +110,35 @@ for i_FG = 1:size(EEFG_Ges,1)
       Traj = Traj_W;
       cds_start
       resmaindir = fullfile(Set.optimization.resdir, Set.optimization.optname);
-      resfile = fullfile(resmaindir, sprintf('Rob%d_%s_Endergebnis.mat', 1, PName));
-      load(resfile, 'RobotOptRes');
-      if isempty(Structures) || RobotOptRes.fval > 1000
+      i_select = 0;
+      for i = 1:length(Structures) % alle Ergebnisse durchgehen (falls mehrere theta-Varianten)
+        resfile = fullfile(resmaindir, sprintf('Rob%d_%s_Endergebnis.mat', Structures{i}.Number, PName));
+        tmp = load(resfile, 'RobotOptRes');
+        if tmp.RobotOptRes.fval < 1000
+          i_select = i;
+          RobotOptRes = tmp.RobotOptRes;
+          break;
+        end
+      end
+      if isempty(Structures) || i_select == 0
         % Die Methode valid_act nimmt die erstbeste bestimmbare Kinematik.
         % Die Wahl der aktuierten Gelenke muss nicht zu vollem Rang führen.
         % Kriterium ist daher nur die Bestimmbarkeit des Rangs (fval <1000)
-        warning('Etwas ist bei der Maßsynthese schiefgelaufen');
+        warning('Etwas ist bei der Maßsynthese schiefgelaufen. Keine Lösung.');
         continue
       end
       RP = RobotOptRes.R;
       r_W_0 = RP.r_W_0;
       phi_W_0 = RP.phi_W_0;
+      phi_P_E = RP.phi_P_E;
+      r_P_E = RP.r_P_E;
       pkin = RP.Leg(1).pkin;
       DesPar_ParRob = RP.DesPar;
       q0 = RobotOptRes.q0;
       qlim = cat(1, RP.Leg.qlim); % Wichtig für Mehrfach-Versuche der IK
-      save(paramfile_robot, 'pkin', 'DesPar_ParRob', 'q0', 'r_W_0', 'phi_W_0', 'qlim');
+      save(paramfile_robot, 'pkin', 'DesPar_ParRob', 'q0', 'r_W_0', 'phi_W_0', 'qlim', 'r_P_E', 'phi_P_E');
       fprintf('Maßsynthese beendet\n');
-      Traj_0 = cds_rotate_traj(Traj_W, RP.T_W_0);
+      Traj_0 = cds_transform_traj(RP, Traj_W);
     end
     
     % Klassenmethode gegen Templatemethode
