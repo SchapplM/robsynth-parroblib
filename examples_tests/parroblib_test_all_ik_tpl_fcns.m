@@ -15,7 +15,7 @@ clc
 tpl_fcn_neu = true;
 test_mex = true; % Benutze mex-Funktionen beim Testen (schneller, aber kein Debuggen möglich)
 recompile_mex = true; % nur notwendig, falls Template-Dateien geändert wurden.
-max_num_pkm = 20; % Reduziere die Anzahl der geprüften PKM pro FG
+max_num_pkm = 3; % Reduziere die Anzahl der geprüften PKM pro FG
 shuffle_pkm_selection = true; % Zufällige Auswahl der PKM
 max_single_points = 50; % Anzahl der zu prüfenden Einzelpunkte
 % Speicherort der Parameter
@@ -26,6 +26,7 @@ mkdirs(tmpdir_params);
 EEFG_Ges = [1 1 0 0 0 1; ...
             1 1 1 0 0 0; ...
             1 1 1 0 0 1; ...
+            1 1 1 1 1 0; ...
             1 1 1 1 1 1];
 EE_FG_Mask = [1 1 1 1 1 1];
 
@@ -39,6 +40,12 @@ for i_FG = 1:size(EEFG_Ges,1)
   if shuffle_pkm_selection
     III = III(randperm(length(III)));
   end
+%  % Debug:
+%  if i_FG == 1
+%    III = find(strcmp(PNames_Kin, 'P3RRR1G1P1'));
+%  elseif i_FG == 4
+%    III = find(strcmp(PNames_Kin, 'P5RPRRR8V1G9P8'));
+%  end
   for ii = III(1:min(max_num_pkm, length(III))) % Debug: find(strcmp(PNames_Kin, 'P6RRPRRR14V3G1P4'));
     PName = [PNames_Kin{ii},'A1']; % Nehme nur die erste Aktuierung (ist egal)
     [~, LEG_Names, ~, ~, ~, ~, ~, ~, PName_Legs, ~] = parroblib_load_robot(PName);
@@ -51,6 +58,7 @@ for i_FG = 1:size(EEFG_Ges,1)
     % (notwendig für Struktursynthese)
     RP.fill_fcn_handles(true, true); % zur Prüfung, ob kompilierte Funktionen vorhanden sind
     RP.fill_fcn_handles(test_mex, true); % zur Einstellung mex ja/nein
+    
     %% Kinematikparameter durch Optimierung erzeugen (oder gespeichert laden)
     Set = cds_settings_defaults(struct('DoF', EE_FG));
     Set.task.Ts = 1e-2;
@@ -72,7 +80,7 @@ for i_FG = 1:size(EEFG_Ges,1)
       RP.update_base(params.r_W_0, params.phi_W_0);
       RP.align_base_coupling(params.DesPar_ParRob.base_method, params.DesPar_ParRob.base_par);
       RP.align_platform_coupling(params.DesPar_ParRob.platform_method, params.DesPar_ParRob.platform_par(1:end-1));
-      Traj_0 = cds_rotate_traj(Traj_W, RP.T_W_0);
+      Traj_0 = cds_transform_traj(RP, Traj_W);
       % Prüfe die Lösbarkeit der IK
       [q_test,Phi]=RP.invkin_ser(Traj_0.X(1,:)', q0);
       if all(abs(Phi)<1e-6) && ~any(isnan(Phi))
@@ -86,7 +94,7 @@ for i_FG = 1:size(EEFG_Ges,1)
     end
     if ~params_success
       % Führe Maßsynthese neu aus. Parameter nicht erfolgreich geladen
-      Set.optimization.objective = 'valid_act';
+      Set.optimization.objective = 'valid_act'; % TODO: Bei freiem theta-Parameter werden mehrere Optimierungen gemacht. Soll nur eine sein.
       Set.optimization.ee_rotation = false;
       Set.optimization.ee_translation = false;
       Set.optimization.movebase = false;
@@ -102,26 +110,37 @@ for i_FG = 1:size(EEFG_Ges,1)
       Traj = Traj_W;
       cds_start
       resmaindir = fullfile(Set.optimization.resdir, Set.optimization.optname);
-      resfile = fullfile(resmaindir, sprintf('Rob%d_%s_Endergebnis.mat', 1, PName));
-      load(resfile, 'RobotOptRes');
-      if isempty(Structures) || RobotOptRes.fval > 1000
+      i_select = 0;
+      for i = 1:length(Structures) % alle Ergebnisse durchgehen (falls mehrere theta-Varianten)
+        resfile = fullfile(resmaindir, sprintf('Rob%d_%s_Endergebnis.mat', Structures{i}.Number, PName));
+        tmp = load(resfile, 'RobotOptRes');
+        if tmp.RobotOptRes.fval < 1000
+          i_select = i;
+          RobotOptRes = tmp.RobotOptRes;
+          break;
+        end
+      end
+      if isempty(Structures) || i_select == 0
         % Die Methode valid_act nimmt die erstbeste bestimmbare Kinematik.
         % Die Wahl der aktuierten Gelenke muss nicht zu vollem Rang führen.
         % Kriterium ist daher nur die Bestimmbarkeit des Rangs (fval <1000)
-        warning('Etwas ist bei der Maßsynthese schiefgelaufen');
+        warning('Etwas ist bei der Maßsynthese schiefgelaufen. Keine Lösung.');
         continue
       end
       RP = RobotOptRes.R;
       r_W_0 = RP.r_W_0;
       phi_W_0 = RP.phi_W_0;
+      phi_P_E = RP.phi_P_E;
+      r_P_E = RP.r_P_E;
       pkin = RP.Leg(1).pkin;
       DesPar_ParRob = RP.DesPar;
       q0 = RobotOptRes.q0;
       qlim = cat(1, RP.Leg.qlim); % Wichtig für Mehrfach-Versuche der IK
-      save(paramfile_robot, 'pkin', 'DesPar_ParRob', 'q0', 'r_W_0', 'phi_W_0', 'qlim');
+      save(paramfile_robot, 'pkin', 'DesPar_ParRob', 'q0', 'r_W_0', 'phi_W_0', 'qlim', 'r_P_E', 'phi_P_E');
       fprintf('Maßsynthese beendet\n');
-      Traj_0 = cds_rotate_traj(Traj_W, RP.T_W_0);
+      Traj_0 = cds_transform_traj(RP, Traj_W);
     end
+    
     % Klassenmethode gegen Templatemethode
     s = struct('Phit_tol', 1e-9, 'Phir_tol', 1e-9, 'retry_limit', 0, ...
       'normalize', false, 'n_max', 5000);
