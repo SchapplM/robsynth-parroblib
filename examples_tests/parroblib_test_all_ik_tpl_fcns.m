@@ -53,6 +53,8 @@ for i_FG = 1:size(EEFG_Ges,1)
     fprintf('Untersuche PKM %s\n', PName);
     serroblib_create_template_functions({LEG_Names{1}},  ~tpl_fcn_neu,recompile_mex) %#ok<CCAT1>
     parroblib_create_template_functions({PNames_Kin{ii}},~tpl_fcn_neu,recompile_mex); %#ok<CCAT1>
+%     matlabfcn2mex({[PName_Legs,'_invkin'], [PName_Legs,'_invkin3'], ...
+%       [PName_Legs,'_invkin_traj']});
     RP = parroblib_create_robot_class(PName, 1, 0.3);
     % Initialisierung der Funktionen: Kompilierte Funktionen nehmen
     % (notwendig für Struktursynthese)
@@ -145,6 +147,7 @@ for i_FG = 1:size(EEFG_Ges,1)
     s = struct('Phit_tol', 1e-9, 'Phir_tol', 1e-9, 'retry_limit', 0, ...
       'normalize', false, 'n_max', 5000);
     %% Teste inverse Kinematik für Einzelpunkte nach erster Methode
+    fprintf('Vergleiche Klassenmethode (invkin_ser) und Template-Methode (invkin2) für Einzelpunkt-IK Variante 1\n');
     % Wähle nur wenige Punkte der Trajektorie zum Testen der Einzelpunkt-IK
     II_traj = 1:size(Traj_0.X,1);
     II_traj = II_traj(randperm(length(II_traj)));
@@ -170,6 +173,7 @@ for i_FG = 1:size(EEFG_Ges,1)
           end
       end
       calctimes = NaN(max_single_points,2); % zum Abspeichern der Rechenzeit
+      num_niO = 0;
       for i = 1:max_single_points
         k = II_traj(i);
         t1=tic();
@@ -183,9 +187,10 @@ for i_FG = 1:size(EEFG_Ges,1)
         ik_res_iks = (all(abs(Phi_kls(RP.I_constr_t_red))<s.Phit_tol) && ... 
                       all(abs(Phi_kls(RP.I_constr_r_red))<s.Phir_tol)); % IK-Status Klassenmethode
         if ik_res_ik2 ~= ik_res_iks % Vergleiche IK-Status (Erfolg / kein Erfolg)
-          error('invkin_ser vs invkin2: IK Status nicht gleich');
+          error('invkin_ser vs invkin2 (Punkt %d/%d): IK Status nicht gleich', i, max_single_points);
         elseif ~ik_res_iks  % beide IK-Status false
-          error('invkin_ser vs invkin2: IK Status beide nicht erfolgreich');
+          num_niO = num_niO + 1;
+          warning('invkin_ser vs invkin2 (Punkt %d/%d): IK Status beide nicht erfolgreich', i, max_single_points);
         end
         ik_test_Tc_stack = Tc_stack_kls - Tc_stack_tpl;
         if max(abs(ik_test_Tc_stack(:))) > 1e-3
@@ -196,12 +201,16 @@ for i_FG = 1:size(EEFG_Ges,1)
           warning('invkin_ser vs invkin2: Gelenkwinkel aus kls und tpl stimmen nicht überein');
         end
       end
+      if num_niO / max_single_points > 0.60
+        error('invkin_ser vs invkin2: Mehr als 60%% (%d/%d) der IK-Versuche für beide Implementierungen nicht erfolgreich', num_niO, max_single_points);
+      end
       fprintf(['Klassen- und Template-Methode für Einzelpunkt-IK stimmen überein (Fall %d, %d Punkte).\n', ...
         'Zeiten: invkin_ser: mean %1.1fms (std %1.1fms), invkin2: mean %1.1fms (std %1.1fms)\n'], ...
         jj, max_single_points, 1e3*mean(calctimes(:,1)), ...
         1e3*std(calctimes(:,1)), 1e3*mean(calctimes(:,2)), 1e3*std(calctimes(:,2)));
     end
     %% Teste inverse Kinematik für Einzelpunkte nach zweiter Methode
+    fprintf('Vergleiche Klassenmethode (invkin3) und Template-Methode (invkin4) für Einzelpunkt-IK Variante 2\n');
     for jj = 1:2
       calctimes = NaN(max_single_points,2);
       % Geht vorerst nur für 3T3R
@@ -218,7 +227,7 @@ for i_FG = 1:size(EEFG_Ges,1)
         case 2
           % Teste IK mit Aufgabenredundanz
           % 3T2R-IK
-          s_jj.I_EE = logical([1 1 1 1 1 0]);
+          s_jj.I_EE_Task = logical([1 1 1 1 1 0]);
           RP.update_EE_FG(logical([1 1 1 1 1 1]), logical([1 1 1 1 1 0]));
       end
       for i = 1:max_single_points
@@ -257,6 +266,7 @@ for i_FG = 1:size(EEFG_Ges,1)
         jj, max_single_points, 1e3*mean(calctimes(:,1)), 1e3*std(calctimes(:,1)), 1e3*mean(calctimes(:,2)), 1e3*std(calctimes(:,2)));
     end
     %% Teste inverse Kinematik für Trajektorie
+    fprintf('Vergleiche Klassenmethode (invkin_traj) und Template-Methode (invkin2_traj) für Trajektorien-IK\n');
     for jj = 1:5
       calctimes = NaN(1,2);
       % Zurücksetzen der Aufgaben-FG auf Standard-Wert
@@ -313,5 +323,5 @@ for i_FG = 1:size(EEFG_Ges,1)
         'Zeiten: invkin_traj: %1.2fs, invkin2_traj: %1.2fs\n'], ...
         jj, calctimes(1), calctimes(2));
     end
-  end
-end
+  end % for ii (PKM)
+end % for i_FG
