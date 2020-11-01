@@ -56,9 +56,9 @@ actfilelist = dir(fullfile(repopath, '**', 'actuation.csv'));
 for i = 1:length(actfilelist)
   acttabfile = fullfile(actfilelist(i).folder, actfilelist(i).name);
   % Finde den Roboternamen heraus
-  [tokens,match] = regexp(actfilelist(i).folder, '.*/(P[\d]+.*)', 'tokens', 'match');
-  PName = tokens{1}{1};
-  SName = ['S',PName(2),PName(3:end)];
+  [tokens1,match1] = regexp(actfilelist(i).folder, '.*/P[\d]+([RP]+[\d]+[V]?[\d]*).*', 'tokens', 'match');
+  [tokens2,match2] = regexp(actfilelist(i).folder, '.*/P[\d]+([RP])+[\d]+[V]?[\d]*.*', 'tokens', 'match');
+  SName = ['S',sprintf('%d',length(tokens2{1}{1})),tokens1{1}{1}];
   % Prüfe den Status der Variablen
   I = strcmp(LegChainList(:,1), SName);
   if ~any(I)
@@ -75,18 +75,30 @@ for i = 1:length(actfilelist)
   tline = fgetl(fid);
   iline=0;
   abort_migration = false;
+  old_format = false;
   while ischar(tline)
     iline=iline+1;
     if iline == 1
-      if ~contains(tline, 'Wertebereich Winkel1')
-        warning('Überschrift in Datei %s nicht im alten Format. Überspringe.', acttabfile);
+      if contains(tline, 'Wertebereich freie Winkel')
+        % Format ist Standardwert aus parroblib_add_robot
+        % (Muss bei Hinzufügen neuer Roboter hier manuell umbenannt werden)
+        tline_new = strrep(tline, 'Wertebereich freie Winkel', ['Wertebereich ',paramstr]);
+      elseif ~contains(tline, 'Wertebereich Winkel1')
+        % Dieses Format entspricht der ersten Version der Datenbank bis
+        % Oktober 2020
+        warning(['Überschrift in Datei %s nicht im alten Format oder im ', ...
+          'Standard-Format. Überspringe.'], acttabfile);
         abort_migration = true;
         break;
+      else
+        % Überschrift aus altem Format umbenennen
+        tline_new = strrep(tline, 'Wertebereich Winkel1', ['Wertebereich ',paramstr]);
+        old_format = true;
       end
-      % Überschrift umbenennen
-      tline_new = strrep(tline, 'Wertebereich Winkel1', ['Wertebereich ',paramstr]);
-    else
-      % Verändere die Daten in der Spalte
+    elseif old_format
+      % Verändere die Daten in der Spalte. Aber nur, wenn die Tabelle dem
+      % alten Format (vor Oktober 2020) entspricht. Wird aus Überschrift
+      % erkannt.
       csvline = strsplit(tline, ';', 'CollapseDelimiters', false);
       data_angle1 = csvline{end};
       if strcmp(data_angle1, '*')
@@ -94,7 +106,7 @@ for i = 1:length(actfilelist)
       elseif strcmp(data_angle1, '0')
         csvline{end} = 'p'; % "Parallel"
       elseif strcmp(data_angle1, '90')
-        csvline{end} = '0'; % "Orthogonal"
+        csvline{end} = 'o'; % "Orthogonal"
       elseif strcmp(data_angle1, '090')
         csvline{end} = 'b'; % "Both" ("Parallel" und "Orthogonal")
       elseif isempty(data_angle1)
