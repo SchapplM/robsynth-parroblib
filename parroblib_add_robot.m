@@ -154,7 +154,10 @@ if ~exist(acttabfile, 'file')
     end
   end
   c=c+1; csvline_head1{c} = 'Rangverlust Plattform-FG';
-  c=c+1; csvline_head1{c} = 'Wertebereich Winkel1';
+  % Überschrift für Wertebereich der Winkel. Kann mit Skript
+  % "modify_csv_column_theta1.m" noch aktualisiert werden
+  % (Enthält dann die Variablennamen auf die sich die Spalte bezieht).
+  c=c+1; csvline_head1{c} = 'Wertebereich freie Winkel';
   % String aus Cell-Array erzeugen
   line_head1 = csvline_head1{1};
   for i = 2:length(csvline_head1)

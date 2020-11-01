@@ -32,19 +32,23 @@
 % AdditionalInfo_Akt
 %   Zusätzliche Infos. Spalten:
 %   1: Rangverlust der Jacobi-Matrix (in den vorgesehenen FG der PKM)
-%   2: Möglicher Wertebereich für den ersten frei wählbaren Strukturwinkel
-%      (theta1). Kodierung:
-%      0: Nicht definiert
-%      1: Nur 0°
-%      2: nur 90°
-%      3: 0° oder 90°
-%      4: Alle Werte möglich.
+% StructuralDHParam
+%   Information, welcher der freien strukturbestimmenden DH-Parameter
+%   (alpha und theta) auf welchen Wert gelegt werden darf. Variable Anzahl
+%   von Einträgen, je nachdem, welche Kombinationen möglich sind.
+%   Jeder Parameter kann 4 Zustände haben (1-4).
+%   Die Stelle der Zahl gibt die Reihenfolge des Parameters an. Kodierung:
+%      0: "u" - Nicht definiert
+%      1: "p" - Nur 0°
+%      2: "o" - nur 90°
+%      3: "b" - 0° oder 90°
+%      4: "a" - Alle Werte möglich.
 
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2018-12
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
 function [NLEG, LEG_Names, Actuation, Coupling, ActNr, symrob, EE_dof0, ...
-  PName_Kin, PName_Legs, AdditionalInfo_Akt] = ...
+  PName_Kin, PName_Legs, AdditionalInfo_Akt, StructuralDHParam] = ...
   parroblib_load_robot(Name)
 %% Initialisierung
 NLEG = 0;
@@ -53,7 +57,8 @@ Actuation = {};
 ActNr = 0;
 symrob = true;
 EE_dof0 = NaN(1,6);
-AdditionalInfo_Akt = NaN(1,2);
+AdditionalInfo_Akt = NaN(1,1);
+StructuralDHParam = 0;
 repopath=fileparts(which('parroblib_path_init.m'));
 
 % Name der Kinematischen Struktur von Aktuierung trennen
@@ -166,21 +171,11 @@ if ~isempty(csvline_act)
   % Rangverlust der Jacobi-Matrix
   AdditionalInfo_Akt(1) = str2double(csvline_act{k});
   % Mögliche Zahlenwerte für frei einstellbare Winkel wie theta1.
-  AdditionalInfo_Akt(2) = 0; % nicht definiert
-  if length(csvline_act) == k+1
-    % Die Werte sind gesetzt
-    if strcmp(csvline_act{k+1}, '0')
-      AdditionalInfo_Akt(2) = 1;
-    elseif strcmp(csvline_act{k+1}, '90')
-      AdditionalInfo_Akt(2) = 2;
-    elseif strcmp(csvline_act{k+1}, '090')
-      AdditionalInfo_Akt(2) = 3;
-    elseif strcmp(csvline_act{k+1}, '*') || strcmp(csvline_act{k+1}, '')
-      AdditionalInfo_Akt(2) = 4;
-    else
-      error('Wert "%s" ist nicht definiert für Wertebereich eines freien Winkels', csvline_act{k+1});
-    end
-  else % TODO: Ermögliche Wertebereiche für mehrere Winkel vorzugeben
+  % Die einzelnen Möglichkeiten sind Komma-getrennte Strings, bei der
+  % jede Stelle einen Parameter kodiert. In den meisten Fällen dürften
+  % nicht viele Kombinationen möglich sein.
+  StructuralDHParam = strsplit(csvline_act{k+1}, ',', 'CollapseDelimiters', false);
+  if length(csvline_act) ~= k+1
     error('Länge %d der Zeile ist nicht definiert', length(csvline_act));
   end
 elseif ActNr ~= 0

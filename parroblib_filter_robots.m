@@ -25,8 +25,6 @@
 %   Array mit zusätzlichen Infos für alle Strukturen aus PNames_Akt (in den Zeilen).
 %   Spalten:
 %   1: Rangverlust der Jacobi-Matrix (in den vorgesehenen FG der PKM)
-%   (2): Möglicher Wertebereich für den ersten frei wählbaren Strukturwinkel
-%      (wird hier nicht gesetzt, aber in anderen Funktionen so verwendet)
 % 
 % TODO: Aktuell sind nur symmetrische PKM berücksichtigt.
 % 
