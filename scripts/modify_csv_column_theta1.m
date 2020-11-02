@@ -11,6 +11,12 @@
 clear
 clc
 
+%% Benutzereingabe
+ % Bei "false" wird auch der Inhalt der Tabellen geändert (nicht nur die
+ % Kopfzeile). Bei "true" werden Kopfzeilen angepasst, z.B. bei neuen
+ % Robotern
+force_rewrite_header_only = true;
+
 %% Liste von Seriellen Beinketten zusammenstellen
 serroblibpath=fileparts(which('serroblib_path_init.m'));
 Anz_Beinketten = zeros(1,7);
@@ -30,17 +36,22 @@ for i = 3:6
     if sum(nparam) == 0
       continue;
     end
-    fprintf('%d FG, Rob. %d/%d (%s): %d Freie Parameter, also %d Kombinationen\n', ...
-      i, j, length(l.Names_Ndof), l.Names_Ndof{j}, sum(I_alpha|I_theta), ncomb);
     % disp([csvline(I_alpha),csvline(I_theta)]);
     paramstr = '';
+    % Sortiere die Parameter: Zuerst nach Gelenknummer, dann nach
+    % alpha/theta
     params = [csvline(I_alpha),csvline(I_theta)];
-    for k = 1:length(params)
-      paramstr = [paramstr, params{k}]; %#ok<AGROW>
-      if k < length(params)
-        paramstr=[paramstr,',']; %#ok<AGROW>
-      end
+    sortstr = cell(length(params),1);
+    for k = 1:length(sortstr)
+      sortstr{k} = [params{k}(end), params{k}];
     end
+    [~,III] = sort(sortstr); % Indizes zum Sortieren
+    for k = III'
+      paramstr = [paramstr, params{k},',']; %#ok<AGROW>
+    end
+    paramstr = paramstr(1:end-1); % letztes Komma entfernen
+    fprintf('%d FG, Rob. %d/%d (%s): %d Freie Parameter, also %d Kombinationen; %s\n', ...
+      i, j, length(l.Names_Ndof), l.Names_Ndof{j}, sum(I_alpha|I_theta), ncomb, paramstr);
     % Merke, welche Beinkette welche freien Parameter hat
     LegChainList = [LegChainList; {l.Names_Ndof{j}, paramstr}]; %#ok<AGROW>
   end
@@ -79,7 +90,14 @@ for i = 1:length(actfilelist)
   while ischar(tline)
     iline=iline+1;
     if iline == 1
-      if contains(tline, 'Wertebereich freie Winkel')
+      if force_rewrite_header_only
+        csvline = strsplit(tline, ';', 'CollapseDelimiters', false);
+        csvline{end} = ['Wertebereich ',paramstr];
+        tline_new = csvline{1};
+        for k = 2:length(csvline)
+          tline_new = sprintf('%s;%s', tline_new, csvline{k});
+        end
+      elseif contains(tline, 'Wertebereich freie Winkel')
         % Format ist Standardwert aus parroblib_add_robot
         % (Muss bei Hinzufügen neuer Roboter hier manuell umbenannt werden)
         tline_new = strrep(tline, 'Wertebereich freie Winkel', ['Wertebereich ',paramstr]);
@@ -118,6 +136,9 @@ for i = 1:length(actfilelist)
       for k = 2:length(csvline)
         tline_new = sprintf('%s;%s', tline_new, csvline{k});
       end
+    else
+      % Kopiere einfach die Datenzeile
+      tline_new = tline;
     end
     fwrite(fidc, [tline_new, newline]);
     tline = fgetl(fid); % nächste Zeile
