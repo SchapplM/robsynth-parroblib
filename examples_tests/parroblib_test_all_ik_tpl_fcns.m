@@ -41,11 +41,13 @@ for i_FG = 1:size(EEFG_Ges,1)
     III = III(randperm(length(III)));
   end
 %  % Debug:
-%  if i_FG == 1
-%    III = find(strcmp(PNames_Kin, 'P3RRR1G1P1'));
-%  elseif i_FG == 4
-%    III = find(strcmp(PNames_Kin, 'P5RPRRR8V1G9P8'));
-%  end
+%   if i_FG == 1
+%     III = find(strcmp(PNames_Kin, 'P3RRR1G1P1'));
+%   elseif i_FG == 2
+%     III = find(strcmp(PNames_Kin, 'P3RRRRR10V1G2P2'));
+%   elseif i_FG == 4
+%     III = find(strcmp(PNames_Kin, 'P5RPRRR8V1G9P8'));
+%   end
   for ii = III(1:min(max_num_pkm, length(III))) % Debug: find(strcmp(PNames_Kin, 'P6RRPRRR14V3G1P4'));
     PName = [PNames_Kin{ii},'A1']; % Nehme nur die erste Aktuierung (ist egal)
     [~, LEG_Names, ~, ~, ~, ~, ~, ~, PName_Legs, ~] = parroblib_load_robot(PName);
@@ -96,12 +98,13 @@ for i_FG = 1:size(EEFG_Ges,1)
     end
     if ~params_success
       % Führe Maßsynthese neu aus. Parameter nicht erfolgreich geladen
-      Set.optimization.objective = 'valid_act'; % TODO: Bei freiem theta-Parameter werden mehrere Optimierungen gemacht. Soll nur eine sein.
+      Set.optimization.objective = 'condition';
       Set.optimization.ee_rotation = false;
       Set.optimization.ee_translation = false;
       Set.optimization.movebase = false;
       Set.optimization.base_size = false;
       Set.optimization.platform_size = false;
+      Set.optimization.obj_limit = 1e3; % Sofort abbrechen, falls Ergebnis gut
       Set.structures.use_parallel_rankdef = 6;
       Set.structures.whitelist = {PName}; % nur diese PKM untersuchen
       Set.structures.nopassiveprismatic = false; % Für Dynamik-Test egal 
