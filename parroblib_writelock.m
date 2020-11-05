@@ -19,7 +19,7 @@
 % verbosity
 %   Bei true werden Textausgaben gemacht.
 
-% Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 20120-08
+% Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2020-08
 % (C) Institut für Mechatronische Systeme, Leibniz Universität Hannover
 
 function parroblib_writelock(mode, content, EEFG, patience, verbosity)
