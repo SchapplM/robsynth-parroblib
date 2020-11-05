@@ -114,6 +114,9 @@ for i_FG = 1:size(EEFG_Ges,1)
       Set.general.nosummary = true;
       Traj = Traj_W;
       cds_start
+      if isempty(Structures)
+        error('PKM %s wurde erst aus Datenbank gewählt und danach nicht mehr gefunden. Fehler.', PName);
+      end
       resmaindir = fullfile(Set.optimization.resdir, Set.optimization.optname);
       i_select = 0;
       for i = 1:length(Structures) % alle Ergebnisse durchgehen (falls mehrere theta-Varianten)
@@ -204,8 +207,8 @@ for i_FG = 1:size(EEFG_Ges,1)
           warning('invkin_ser vs invkin2: Gelenkwinkel aus kls und tpl stimmen nicht überein');
         end
       end
-      if num_niO / max_single_points > 0.60
-        error('invkin_ser vs invkin2: Mehr als 60%% (%d/%d) der IK-Versuche für beide Implementierungen nicht erfolgreich', num_niO, max_single_points);
+      if num_niO / max_single_points > 0.80 % bei ungünstigen Kinematikparametern evtl schlechte Konvergenz
+        error('invkin_ser vs invkin2: Mehr als 80%% (%d/%d) der IK-Versuche für beide Implementierungen nicht erfolgreich', num_niO, max_single_points);
       end
       fprintf(['Klassen- und Template-Methode für Einzelpunkt-IK stimmen überein (Fall %d, %d Punkte).\n', ...
         'Zeiten: invkin_ser: mean %1.1fms (std %1.1fms), invkin2: mean %1.1fms (std %1.1fms)\n'], ...
