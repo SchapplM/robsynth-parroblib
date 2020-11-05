@@ -58,7 +58,7 @@ ActNr = 0;
 symrob = true;
 EE_dof0 = NaN(1,6);
 AdditionalInfo_Akt = NaN(1,1);
-StructuralDHParam = 0;
+StructuralDHParam = {};
 repopath=fileparts(which('parroblib_path_init.m'));
 
 % Name der Kinematischen Struktur von Aktuierung trennen
