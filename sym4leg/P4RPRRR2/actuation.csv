@@ -1,5 +1,7 @@
-Name;Aktuierung Bein 1;;;;;Aktuierung Bein 2;;;;;Aktuierung Bein 3;;;;;Aktuierung Bein 4;;;;;Rangverlust Plattform-FG;Wertebereich Winkel1
-P4RPRRR2G1P2A1;0;1;0;0;0;0;1;0;0;0;0;1;0;0;0;0;1;0;0;0;1;*
-P4RPRRR2G1P3A1;0;1;0;0;0;0;1;0;0;0;0;1;0;0;0;0;1;0;0;0;2;*
-P4RPRRR2G2P1A1;0;1;0;0;0;0;1;0;0;0;0;1;0;0;0;0;1;0;0;0;3;*
-P4RPRRR2G3P1A1;0;1;0;0;0;0;1;0;0;0;0;1;0;0;0;0;1;0;0;0;3;*
+Name;Aktuierung Bein 1;;;;;Aktuierung Bein 2;;;;;Aktuierung Bein 3;;;;;Aktuierung Bein 4;;;;;Rangverlust Plattform-FG;Wertebereich theta2
+P4RPRRR2G1P2A1;0;1;0;0;0;0;1;0;0;0;0;1;0;0;0;0;1;0;0;0;1;a
+P4RPRRR2G1P3A1;0;1;0;0;0;0;1;0;0;0;0;1;0;0;0;0;1;0;0;0;2;a
+P4RPRRR2G1P8A1;0;1;0;0;0;0;1;0;0;0;0;1;0;0;0;0;1;0;0;0;2;a
+P4RPRRR2G2P1A1;0;1;0;0;0;0;1;0;0;0;0;1;0;0;0;0;1;0;0;0;3;a
+P4RPRRR2G3P1A1;0;1;0;0;0;0;1;0;0;0;0;1;0;0;0;0;1;0;0;0;3;a
+P4RPRRR2G9P1A1;0;1;0;0;0;0;1;0;0;0;0;1;0;0;0;0;1;0;0;0;3;a

@@ -7,9 +7,10 @@
 % varargin
 %   Name und Wert für zusätzliche PKM-Eigenschaften:
 %   * rankloss: Anzahl der Dimensionen des Rangverlustes
-%   * values_angle1: Mögliche Werte für den ersten freien Winkel (i.d.R.
-%     theta1). Koodierung: Nur 0° (0), nur 90° (90), 0° oder 90° (090),
-%     alle Werte möglich (*). Siehe parroblib_load_robot.
+%   * values_angles: Mögliche Werte für die freien Winkel (alpha und theta).
+%     Kodierung durch Komma-getrennte Zeichen für jeden möglichen Zustand.
+%     Reihenfolge: Aufsteigende Gelenknummer, erst alpha, dann theta
+%     Beispiel: z.B. "op,po". Siehe parroblib_load_robot.
 
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2019-09
 % (C) Institut für Mechatronische Systeme, Universität Hannover
@@ -18,7 +19,7 @@ function parroblib_change_properties(PName_Akt, varargin)
 p = inputParser;
 addRequired(p,'PName_Akt');
 addParameter(p,'rankloss',[])
-addParameter(p,'values_angle1',[])
+addParameter(p,'values_angles',[])
 parse(p,PName_Akt,varargin{:});
 repopath=fileparts(which('parroblib_path_init.m'));
 [NLEG, ~, ~, ~, ~, ~, ~, ~, PName_Legs] = parroblib_load_robot(PName_Akt);
@@ -39,11 +40,8 @@ while ischar(tline) && ~isempty(tline)
     if ~isempty(p.Results.rankloss)
       csvline{end-1} = p.Results.rankloss;
     end
-    if ~isempty(p.Results.values_angle1)
-      if ~any(strcmp(p.Results.values_angle1, {'0','90','090','*'}))
-        error('Wert "%s" für values_angle1 ist keine der zulässigen Eingaben.', p.Results.values_angle1);
-      end
-      csvline{end} = p.Results.values_angle1;
+    if ~isempty(p.Results.values_angles)
+      csvline{end} = p.Results.values_angles;
     end
     % Zeile neu generieren
     tline = csvline{1};
