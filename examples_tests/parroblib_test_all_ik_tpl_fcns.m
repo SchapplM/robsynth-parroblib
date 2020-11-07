@@ -215,6 +215,7 @@ for i_FG = 1:size(EEFG_Ges,1)
         jj, max_single_points, 1e3*mean(calctimes(:,1)), ...
         1e3*std(calctimes(:,1)), 1e3*mean(calctimes(:,2)), 1e3*std(calctimes(:,2)));
     end
+    fprintf('Vergleich invkin_ser vs invkin2 für 3 Fälle erfolgreich\n');
     %% Teste inverse Kinematik für Einzelpunkte nach zweiter Methode
     fprintf('Vergleiche Klassenmethode (invkin3) und Template-Methode (invkin4) für Einzelpunkt-IK Variante 2\n');
     for jj = 1:2
@@ -271,6 +272,7 @@ for i_FG = 1:size(EEFG_Ges,1)
         'Zeiten: invkin3: mean %1.1fms (std %1.1fms), invkin4: mean %1.1fms (std %1.1fms)\n'], ...
         jj, max_single_points, 1e3*mean(calctimes(:,1)), 1e3*std(calctimes(:,1)), 1e3*mean(calctimes(:,2)), 1e3*std(calctimes(:,2)));
     end
+    fprintf('Vergleich invkin3 vs invkin4 für 2 Fälle erfolgreich\n');
     %% Teste inverse Kinematik für Trajektorie
     fprintf('Vergleiche Klassenmethode (invkin_traj) und Template-Methode (invkin2_traj) für Trajektorien-IK\n');
     for jj = 1:5
@@ -278,6 +280,7 @@ for i_FG = 1:size(EEFG_Ges,1)
       % Zurücksetzen der Aufgaben-FG auf Standard-Wert
       RP.update_EE_FG(RP.I_EE, RP.I_EE);
       s_jj = s;
+      s_jj.debug = true; % Abbruch, wenn interne Fehler in Traj.-IK-Fkt.
       switch jj
         case 1
           % Teste IK mit vollständigen Freiheitsgraden
@@ -307,23 +310,68 @@ for i_FG = 1:size(EEFG_Ges,1)
           s_jj.I_EE_Task = logical([1 1 1 1 1 0]);
           RP.update_EE_FG(logical([1 1 1 1 1 1]), logical([1 1 1 1 1 0]));
       end
+      % Berechne IK des ersten Traj.-Punktes, damit beide Verfahren
+      % gleich anfangen (sonst mehr Möglichkeit für Abweichungen).
+      [q0_traj, Phi_q0] = RP.invkin_ser(Traj_0.X(1,:)', q0);
+      if any(abs(Phi_q0) > 1e-8) || any(isnan(Phi_q0))
+        error('IK für Anfangspunkt nicht berechenbar. Muss funktionieren, da Parameter aus Maßsynthese');
+      end
       t1=tic();
-      [Q_t_kls, QD_t_kls, ~, Phi1_t_kls,~,~, JointPos_all_kls] = ...
-        RP.invkin_traj(Traj_0.X, Traj_0.XD, Traj_0.XDD, Traj_0.t, q0, s_jj);% Klassen
+      [Q_t_kls, QD_t_kls, QDD_t_kls, Phi1_t_kls,~,~, JointPos_all_kls] = ...
+        RP.invkin_traj(Traj_0.X, Traj_0.XD, Traj_0.XDD, Traj_0.t, q0_traj, s_jj);% Klassen
       calctimes(1)=toc(t1);
       t1=tic();
-      [Q_t_tpl, QD_t_tpl, ~, Phi1_t_tpl,~,~, JointPos_all_tpl] = ...
-        RP.invkin2_traj(Traj_0.X, Traj_0.XD, Traj_0.XDD, Traj_0.t, q0, s_jj);% Template
+      [Q_t_tpl, QD_t_tpl, QDD_t_tpl, Phi1_t_tpl,~,~, JointPos_all_tpl] = ...
+        RP.invkin2_traj(Traj_0.X, Traj_0.XD, Traj_0.XDD, Traj_0.t, q0_traj, s_jj);% Template
       calctimes(2)=toc(t1);
+      trajik_iO = [any(abs(Phi1_t_kls(:)) > 1e-6), any(abs(Phi1_t_tpl(:)) > 1e-6)];
+      if any(~trajik_iO)
+        error('Eine Trajektorien-IK funktioniert nicht. Darf nicht sein, da Parameter aus Maßsynthese kommen');
+      end
+      % Prüfe das Ergebnis der Traj.-IK in sich. Wenn die IK erfolgreich
+      % ist, muss die Plattform-Bewegung von allen Beinketten aus gezählt
+      % übereinstimmen
+      for iktyp = 1:2
+        if ~trajik_iO(iktyp), continue; end % Nicht prüfbar, ob IK stimmt.
+        if iktyp == 1
+          Q = Q_t_kls; QD = QD_t_kls; QDD = QDD_t_kls;
+        else
+          Q = Q_t_tpl; QD = QD_t_tpl; QDD = QDD_t_tpl;
+        end
+        for j = 1:RP.NLEG
+          [X3,XD3,XDD3] = RP.fkineEE_traj(Q, QD, QDD, j);
+          if j == 1 % Speichere die erste Beinkette als Referenz
+            X = X3; XD = XD3; XDD = XDD3;
+          end
+          test_X = X(:,1:6) - X3(:,1:6);
+          test_X([false(size(test_X,1),3),abs(abs(test_X(:,4:6))-2*pi)<1e-3]) = 0; % 2pi-Fehler entfernen
+          test_XD = XD(:,1:6) - XD3(:,1:6);
+          test_XDD = XDD(:,1:6) - XDD3(:,1:6);
+          if max(abs(test_X(:)))>1e-6
+            Ifirst = find(any(abs(test_X)>1e-6,2), 1, 'first');
+            error('Die Endeffektor-Trajektorie X aus Beinkette %d stimmt nicht gegen Beinkette 1. Erstes Vorkommnis: Zeitschritt %d', j, Ifirst);
+          end
+          if max(abs(test_XD(:)))>1e-6
+            Ifirst = find(any(abs(test_XD)>1e-6,2), 1, 'first');
+            error('Die Endeffektor-Trajektorie XD aus Beinkette %d stimmt nicht gegen Beinkette 1. Erstes Vorkommnis: Zeitschritt %d', j, Ifirst);
+          end
+          test_XDD(abs(test_XDD)<1e-3) = 0;
+          if max(abs(test_XDD(:)))>1e-3
+            Ifirst = find(any(abs(test_XDD)>1e-3,2), 1, 'first');
+            error('Die Endeffektor-Trajektorie XDD aus Beinkette %d stimmt nicht gegen Beinkette 1. Erstes Vorkommnis: Zeitschritt %d', j, Ifirst);
+          end
+        end
+      end
       test_JP = JointPos_all_kls - JointPos_all_tpl;
       test_Q = Q_t_kls - Q_t_tpl;
+      if any(abs(test_Q(:))>1e-3)
+        Ifirst = find(any(abs(test_Q)>1e-3,2), 1, 'first');
+        warning('invkin_traj vs invkin2_traj: Q1 aus kls und tpl stimmen nicht überein. Max. Abweichung %1.1e. Erstes Vorkommnis: Zeitschritt %d', ...
+          max(abs(test_Q(:))), Ifirst);
+      end
       if any(abs(test_JP(:))>1e-6)
         warning('invkin_traj vs invkin2_traj: JointPos aus kls und tpl stimmen nicht überein. Max. Abweichung %1.1e', ...
           max(abs(test_JP(:))));
-      end
-      if any(abs(test_Q(:))>1e-6)
-        warning('invkin_traj vs invkin2_traj: Q1 aus kls und tpl stimmen nicht überein. Max. Abweichung %1.1e', ...
-          max(abs(test_Q(:))));
       end
       fprintf(['Klassen- und Template-Methode für Traj.-IK stimmen überein (Fall %d).\n', ...
         'Zeiten: invkin_traj: %1.2fs, invkin2_traj: %1.2fs\n'], ...
