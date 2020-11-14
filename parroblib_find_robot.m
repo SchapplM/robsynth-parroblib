@@ -26,7 +26,7 @@
 %   Zeile in der csv-Tabelle für Aktuierung (actuation.csv)
 
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2018-12
-% (C) Institut für mechatronische Systeme, Universität Hannover
+% (C) Institut für Mechatronische Systeme, Leibniz Universität Hannover
 
 function [found, Name, PName_Kin, csvline_kin, csvline_act] = parroblib_find_robot(NLEG, LEG_Names, Actuation, Coupling, symrob)
 
@@ -41,39 +41,50 @@ if ~symrob
   error('Nicht kinematisch symmetrische Roboter noch nicht implementiert');
 end
 %% Roboterkinematik in Tabelle suchen
+% Da Anzahl Beinketten gegeben ist, aber die PKM nach FG gespeichert sind,
+% müssen mehrere Tabellen durchsucht werden.
+EEFG_Ges = logical(...
+  [1 1 0 0 0 1; 1 1 1 0 0 0;  1 1 1 0 0 1; ...
+   1 1 1 1 1 0; 1 1 1 1 1 1]);
+EEstr = ''; % Platzhalter, wird im folgenden belegt.
 PName_Kin = '';
-kintabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), sprintf('sym%dleg_list.csv', NLEG));
-fid = fopen(kintabfile);
-if fid == -1
-  warning('Datei %s existiert nicht. Sollte aber im Repo enthalten sein.', kintabfile);
-  return
+for jj = 1:size(EEFG_Ges,1)
+  if sum(EEFG_Ges(jj,:)) ~= NLEG, continue; end % PKM-FG passen nicht zu Beinketten
+  EEstr = sprintf('%dT%dR', sum(EEFG_Ges(jj,1:3)), sum(EEFG_Ges(jj,4:6)));
+  kintabfile = fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list.csv']);
+  fid = fopen(kintabfile);
+  if fid == -1
+    warning('Datei %s existiert nicht. Sollte aber im Repo enthalten sein.', kintabfile);
+    return
+  end
+  tline = fgetl(fid);
+  while ischar(tline) && ~isempty(tline)
+    % Spaltenweise als Cell-Array
+    csvline = strsplit(tline, ';');
+    tline = fgetl(fid); % nächste Zeile
+    if isempty(csvline) || strcmp(csvline{1}, '')
+      continue
+    end
+    if length(csvline) ~= 8
+      % warning('Zeile %s sieht ungültig aus', tline);
+      continue % nicht genug Spalten: Ungültiger Datensatz oder Überschrift
+    end
+    % Vergleich mit Eingabedaten
+    if ~strcmp(csvline{2}, LEG_Names{1})
+      continue
+    end
+    if ~contains(csvline{1}, sprintf('G%dP%d', Coupling(1), Coupling(2)))
+      continue
+    end
+    % Bis hier hin gekommen: Roboter-Kinematik wurde gefunden
+    PName_Kin = csvline{1};
+    csvline_kin = csvline;
+    found(1) = true;
+    break;
+  end
+  fclose(fid);
+  if found(1), break; end % In aktueller Tabelle gefunden. Abbruch.
 end
-tline = fgetl(fid);
-while ischar(tline) && ~isempty(tline)
-  % Spaltenweise als Cell-Array
-  csvline = strsplit(tline, ';');
-  tline = fgetl(fid); % nächste Zeile
-  if isempty(csvline) || strcmp(csvline{1}, '')
-    continue
-  end
-  if length(csvline) ~= 8
-    % warning('Zeile %s sieht ungültig aus', tline);
-    continue % nicht genug Spalten: Ungültiger Datensatz oder Überschrift
-  end
-  % Vergleich mit Eingabedaten
-  if ~strcmp(csvline{2}, LEG_Names{1})
-    continue
-  end
-  if ~contains(csvline{1}, sprintf('G%dP%d', Coupling(1), Coupling(2)))
-    continue
-  end
-  % Bis hier hin gekommen: Roboter-Kinematik wurde gefunden
-  PName_Kin = csvline{1};
-  csvline_kin = csvline;
-  found(1) = true;
-  break;
-end
-fclose(fid);
 
 if isempty(PName_Kin)
   % Der Kinematikname fehlt bislang in der Datenbank
@@ -92,7 +103,7 @@ if isempty(tokens)
   error('Name %s aus Tabelle passt nicht zum Namensschema', PName_Kin);
 end
 PName_Legs = tokens{1}{1};
-acttabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, 'actuation.csv');
+acttabfile = fullfile(repopath, ['sym_', EEstr], PName_Legs, 'actuation.csv');
 fid = fopen(acttabfile);
 if fid == -1
   % Diese Aktuierung zu der Kinematik ist noch nicht gespeichert / generiert.

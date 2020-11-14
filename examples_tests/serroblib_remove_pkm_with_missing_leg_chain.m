@@ -19,7 +19,13 @@ for N = 3:6
     l.Names_Ndof = [l.Names_Ndof,l_tmp.Names_Ndof];
   end
   % Lade alle Roboter die es gibt (keine Filter wirksam)
-  PNames_Kin = parroblib_filter_robots(N, false(1,6), false(1,6));
+  EEFG_Ges = logical(...
+    [1 1 0 0 0 1; 1 1 1 0 0 0;  1 1 1 0 0 1; ...
+     1 1 1 1 1 0; 1 1 1 1 1 1]);
+  PNames_Kin = {};
+  for j = 1:size(EEFG_Ges,1)
+    PNames_Kin = [PNames_Kin, parroblib_filter_robots(EEFG_Ges(j,:))]; %#ok<AGROW>
+  end
   for i = 1:length(PNames_Kin)
     PName_kin_i = PNames_Kin{i};
     % Bestimme Namen der Beinkette

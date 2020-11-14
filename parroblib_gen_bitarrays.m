@@ -1,12 +1,12 @@
 % Generiere .mat-Dateien zum schnelleren Durchsuchen der Datenbank
 % 
 % Eingabe:
-% N_update (optional)
-%   Anzahl der Beinketten der Roboter, für die die .mat-Datei
-%   aktualisiert werden soll.
+% EEFG_update (optional)
+%   Array mit EE-FG, für die neu generiert werden soll. Zeilenweise FG im
+%   Format [1 1 0 0 0 1]
 % 
 % Schreibt Dateien:
-% symxleg_list_kin.mat (x=Anzahl Beinketten aus Eingabe). Enthält Variable
+% sym_xTyR_list_kin.mat (x,y aus EEFG aus Eingabe). Enthält Variable
 % KinTab. Entspricht symxleg_list.csv. Matlab-Tabelle mit Feldern:
 %   Name
 %     Name der PKM-Kinematik (mit Koppelgelenk): "P6PRRRRR1G1P5"
@@ -32,15 +32,21 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2020-11
 % (C) Institut für Mechatronische Systeme, Leibniz Universität Hannover
 
-function parroblib_gen_bitarrays(N_update)
-
+function parroblib_gen_bitarrays(EEFG_update)
 if nargin == 0
-  N_update = 3:6; % Aktualisiere alle Roboter
+  EEFG_update = logical(... % Aktualisiere alle Roboter
+    [1 1 0 0 0 1; 1 1 1 0 0 0;  1 1 1 0 0 1; ...
+     1 1 1 1 1 0; 1 1 1 1 1 1]);
 end
+if size(EEFG_update,2)~=6
+  error('Eingabe EEFG_update muss 0/1-Matrix mit 6 Spalten sein');
+end
+
 repopath=fileparts(which('parroblib_path_init.m'));
-for NLEG = N_update(:)'
+for iFG = 1:size(EEFG_update,1)
+  EEstr = sprintf('%dT%dR', sum(EEFG_update(iFG,1:3)), sum(EEFG_update(iFG,4:6)));
   %% Kinematik-Tabelle durchsuchen
-  kintabfile_csv = fullfile(repopath, sprintf('sym%dleg', NLEG), sprintf('sym%dleg_list.csv', NLEG));
+  kintabfile_csv = fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list.csv']);
   if ~exist(kintabfile_csv, 'file')
     warning('Datei %s existiert nicht. Sollte aber im Repo enthalten sein.', kintabfile_csv);
     return
@@ -65,7 +71,7 @@ for NLEG = N_update(:)'
   %% Kinematik-Tabelle speichern
   % Prüfe, ob die aktuell ausgelesene CSV-Datei der gleiche Stand ist wie
   % die binär einzulesende Datei
-  kintabfile_mat = fullfile(repopath, sprintf('sym%dleg', NLEG), sprintf('sym%dleg_list_kin.mat', NLEG));
+  kintabfile_mat = fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list_kin.mat']);
   write_new_kin = false;
   if exist(kintabfile_mat, 'file')
     tmp = load(kintabfile_mat);
@@ -96,7 +102,7 @@ for NLEG = N_update(:)'
     else % serielle Kette ist eine Variante abgeleitet aus Hauptmodell
       PName_Legs = ['P', res{1}, res{2}, res{3}, 'V', res{4}];
     end
-    acttabfile_csv = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, 'actuation.csv');
+    acttabfile_csv = fullfile(repopath, ['sym_', EEstr], PName_Legs, 'actuation.csv');
     if ~exist(acttabfile_csv, 'file')
       % Diese Aktuierung zu der Kinematik ist noch nicht gespeichert / generiert.
       warning('Zu Kinematik %s gibt es keine Aktuierungstabelle %s', PName_Kin, acttabfile_csv);
@@ -114,6 +120,7 @@ for NLEG = N_update(:)'
     % Dazu Spaltenüberschriften interpretieren. Siehe actuation.csv.
     ileg = 0;
     ilegj = 0;
+    NLEG = sum(EEFG_update(iFG,:)); % Annahme: keine Antriebsredundanz, etc.
     vargroups_leg_acts = cell(NLEG,1);
     for jj = 1:length(varnames_act)
       [tokens] = regexp(varnames_act{jj},'Aktuierung Bein (\d)','tokens');
@@ -159,7 +166,7 @@ for NLEG = N_update(:)'
   %% Aktuierungs-Tabelle speichern
   % Prüfe, ob die aktuell ausgelesene CSV-Datei der gleiche Stand ist wie
   % die binär einzulesende Datei
-  acttabfile_mat = fullfile(repopath, sprintf('sym%dleg', NLEG), sprintf('sym%dleg_list_act.mat', NLEG));
+  acttabfile_mat = fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list_act.mat']);
   write_new_act = false;
   if exist(acttabfile_mat, 'file')
     tmp = load(acttabfile_mat);

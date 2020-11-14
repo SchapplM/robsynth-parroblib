@@ -21,11 +21,11 @@
 %   true, wenn Roboter neu ist und der Datenbank hinzugefügt wurde.
 % 
 % Schreibt Dateien:
-% sym3leg/sym3leg_list.csv (Liste aller Roboterstrukturen)
+% sym_xTyR/sym_xTyR_list.csv (Liste aller Roboterstrukturen)
 % actuation.csv (Tabelle der Aktuierungen)
 
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2018-12
-% (C) Institut für Mechatronische Systeme, Universität Hannover
+% (C) Institut für Mechatronische Systeme, Leibniz Universität Hannover
 
 function [Name, new] = parroblib_add_robot(NLEG, LEG_Names, Actuation, Coupling, EEdof0)
 %% Init
@@ -35,7 +35,7 @@ if length(Actuation) ~= NLEG
 end
 assert(isa(Coupling, 'double') && all(size(Coupling) == [1 2]), ...
   'Koppelpunkt-Kennung muss 1x2 double sein');
-
+EEstr = sprintf('%dT%dR', sum(EEdof0(1:3)), sum(EEdof0(4:6)));
 % Prüfe, ob kinematisch symmetrisch (durch Vergleich der Namen der
 % Beinketten)
 symrob = true;
@@ -66,9 +66,9 @@ new = true;
 %% Erstelle neuen Eintrag: Kinematik-Tabelle
 if ~found(1)
   % Für diese Kinematik gibt es noch keinen Eintrag
-  kintabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), sprintf('sym%dleg_list.csv', NLEG));
-  kintabtmp1file = fullfile(repopath, sprintf('sym%dleg', NLEG), sprintf('sym%dleg_list.tmp1.csv', NLEG));
-  kintabtmp2file = fullfile(repopath, sprintf('sym%dleg', NLEG), sprintf('sym%dleg_list.tmp2.csv', NLEG));
+  kintabfile = fullfile(repopath, ['sym_%s', EEstr], ['sym_',EEstr,'_list.csv']);
+  kintabtmp1file = fullfile(repopath, ['sym_%s', EEstr], ['sym_',EEstr,'_list.tmp1.csv']);
+  kintabtmp2file = fullfile(repopath, ['sym_%s', EEstr], ['sym_',EEstr,'_list.tmp2.csv']);
   % Kopfzeilendatei erstellen (Temp-Datei zum Kopieren)
   mkdirs(fileparts(kintabfile));
   csvline_head1 = {'Name','Beinkette','EE-FG (Basis-KS)','','','','',''};
@@ -133,7 +133,7 @@ expression = '(P[\d][RP]+[\d]+[V]?[\d]*)G[\d]+P[\d]+'; % Format "P3RRR1G1P1A1" o
 [tokens, ~] = regexp(PName_Kin,expression,'tokens','match');
 PName_Legs = tokens{1}{1};
 
-acttabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, 'actuation.csv');
+acttabfile = fullfile(repopath, ['sym_', EEstr], PName_Legs, 'actuation.csv');
 if ~exist(acttabfile, 'file')
   % Tabelle existiert nicht. Erstellen
   % Kopfzeile als Cell-Array

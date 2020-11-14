@@ -91,8 +91,7 @@ elseif ~isempty(i)
     % Name der PKM-Kinematik zusammenstellen
     PName = sprintf('P%d%sG%dP%d', NLEG, SName_str(3:end),Coupling(1),Coupling(2));
     % Finde alle Roboter in der Datenbank mit dieser Anzahl Beinen
-    [~, PNames_Akt, AdditionalInfo_Akt] = parroblib_filter_robots( ...
-      NLEG, EE_FG0, [1 1 1 1 1 1], 6);
+    [~, PNames_Akt, AdditionalInfo_Akt] = parroblib_filter_robots(EE_FG0,6);
     % Finde alle Aktuierungen zu dieser Kinematik
     AnzahlErfolgAkt_i = 0;
     AnzahlErfolglosAkt_i = 0; % nur zur Probe
@@ -143,10 +142,8 @@ function parroblib_create_csv(EE_FG0, var)
 
 csvtable = csvtable_filepath(EE_FG0, var);
 %% Kinematik-Tabelle durchsuchen
-EE_FG_Mask = logical([1 1 1 1 1 1]); % hat keine Wirkung
 NLEG = sum(EE_FG0);
-[PNames_Kin, PNames_Akt, AdditionalInfo_Akt] = parroblib_filter_robots( ...
-  NLEG, EE_FG0, EE_FG_Mask, 6);
+[PNames_Kin, PNames_Akt, AdditionalInfo_Akt] = parroblib_filter_robots(EE_FG0,6);
 
 %% PKM von Datenbank zu csv eingeben
 tableheading = {'Beinkette','Anzahl_Beinketten','G_Methode','P_Methode','Status', 'Anzahl_Akt'};

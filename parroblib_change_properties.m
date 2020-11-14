@@ -13,7 +13,7 @@
 %     Beispiel: z.B. "op,po". Siehe parroblib_load_robot.
 
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2019-09
-% (C) Institut für Mechatronische Systeme, Universität Hannover
+% (C) Institut für Mechatronische Systeme, Leibniz Universität Hannover
 
 function parroblib_change_properties(PName_Akt, varargin)
 p = inputParser;
@@ -22,10 +22,10 @@ addParameter(p,'rankloss',[])
 addParameter(p,'values_angles',[])
 parse(p,PName_Akt,varargin{:});
 repopath=fileparts(which('parroblib_path_init.m'));
-[NLEG, ~, ~, ~, ~, ~, ~, ~, PName_Legs] = parroblib_load_robot(PName_Akt);
-
+[~, ~, ~, ~, ~, ~, EEdof0, ~, PName_Legs] = parroblib_load_robot(PName_Akt);
+EEstr = sprintf('%dT%dR', sum(EEdof0(1:3)), sum(EEdof0(4:6)));
 %% Durchsuche die Aktuierungstabelle und ändere die entsprechende Zeile
-acttabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, 'actuation.csv');
+acttabfile = fullfile(repopath, ['sym_', EEstr], PName_Legs, 'actuation.csv');
 acttabfile_copy = [acttabfile, '.copy']; % Kopie der Tabelle zur Bearbeitung
 fid = fopen(acttabfile, 'r');
 fidc = fopen(acttabfile_copy, 'w');
