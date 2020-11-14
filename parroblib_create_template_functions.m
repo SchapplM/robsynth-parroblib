@@ -29,10 +29,13 @@ old_dir = pwd();
 repopath=fileparts(which('parroblib_path_init.m'));
 if nargin < 1 || isempty(Names) % keine Eingabe einer Liste. Nehme alle.
   % Stelle Liste aller Roboter zusammen
-  Names = {};  
-  for N = 3:6
-    [PNames_Kin, ~, ~] = parroblib_filter_robots(N, ones(1,6), zeros(1,6), 6); 
-    Names = {Names{:}, PNames_Kin{:}}; %#ok<CCAT>
+  Names = {};
+  EEFG_Ges = logical(...
+    [1 1 0 0 0 1; 1 1 1 0 0 0;  1 1 1 0 0 1; ...
+     1 1 1 1 1 0; 1 1 1 1 1 1]);
+  for j = 1:size(EEFG_Ges,1)
+    [PNames_Kin, ~, ~] = parroblib_filter_robots(EEFG_Ges(j,:), 6); 
+    Names = [Names, PNames_Kin]; %#ok<CCAT>
   end
 end
 if nargin < 2
@@ -134,8 +137,9 @@ for i = 1:length(Names)
   Name_i = Names{i};
   % Daten zur PKM laden
   [N, LEG_Names,~,~,~,~,EE_dof0,~,PName_Legs] = parroblib_load_robot([Name_i,'A0']);
+  EEstr = sprintf('%dT%dR', sum(EE_dof0(1:3)), sum(EE_dof0(4:6)));
   RS = serroblib_create_robot_class(LEG_Names{1});
-  fcn_dir = fullfile(repopath, sprintf('sym%dleg', N), PName_Legs, 'tpl');
+  fcn_dir = fullfile(repopath, ['sym_', EEstr], PName_Legs, 'tpl');
   % Platzhalter-Ausdrücke für diese PKM. Werden aus ParRob-Klassen
   % generiert. Ersetze Ausdruck später von Spalte 1 mit Ausdruck in Spalte 2
   subsexp_array = { ...

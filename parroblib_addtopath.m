@@ -17,8 +17,8 @@ end
 parroblibpath=fileparts(which('parroblib_path_init.m'));
 for i = 1:length(Names)
   Name = Names{i};
-  [NLEG, LEG_Names, ~, Coupling, ActNr, ~, ~, PName_Kin, PName_Legs] = parroblib_load_robot(Name);
-
+  [NLEG, LEG_Names, ~, Coupling, ActNr, ~, EEdof0, PName_Kin, PName_Legs] = parroblib_load_robot(Name);
+  EEstr = sprintf('%dT%dR', sum(EEdof0(1:3)), sum(EEdof0(4:6)));
   % Pfade für Matlab-Funktionen der PKM hinzufügen
   switch Coupling(1) % siehe align_base_coupling.m
     case 1
@@ -44,13 +44,13 @@ for i = 1:length(Names)
   % suchen)
   basecoupling_equiv = [Coupling(1), basecoupling_equiv]; %#ok<AGROW>
   for k = basecoupling_equiv
-    fcn_dir1 = fullfile(parroblibpath, sprintf('sym%dleg', NLEG), PName_Legs, ...
+    fcn_dir1 = fullfile(parroblibpath, ['sym_', EEstr], PName_Legs, ...
       sprintf('hd_G%dA0', k)); % keine P-Nummer für A0-Code
     if exist(fcn_dir1, 'file'), break; end % nehme den existierenden Ordner
   end
-  fcn_dir2 = fullfile(parroblibpath, sprintf('sym%dleg', NLEG), PName_Legs, ...
+  fcn_dir2 = fullfile(parroblibpath, ['sym_', EEstr], PName_Legs, ...
     sprintf('hd_G%dP%dA%d', Coupling(1), Coupling(2), ActNr));
-  fcn_dir3 = fullfile(parroblibpath, sprintf('sym%dleg', NLEG), PName_Legs, ...
+  fcn_dir3 = fullfile(parroblibpath, ['sym_', EEstr], PName_Legs, ...
     'tpl');
   if exist(fcn_dir1, 'file') % existiert nur, wenn symbolischer Code generiert
     addpath(fcn_dir1);

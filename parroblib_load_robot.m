@@ -89,31 +89,43 @@ PName_Kin = [PName_Legs, sprintf('G%dP%d', Coupling(1), Coupling(2))];
 ActNr = str2double(res{7});
 PName_Akt = [PName_Kin, sprintf('A%d', ActNr)];
 %% csv-Tabelle öffnen: Kinematik
-% Ergebnis: Tabellenzeile csvline_kin für den gesuchten Roboter
-kintabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), sprintf('sym%dleg_list.csv', NLEG));
-fid = fopen(kintabfile);
-if fid == -1
-  error('Datei %s existiert nicht. Sollte aber im Repo enthalten sein.', kintabfile);
-end
-% Tabelle zeilenweise durchgehen
-tline = fgetl(fid);
-found = false;
-while ischar(tline) && ~isempty(tline)
-  % Spaltenweise als Cell-Array
-  csvline = strsplit(tline, ';');
-  tline = fgetl(fid); % nächste Zeile
-  if isempty(csvline) || strcmp(csvline{1}, '')
-    continue
+% Da Anzahl Beinketten gegeben ist, aber die PKM nach FG gespeichert sind,
+% müssen mehrere Tabellen durchsucht werden.
+EEFG_Ges = logical(...
+  [1 1 0 0 0 1; 1 1 1 0 0 0;  1 1 1 0 0 1; ...
+   1 1 1 1 1 0; 1 1 1 1 1 1]);
+EEstr = ''; % Platzhalter, wird im folgenden belegt.
+for jj = 1:size(EEFG_Ges,1)
+  if sum(EEFG_Ges(jj,:)) ~= NLEG, continue; end % PKM-FG passen nicht zu Beinketten
+  EEstr = sprintf('%dT%dR', sum(EEFG_Ges(jj,1:3)), sum(EEFG_Ges(jj,4:6)));
+  % Ergebnis: Tabellenzeile csvline_kin für den gesuchten Roboter
+  kintabfile = fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list.csv']);
+  fid = fopen(kintabfile);
+  if fid == -1
+    error('Datei %s existiert nicht. Sollte aber im Repo enthalten sein.', kintabfile);
   end
-  if strcmp(csvline{1}, PName_Kin)
-    % gefunden
-    csvline_kin = csvline;
-    found = true;
-    break;
+  % Tabelle zeilenweise durchgehen
+  tline = fgetl(fid);
+  found = false;
+  while ischar(tline) && ~isempty(tline)
+    % Spaltenweise als Cell-Array
+    csvline = strsplit(tline, ';');
+    tline = fgetl(fid); % nächste Zeile
+    if isempty(csvline) || strcmp(csvline{1}, '')
+      continue
+    end
+    if strcmp(csvline{1}, PName_Kin)
+      % gefunden
+      csvline_kin = csvline;
+      found = true;
+      break;
+    end
+  end
+  fclose(fid);
+  if found
+    break; % In aktueller Tabelle gefunden. Abbruch.
   end
 end
-fclose(fid);
-
 if ~found
   error('Roboter %s wurde nicht in der Tabelle %s gefunden.', PName_Kin, kintabfile);
 end
@@ -127,7 +139,7 @@ for i = 1:NLEG
 end
 %% csv-Tabelle öffnen: Aktuierung
 % Ergebnis: Tabellenzeile csvline_act für den gesuchten Roboter
-acttabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, 'actuation.csv');
+acttabfile = fullfile(repopath, ['sym_', EEstr], PName_Legs, 'actuation.csv');
 csvline_act = [];
 if ActNr ~= 0
   fid = fopen(acttabfile);

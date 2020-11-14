@@ -1,13 +1,8 @@
 % Finde PKM-Robotermodelle in der Datenbank mit gegebenen Filtern
 % 
 % Eingabe:
-% NLEG
-%   Anzahl der Beine der symmetrischen PKM
 % EE_FG [1x6]
 %   Vektor mit 1/0 für Belegung ob EE-FG aktiv ist
-% EE_FG_Mask [1x6]
-%   Maske, die festlegt ob die FG exakt wie in `EE_FG` sind, oder ob auch
-%   gesperrte FG wirklich nicht beweglich sind
 % max_rankdeficit [1x1]
 %   Grad des möglichen Rangverlustes der PKM-Jacobi-Matrix (Standard: 0)
 %   Wird ein Wert von 1 bis 6 (max.) eingesetzt, werden auch PKM
@@ -33,116 +28,44 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2019-01
 % (C) Institut für Mechatronische Systeme, Leibniz Universität Hannover
 
-function [PNames_Kin, PNames_Akt, AdditionalInfo_Akt] = parroblib_filter_robots(NLEG, EE_FG0, EE_FG_Mask, max_rankdeficit)
+function [PNames_Kin, PNames_Akt, AdditionalInfo_Akt] = parroblib_filter_robots(EE_FG0, max_rankdeficit)
 
 %% Initialisierung
 repopath=fileparts(which('parroblib_path_init.m'));
-if nargin < 4
+assert(size(EE_FG0,2)==6, 'EE_FG0 muss 6 Spalten haben');
+if nargin < 2
   max_rankdeficit = 0;
 end
+EEstr = sprintf('%dT%dR', sum(EE_FG0(1:3)), sum(EE_FG0(4:6)));
 %% Kinematik-Tabelle durchsuchen
 PNames_Kin = {};
 PNames_Akt = {};
 AdditionalInfo_Akt = [];
-kintabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), sprintf('sym%dleg_list.csv', NLEG));
-fid = fopen(kintabfile);
-if fid == -1
-  warning('Datei %s existiert nicht. Sollte aber im Repo enthalten sein.', kintabfile);
+kintabfile=fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list_kin.mat']);
+if ~exist(kintabfile, 'file')
+  error('Datei %s existiert nicht. parroblib_gen_bitarrays ausführen!', kintabfile);
+end
+tmp = load(kintabfile);
+KinTab = tmp.KinTab;
+PNames_Kin = KinTab.Name';
+
+if nargout == 1
   return
 end
-% Tabelle zeilenweise durchgehen
-tline = fgetl(fid);
-while ischar(tline) && ~isempty(tline)
-  % Zeile spaltenweise als Cell-Array
-  csvline = strsplit(tline, ';');
-  tline = fgetl(fid); % nächste Zeile
-  if isempty(csvline) || strcmp(csvline{1}, '')
-    continue
-  end
-  if length(csvline) ~= 8
-    % warning('Zeile %s sieht ungültig aus', tline);
-    continue % nicht genug Spalten: Ungültiger Datensatz oder Überschrift
-  end
-  
-  % Gültige Tabellenzeile. Daten auslesen
-  PName_Kin = csvline{1};
-  LegName = csvline{2}; %#ok<NASGU>
-  EEFG0_cell = csvline(3:8);
-  EE_FG_csv = zeros(1,6);
-  for i = 1:6
-    if strcmp(EEFG0_cell{i}, '1')
-      EE_FG_csv(i) = 1;
-    end
-  end
-  
-  % Daten filtern
-  if ~all( (EE_FG_csv & EE_FG_Mask) == (EE_FG0 & EE_FG_Mask))
-    continue
-  end
-  
-  % Roboter passt zu Filter. Auswahl in Liste
-  PNames_Kin = {PNames_Kin{:}, PName_Kin}; %#ok<CCAT>
-end
-fclose(fid);
-
 %% Aktuierung heraussuchen
-PNames_Akt = {};
-for i = 1:length(PNames_Kin)
-  PName_Kin = PNames_Kin{i};
-  % Extrahiere Beinketten-Name der PKM (ohne Ausrichtungs-Nummern G/P)
-  % Unter diesem Namen ist die Aktuierungstabelle gespeichert
-  expression = 'P(\d)([RP]+)(\d+)[V]?(\d*)[G]?(\d*)[P]?(\d*)'; % Format "P3RRRG1P11A1" oder "P3RRR1V1G1P1A1"
-  [tokens, ~] = regexp(PName_Kin,expression,'tokens','match');
-  if isempty(tokens)
-    error('Eintrag %s aus der Tabelle stimmt nicht mit Namensschema überein.', PName_Kin);
-  end
-  res = tokens{1};
-  if isempty(res{4}) % serielle Kette ist keine abgeleitete Variante
-    PName_Legs = ['P', res{1}, res{2}, res{3}];
-  else % serielle Kette ist eine Variante abgeleitet aus Hauptmodell
-    PName_Legs = ['P', res{1}, res{2}, res{3}, 'V', res{4}];
-  end
-  acttabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, 'actuation.csv');
-  fid = fopen(acttabfile);
-  if fid == -1
-    % Diese Aktuierung zu der Kinematik ist noch nicht gespeichert / generiert.
-    warning('Zu Kinematik %s gibt es keine Aktuierungstabelle %s', PName_Kin, acttabfile);
-    return
-  end
-  tline = fgetl(fid);
-  firstline = true;
-  while ischar(tline) && ~isempty(tline)
-    % Zeile spaltenweise als Cell-Array
-    csvline = strsplit(tline, ';');
-    tline = fgetl(fid); % nächste Zeile
-    if firstline % erste Zeile ist Überschrift. Ignorieren
-      firstline = false;
-      continue % TODO: Robustere Methode zur Erkennung richtiger Zeilen
-    end
-    if strcmp(csvline{1}, '')
-      continue
-    end
-    % Daten auslesen
-    Name_Akt = csvline{1};
-    
-    % Prüfe, ob Kinematik die gleiche ist (es stehen mehrere
-    % Gestell-Varianten in der gleichen Aktuierungstabelle)
-    if ~contains(Name_Akt, PName_Kin)
-      continue
-    end
-    % Wert für den Rangverlust (die Datenbank enthält auch PKM, deren
-    % Aktuierung oder Gestell-Anordnung nicht sinnvoll ist)
-    rankdef = str2double(csvline{end-1});
-    if rankdef > max_rankdeficit
-      % Die Struktur soll nicht ausgegeben werden: Rangverlust ist zu groß
-      % Wenn in Tabelle ein "?" steht, dann NaN. Soll aber ausgegeben werden
-      % (Bedeutet, dass noch nicht geprüft ist)
-      continue
-    end
-    AdditionalInfo_Akt = [AdditionalInfo_Akt; rankdef]; %#ok<AGROW>
-    
-    % Roboter in Liste aufnehmen (es gibt keinen Filter für die Aktuierung)
-    PNames_Akt = {PNames_Akt{:}, Name_Akt}; %#ok<CCAT>
-  end
-  fclose(fid);
+acttabfile=fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list_act.mat']);
+if ~exist(acttabfile, 'file')
+  error('Datei %s existiert nicht. parroblib_gen_bitarrays ausführen!', acttabfile);
 end
+tmp = load(acttabfile);
+ActTab = tmp.ActTab;
+% Wähle die Roboter in der Datenbank anhand der Filterkriterien aus
+I_rankloss = ActTab.Rankloss_Platform <= max_rankdeficit;
+% Wähle PKM, deren Rang noch nicht geprüft wurde (in der Tabelle steht ein
+% "?"). Werden ausgegeben. Sonst funktioniert die Struktursynthese nicht.
+I_unchecked = isnan(ActTab.Rankloss_Platform);
+% Kombiniere Filterkriterien
+I = I_rankloss|I_unchecked;
+% Ausgabevariablen zuweisen
+PNames_Akt = ActTab.Name(I);
+AdditionalInfo_Akt = ActTab.Rankloss_Platform(I);

@@ -37,7 +37,7 @@ if nargin < 5
   verbosity = false;
 end
 %% Initialisierung
-folder = sprintf('sym%dleg', sum(EEFG));
+folder = sprintf('sym_%dT%dR', sum(EEFG(1:3)), sum(EEFG(4:6)));
 repopath = fileparts(which('parroblib_path_init.m'));
 % Prüfe, ob die Eingabe ein Robotername ist.
 expression_robname = 'P(\d)([RP]+)(\d+)[V]?';

@@ -23,7 +23,8 @@ for i = 1:length(Names)
   n = Names{i};
   
   %% Daten für diesen Roboter laden
-  [NLEG, LEG_Names, Actuation, Coupling, ActNr, ~, EE_FG0, PName_Kin, PName_Legs, AdditionalInfo_Akt] = parroblib_load_robot(n);
+  [NLEG, LEG_Names, Actuation, Coupling, ActNr, ~, EE_FG0, ~, PName_Legs, AdditionalInfo_Akt] = parroblib_load_robot(n);
+  EEstr = sprintf('%dT%dR', sum(EE_FG0(1:3)), sum(EE_FG0(4:6)));
   for j = 1:NLEG
     if isempty(Actuation{j})
       error('Beinkette %d ist nicht aktuiert. Das wird aktuell nicht unterstützt', j);
@@ -64,7 +65,7 @@ for i = 1:length(Names)
 
   %% Maple-Toolbox-Eingabe erzeugen
   % Zur Definition des Formats der Eingabedatei; siehe HybrDyn-Repo
-  mapleinputfile=fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, ...
+  mapleinputfile=fullfile(repopath, ['sym_', EEstr], PName_Legs, ...
     sprintf('hd_G%dP%dA%d',Coupling(1),Coupling(2),ActNr), sprintf('robot_env_par_%s', n));
   mkdirs(fileparts(mapleinputfile));
   fid = fopen(mapleinputfile, 'w');

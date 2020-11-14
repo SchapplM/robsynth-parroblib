@@ -8,11 +8,11 @@ clc
 clear
 
 serroblibpath=fileparts(which('serroblib_path_init.m'));
-
-for NLEG = [3 4 6]
-  EE_FG0 = [0 0 0 0 0 0];
-  EE_FG_Mask = [0 0 0 0 0 0]; % Maske 0, EE-FG sind egal.
-  [PNames_Kin, PNames_Akt] = parroblib_filter_robots(NLEG, EE_FG0, EE_FG_Mask);
+EEFG_Ges = logical(...
+  [1 1 0 0 0 1; 1 1 1 0 0 0;  1 1 1 0 0 1; ...
+   1 1 1 1 1 0; 1 1 1 1 1 1]);
+for j = 1:size(EEFG_Ges,1)
+  PNames_Kin = parroblib_filter_robots(EEFG_Ges(j,1:6));
 
   for i = 1:length(PNames_Kin)
     fprintf('%d/%d: Prüfe PKM %s\n', i, length(PNames_Kin), PNames_Kin{i});

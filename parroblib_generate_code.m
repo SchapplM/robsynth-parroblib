@@ -39,6 +39,7 @@ for i = 1:length(Names)
 
   % Daten über den Roboter zusammenstellen
   [NLEG, LEG_Names, Actuation, Coupling, ActNr, ~, EE_FG0, PName_Kin, PName_Legs, AdditionalInfo_Akt] = parroblib_load_robot(n);
+  EEstr = sprintf('%dT%dR', sum(EE_FG0(1:3)), sum(EE_FG0(4:6)));
   % Robotereigenschaften aus dem Namen auslesen.
   % TODO: Einbindung nicht-symmetrischer PKM
   
@@ -64,7 +65,7 @@ for i = 1:length(Names)
   
   % Maple-Toolbox-Eingabe laden (wurde an anderer Stelle erzeugt)
   % (durch parroblib_generate_mapleinput.m)
-  mapleinputfile=fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, ...
+  mapleinputfile=fullfile(repopath, ['sym_', EEstr], PName_Legs, ...
     sprintf('hd_G%dP%dA%d',Coupling(1),Coupling(2),ActNr), sprintf('robot_env_par_%s', n));
   if ~exist(mapleinputfile, 'file')
     warning('Datei %s existiert nicht. Wurde `parroblib_generate_mapleinput.m` ausgeführt?', fileparts(mapleinputfile) );
@@ -130,7 +131,7 @@ for i = 1:length(Names)
   % Suche in den anderen Code-Ordnern nach bestehenden Robotern
   if ~force_par
     for k = basecoupling_equiv
-      outputdir_local_A0_k = fullfile(repopath, sprintf('sym%dleg', NLEG), ...
+      outputdir_local_A0_k = fullfile(repopath, ['sym_', EEstr], ...
         PName_Legs, sprintf('hd_G%dA0', k));
       if length(dir(fullfile(outputdir_local_A0_k, '*.m'))) > 10
         G_num = k;
@@ -143,7 +144,7 @@ for i = 1:length(Names)
   n_A0 = [PName_Kin(1:end-4),sprintf('G%d',G_num),'A0']; % Entferne P-Nummer wieder. Ist für A0-Modell egal.
   % Roboternamen, Datei- und Ordnernamen für allgemeinen Fall definieren
   outputdir_tb_par_A0 = fullfile(mrp, 'codeexport', n_A0, 'matlabfcn'); % Verzeichnis in der Maple-Toolbox
-  mapleinputfile_A0=fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, ...
+  mapleinputfile_A0=fullfile(repopath, ['sym_', EEstr], PName_Legs, ...
     sprintf('hd_G%dA0', G_num), sprintf('robot_env_par_%s', n_A0));
   outputdir_local_A0 = fileparts(mapleinputfile_A0);
   if ActNr == 1 && ... % Nur Generierung, wenn noch kein Code vorhanden:

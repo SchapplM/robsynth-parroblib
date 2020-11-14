@@ -66,8 +66,28 @@ Coupling = [str2double(res{5}), str2double(res{6})];
 NLEG = str2double(res{1});
 
 %% Tabelle für Kinematik öffnen und Zeile entfernen
+% Prüfen, in welcher Tabelle der Roboter ist
+EEFG_Ges = logical(...
+  [1 1 0 0 0 1; 1 1 1 0 0 0;  1 1 1 0 0 1; ...
+   1 1 1 1 1 0; 1 1 1 1 1 1]);
+EEstr = ''; % Platzhalter, wird im folgenden belegt.
+for jj = 1:size(EEFG_Ges,1)
+  if sum(EEFG_Ges(jj,:)) ~= NLEG, continue; end % PKM-FG passen nicht zu Beinketten
+  EEstr = sprintf('%dT%dR', sum(EEFG_Ges(jj,1:3)), sum(EEFG_Ges(jj,4:6)));
+  kintabfile=fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list_kin.mat']);
+  if ~exist(kintabfile, 'file')
+    error('Datei %s existiert nicht. parroblib_gen_bitarrays ausführen!', kintabfile);
+  end
+  tmp = load(kintabfile);
+  KinTab = tmp.KinTab;
+  if any(strcmp(KinTab.Name, PName_Kin))
+    break; % Der Roboter ist in der aktuellen Tabelle. Variable EEstr wird übernommen
+  end
+end
+  
+
 if Name_Typ == 1
-  kintabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), sprintf('sym%dleg_list.csv', NLEG));
+  kintabfile = fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list.csv']);
   kintabfile_copy = [kintabfile, '.copy']; % Kopie der Tabelle zur Bearbeitung
 
   fid = fopen(kintabfile, 'r');
@@ -105,7 +125,7 @@ if Name_Typ == 1
 end
 %% Tabelle für Aktuierung öffnen und Zeile entfernen
 if Name_Typ == 2
-  acttabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, 'actuation.csv');
+  acttabfile = fullfile(repopath, ['sym_', EEstr], PName_Legs, 'actuation.csv');
   acttabfile_copy = [acttabfile, '.copy']; % Kopie der Tabelle zur Bearbeitung
 
   fid = fopen(acttabfile, 'r');
@@ -164,7 +184,7 @@ end
 if Name_Typ == 1
   % Ordner mit Code und Parameter-Modellen löschen (auch alle Aktuierungen)
   % Aktuell muss noch manuell geprüft werden, ob dabei wichtige Daten verloren gehen
-  robdirs = dir(fullfile( repopath, sprintf('sym%dleg', NLEG), PName_Legs, ...
+  robdirs = dir(fullfile( repopath, ['sym_', EEstr], PName_Legs, ...
     sprintf('hd_G%dP%d*',Coupling(1),Coupling(2)) ));
   for i = 1:length(robdirs)
     robdir = fullfile(robdirs(i).folder, robdirs(i).name);
@@ -175,7 +195,7 @@ if Name_Typ == 1
     end
   end
   % Prüfe, ob die Tabelle "actuation.csv" gelöscht werden kann
-  acttabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, 'actuation.csv');
+  acttabfile = fullfile(repopath, ['sym_', EEstr], PName_Legs, 'actuation.csv');
   fid = fopen(acttabfile, 'r');
   if fid ~= -1
     tmp = textscan(fid, '%s','delimiter','\n');
@@ -187,12 +207,12 @@ if Name_Typ == 1
     end
   end
   % Falls der Ordner jetzt leer ist, wird er auch gelöscht
-  tpldir = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, 'tpl');
+  tpldir = fullfile(repopath, ['sym_', EEstr], PName_Legs, 'tpl');
   if ~exist(acttabfile, 'file') && ... % gelöschte PKM war die letzte. Aktuierungs-Datei ist gelöscht
       exist(tpldir, 'file') % es existieren Vorlagen-Funktionen, die gelöscht werden können.
     rmdir(tpldir, 's');
   end
-  PName_Dir = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs);
+  PName_Dir = fullfile(repopath, ['sym_', EEstr], PName_Legs);
   PName_DirContent = dir(fullfile(PName_Dir, '*'));
   PName_DirContent=PName_DirContent(~ismember({PName_DirContent.name},{'.','..'}));
   if isempty(PName_DirContent)
@@ -202,7 +222,7 @@ if Name_Typ == 1
 elseif Name_Typ == 2 && ~removed_Kin
   % Aktuierung: Lösche nur den Unterordner, der zu dieser Aktuierung gehört
   % Nur löschen, wenn der Hauptordner des Kinematikmodells noch da ist.
-  codedir = fullfile(repopath, sprintf('sym%dleg', NLEG), PName_Legs, ...
+  codedir = fullfile(repopath, ['sym_', EEstr], PName_Legs, ...
     sprintf('hd_G%dP%dA%s', Coupling(1), Coupling(2), ActNr));
   if exist(codedir, 'file') % Das Verzeichnis wird erst durch Code-Generierung angelegt. Ist eventuell noch nicht erfolgt.
     if nofiledelete

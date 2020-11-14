@@ -28,11 +28,10 @@ EEFG_Ges = [1 1 0 0 0 1; ...
             1 1 1 0 0 1; ...
             1 1 1 1 1 0; ...
             1 1 1 1 1 1];
-EE_FG_Mask = [1 1 1 1 1 1];
 
 for i_FG = 1:size(EEFG_Ges,1)
   EE_FG = EEFG_Ges(i_FG,:);
-  [PNames_Kin, ~] = parroblib_filter_robots(sum(EE_FG), EE_FG, EE_FG_Mask, 6);
+  [PNames_Kin, ~] = parroblib_filter_robots(EE_FG, 6);
   if isempty(PNames_Kin)
     continue % Es gibt keine PKM mit diesen FG.
   end
