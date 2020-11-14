@@ -13,3 +13,5 @@ maplerepo_path.m
 *.copy
 tpl
 *.lock
+sym*leg/sym*leg_kin.mat
+sym*leg/sym*leg_act.mat
