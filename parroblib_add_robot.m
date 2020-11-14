@@ -66,9 +66,9 @@ new = true;
 %% Erstelle neuen Eintrag: Kinematik-Tabelle
 if ~found(1)
   % Für diese Kinematik gibt es noch keinen Eintrag
-  kintabfile = fullfile(repopath, ['sym_%s', EEstr], ['sym_',EEstr,'_list.csv']);
-  kintabtmp1file = fullfile(repopath, ['sym_%s', EEstr], ['sym_',EEstr,'_list.tmp1.csv']);
-  kintabtmp2file = fullfile(repopath, ['sym_%s', EEstr], ['sym_',EEstr,'_list.tmp2.csv']);
+  kintabfile = fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list.csv']);
+  kintabtmp1file = fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list.tmp1.csv']);
+  kintabtmp2file = fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list.tmp2.csv']);
   % Kopfzeilendatei erstellen (Temp-Datei zum Kopieren)
   mkdirs(fileparts(kintabfile));
   csvline_head1 = {'Name','Beinkette','EE-FG (Basis-KS)','','','','',''};

@@ -171,6 +171,16 @@ for iFG = 1:size(EEFG_update,1)
       warning('%d ungültige Zeile(n) in %s.', sum(I_invalid), acttabfile_csv);
       ActTab_i = ActTab_i(~I_invalid,:);
     end
+    % Nachverarbeitung der Spalte für Rangverlust. Wenn dort ein "?" in der
+    % csv-Tabelle steht, muss das in NaN übersetzt werden.
+    if isa(ActTab_i.Rankloss_Platform, 'cell')
+      % Wenn in der csv ein "?" steht, wird die Spalte als cell erzeugt.
+      % Wandle die Daten wieder in double um und setze NaN
+      ranklosscoll = NaN(size(ActTab_i,1),1);
+      I_NaN = strcmp(ActTab_i.Rankloss_Platform,'?');
+      ranklosscoll(~I_NaN)=str2double(ActTab_i.Rankloss_Platform(~I_NaN));
+      ActTab_i.Rankloss_Platform = ranklosscoll;
+    end
     % Stapele die einzelnen Tabellen
     if i == 1
       ActTab = ActTab_i;
