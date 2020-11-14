@@ -86,7 +86,8 @@ for iFG = 1:size(EEFG_update,1)
   if write_new_kin
     save(kintabfile_mat, 'KinTab');
   end
-  %% Aktuierungs-Tabelle auslesen
+  %% Menge der PKM reduzieren (G-/P-Nummer wieder entfernen)
+  PName_Legs_all = {};
   for i = 1:size(KinTab,1)
     PName_Kin = KinTab.Name{i};
     % Extrahiere Beinketten-Name der PKM (ohne Ausrichtungs-Nummern G/P)
@@ -102,6 +103,12 @@ for iFG = 1:size(EEFG_update,1)
     else % serielle Kette ist eine Variante abgeleitet aus Hauptmodell
       PName_Legs = ['P', res{1}, res{2}, res{3}, 'V', res{4}];
     end
+    PName_Legs_all = [PName_Legs_all, PName_Legs]; %#ok<AGROW>
+  end
+  PName_Legs_unique = unique(PName_Legs_all);
+  %% Aktuierungs-Tabelle auslesen
+  for i = 1:length(PName_Legs_unique)
+    PName_Legs = PName_Legs_unique{i};
     acttabfile_csv = fullfile(repopath, ['sym_', EEstr], PName_Legs, 'actuation.csv');
     if ~exist(acttabfile_csv, 'file')
       % Diese Aktuierung zu der Kinematik ist noch nicht gespeichert / generiert.
@@ -156,6 +163,14 @@ for iFG = 1:size(EEFG_update,1)
     % Ändere den Namen der Spalte für die frei wählbaren Winkel (sonst
     % nicht stapelbar, weil unterschiedliche Spaltennamen
     ActTab_i.Properties.VariableNames(end) = {'Values_Angle_Parameters'};
+    % Prüfe, ob die Datenzeile einen passenden Namen hat. Benutze Ausdruck
+    % von oben (ohne A-Nummer)
+    tokens = regexp(ActTab_i.Name,expression,'tokens');
+    I_invalid = cellfun(@isempty,tokens); % Wenn der Name bspw. leer ist, wird der Ausdruck nicht gefunden
+    if any(I_invalid)
+      warning('%d ungültige Zeile(n) in %s.', sum(I_invalid), acttabfile_csv);
+      ActTab_i = ActTab_i(~I_invalid,:);
+    end
     % Stapele die einzelnen Tabellen
     if i == 1
       ActTab = ActTab_i;
