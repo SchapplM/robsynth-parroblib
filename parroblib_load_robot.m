@@ -88,7 +88,7 @@ PName_Kin = [PName_Legs, sprintf('G%dP%d', Coupling(1), Coupling(2))];
 
 ActNr = str2double(res{7});
 PName_Akt = [PName_Kin, sprintf('A%d', ActNr)];
-%% csv-Tabelle öffnen: KinematikEE_dof0 = NaN(6,1);
+%% csv-Tabelle öffnen: Kinematik
 % Ergebnis: Tabellenzeile csvline_kin für den gesuchten Roboter
 kintabfile = fullfile(repopath, sprintf('sym%dleg', NLEG), sprintf('sym%dleg_list.csv', NLEG));
 fid = fopen(kintabfile);
