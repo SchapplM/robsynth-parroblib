@@ -103,21 +103,10 @@ else
 end
 RP.align_platform_coupling(Coupling(2), p_platform_all);
 
-% EE-FG eintragen
-if all(EE_dof0 == [1 1 0 0 0 1]) % 2T1R (planar)
-  RP.update_EE_FG(logical(EE_dof0), logical(EE_dof0), logical(repmat(logical(EE_dof0),RP.NLEG,1)));
-elseif all(EE_dof0 == [1 1 1 1 1 0])
-  % 3T2R-PKM (strukturell) benutze constr3-Methode. Beinketten wird volle
-  % 3T3R-FG als Sollvorgabe zugewiesen.
-  RP.update_EE_FG(logical(EE_dof0));
-elseif all(EE_dof0 == [1 1 1 0 0 0]) || all(EE_dof0 == [1 1 1 0 0 1])
-  % Bei 3T0R, 3T1R wird bei Beinketten immer volle 3T3R-Sollvorgabe gegeben.
-  RP.update_EE_FG(logical(EE_dof0), logical(EE_dof0), true(RP.NLEG,6));
-elseif all(EE_dof0 == [1 1 1 1 1 1])
-  RP.update_EE_FG(logical(EE_dof0))
-else
-  error('Fall noch nicht vorgesehen');
-end
+% EE-FG eintragen. Die Logik für die Zuordnung der Beinketten-FG liegt in
+% der Klassenmethode. Sonderfall von PKM mit Beinketten, deren FG identisch
+% zur Plattform sind, noch nicht implementiert (für 3T0R, 3T1R)
+RP.update_EE_FG(logical(EE_dof0), logical(EE_dof0));
 
 % Aktuierung eintragen
 I_qa = false(RP.NJ,1);
