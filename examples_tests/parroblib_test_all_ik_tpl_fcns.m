@@ -81,6 +81,7 @@ for i_FG = 1:size(EEFG_Ges,1)
         RP.Leg(il).qlim = params.qlim(RP.I1J_LEG(il):RP.I2J_LEG(il),:);
       end
       RP.update_base(params.r_W_0, params.phi_W_0);
+      RP.update_EE(params.r_P_E, params.phi_P_E);
       RP.align_base_coupling(params.DesPar_ParRob.base_method, params.DesPar_ParRob.base_par);
       RP.align_platform_coupling(params.DesPar_ParRob.platform_method, params.DesPar_ParRob.platform_par(1:end-1));
       Traj_0 = cds_transform_traj(RP, Traj_W);
