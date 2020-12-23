@@ -118,6 +118,13 @@ for iFG = 1:size(EEFG_update,1)
     ActTab_i = readtable(acttabfile_csv, 'HeaderLines', 1);
     ActTab_i_headers = readtable(acttabfile_csv, 'PreserveVariableNames', ...
       true, 'ReadVariableNames', true);
+    if size(ActTab_i,2) == size(ActTab_i_headers,2) - 1
+      % Im Datenbereich der Tabelle ist die letzte Spalte leer. Füge ein
+      % leeres Cell-Array ein. Notwendig, da hier sonst im Cell-Array die
+      % Kürzel der Werte für freie Parameter stehen.
+      ActTab_i = addvars(ActTab_i, cell(size(ActTab_i,1),1), ...
+        'NewVariableNames', 'Values_Angle_Parameters');  
+    end
     varnames_act = ActTab_i_headers.Properties.VariableNames;
     % Überschriften aktualisieren
     varnames_act{end-1} = 'Rankloss_Platform'; % Matlab-Konform ohne Leerzeichen
