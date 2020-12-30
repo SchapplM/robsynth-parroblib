@@ -146,11 +146,13 @@ for i_FG = 1:size(EEFG_Ges,1)
       resmaindir = fullfile(Set.optimization.resdir, Set.optimization.optname);
       i_select = 0;
       for i = 1:length(Structures) % alle Ergebnisse durchgehen (falls mehrere theta-Varianten)
-        resfile = fullfile(resmaindir, sprintf('Rob%d_%s_Endergebnis.mat', Structures{i}.Number, PName));
-        tmp = load(resfile, 'RobotOptRes');
-        if tmp.RobotOptRes.fval <= 1000 % Singuläre Konditionszahl der aktiven Gelenke heißt exakt 1e3 als Fitness-Wert. Reicht hier.
+        resfile1 = fullfile(resmaindir, sprintf('Rob%d_%s_Details.mat', Structures{i}.Number, PName));
+        tmp1 = load(resfile1, 'RobotOptDetails');
+        resfile1 = fullfile(resmaindir, sprintf('Rob%d_%s_Endergebnis.mat', Structures{i}.Number, PName));
+        tmp2 = load(resfile1, 'RobotOptRes');
+        if isfield(tmp1, 'RobotOptDetails') && tmp2.RobotOptRes.fval <= 1000 % Singuläre Konditionszahl der aktiven Gelenke heißt exakt 1e3 als Fitness-Wert. Reicht hier.
           i_select = i;
-          RobotOptRes = tmp.RobotOptRes;
+          RobotOptDetails = tmp1.RobotOptDetails;
           break;
         end
       end
@@ -161,14 +163,14 @@ for i_FG = 1:size(EEFG_Ges,1)
         warning('Etwas ist bei der Maßsynthese schiefgelaufen. Keine Lösung.');
         continue
       end
-      RP = RobotOptRes.R;
+      RP = RobotOptDetails.R;
       r_W_0 = RP.r_W_0;
       phi_W_0 = RP.phi_W_0;
       phi_P_E = RP.phi_P_E;
       r_P_E = RP.r_P_E;
       pkin = RP.Leg(1).pkin;
       DesPar_ParRob = RP.DesPar;
-      q0 = RobotOptRes.q0;
+      q0 = RobotOptDetails.q0;
       qlim = cat(1, RP.Leg.qlim); % Wichtig für Mehrfach-Versuche der IK
       save(paramfile_robot, 'pkin', 'DesPar_ParRob', 'q0', 'r_W_0', 'phi_W_0', 'qlim', 'r_P_E', 'phi_P_E');
       fprintf('Maßsynthese beendet\n');
