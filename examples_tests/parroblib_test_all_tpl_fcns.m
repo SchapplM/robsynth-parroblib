@@ -40,9 +40,17 @@ for i_FG = 1:size(EEFG_Ges,1)
   if shuffle_pkm_selection
     III = III(randperm(length(III)));
   end
-%  % Debug:
-%   if i_FG == 4
+  % Debug:
+%   if i_FG == 1
+%     III = find(strcmp(PNames_Kin, 'P3RRR1G1P1'));
+%   elseif i_FG == 2
+%     III = find(strcmp(PNames_Kin, 'P3RRRRR10V1G2P2'));
+%   elseif i_FG == 3
+%     III = find(strcmp(PNames_Kin, 'P4PRRRR3V1G1P2'));
+%   elseif i_FG == 4
 %     III = find(strcmp(PNames_Kin, 'P5RPRRR8V1G9P8'));
+%   elseif i_FG == 5
+%     III = find(strcmp(PNames_Kin, 'P6RRPRRR14V3G1P4'));
 %   end
   for ii =  III(1:min(max_num_pkm, length(III))) % Debug: find(strcmp(PNames_Kin, 'P6RRPRRR14V3G1P4'));
     PName = [PNames_Kin{ii},'A1']; % Nehme nur die erste Aktuierung (ist egal)
@@ -81,6 +89,10 @@ for i_FG = 1:size(EEFG_Ges,1)
     if trtest == 2
       if all(EE_FG == [1 1 1 1 1 1])
         R.I_EE_Task = logical([1 1 1 1 1 0]);
+      elseif all(EE_FG == [1 1 0 0 0 1])
+        R.I_EE_Task = logical([1 1 0 0 0 0]);
+      elseif all(EE_FG == [1 1 1 0 0 1])
+        R.I_EE_Task = logical([1 1 1 0 0 0]);
       else
         % Aufgabenredundanz für diese Struktur-FG noch nicht definiert.
         continue
@@ -91,8 +103,8 @@ for i_FG = 1:size(EEFG_Ges,1)
     % Struktur aus ParRob/invkin2_traj
     Leg_I_EE_Task = true(R.NLEG,6);
     Leg_pkin_gen = zeros(R.NLEG,length(R.Leg(1).pkin_gen));
-    Leg_T_N_E_vec = zeros(6,R.NLEG);% 1:3 eularwinkel 4:6 Position
-    Leg_T_0_W_vec = zeros(6,R.NLEG);% 1:3 eularwinkel 4:6 Position
+    Leg_T_N_E_vec = zeros(6,R.NLEG);% 1:3 Euler-Winkel 4:6 Position
+    Leg_T_0_W_vec = zeros(6,R.NLEG);% 1:3 Euler-Winkel 4:6 Position
     Leg_phi_W_0 = zeros(3,R.NLEG);
     Leg_phiconv_W_0 = uint8(zeros(R.NLEG,1));
     phiconv_W_E = uint8(R.phiconv_W_E);
@@ -140,13 +152,12 @@ for i_FG = 1:size(EEFG_Ges,1)
       'Leg_sigmaJ', Leg_sigmaJ, ...
       'Leg_qlim', Leg_qlim, ...
       'Leg_phiconv_W_E', Leg_phiconv_W_E);
-    K_def = 0.5*ones(R.Leg(1).NQJ,1);
     % Struktur 2 aus pkm_invkin_traj
     s_ser = struct( ...
       'reci', true, ...
-      'K', K_def, ... % Verstärkung
-      'Kn', 1e-2*ones(R.Leg(1).NQJ,1), ... % Verstärkung
-      'wn', zeros(2,1), ... % Gewichtung der Nebenbedingung
+      'K', ones(R.Leg(1).NQJ,1), ... % Verstärkung
+      'Kn', ones(R.Leg(1).NQJ,1), ... % Verstärkung
+      'wn', zeros(3,1), ... % Gewichtung der Nebenbedingung
       'scale_lim', 0.0, ... % Herunterskalierung bei Grenzüberschreitung
       'maxrelstep', 0.05, ... % Maximale auf Grenzen bezogene Schrittweite
       'normalize', true, ... % Normalisieren auf +/- 180°
@@ -268,6 +279,20 @@ for i_FG = 1:size(EEFG_Ges,1)
     s_x_4 = rmfield(s_x_2, 'I_EE_Task');
     % Struktur aus constr2gradD_rr
     s_xD_4 = rmfield(s_xD_2, {'I_EE_Task', 'I_constr_t_red'});
+    % Struktur aus constr3
+    s3 = struct( ...
+      'I_constr_t_red', s.I_constr_t_red,...
+      'I_constr_r_red', s.I_constr_r_red,...
+      'r_P_B_all', s.r_P_B_all,...
+      'phi_P_B_all', R.phi_P_B_all,...
+      'T_P_E', s.T_P_E, ...
+      'phiconv_W_E', s.phiconv_W_E, ...
+      'Leg_I_EE_Task', s.Leg_I_EE_Task,...
+      'Leg_pkin_gen', s.Leg_pkin_gen,...
+      'Leg_T_N_E_vec', s.Leg_T_N_E_vec,...
+      'Leg_T_0_W_vec', s.Leg_T_0_W_vec,...
+      'Leg_phi_W_0', s.Leg_phi_W_0,...
+      'Leg_phiconv_W_0', s.Leg_phiconv_W_0);
     % Struktur aus constr3grad_q
     s_q_3 = struct( ...
       'I_EE_Task', R.I_EE_Task,...
@@ -331,7 +356,7 @@ for i_FG = 1:size(EEFG_Ges,1)
     for mextest = 1:(1+test_mex) % mextest = 2: mex-Datei aufrufen
       if mextest == 2
         % Benutze auch in der Matlab-Klasse kompilierte Funktionen
-        R.fill_fcn_handles(true, false);
+        R.fill_fcn_handles(true, true);
       end
       % Teste Trajektorien-Funktionen
       %% Teste fkineEE_traj
@@ -502,8 +527,21 @@ for i_FG = 1:size(EEFG_Ges,1)
             any(isnan([test_Phi4dxD(:);test_Phi4dxD(:)]))
           error('Berechnung von constr4gradD_x stimmt nicht zwischen Template-Funktion und Klasse');
         end
-        if i_FG == 1 || i_FG == 2 || i_FG == 3
-          continue % Für 2T1R, 3T0R oder 3T1R noch nicht definiert.
+        if i_FG == 2
+          continue % Für 3T0R nicht definiert.
+        end
+        %% Teste constr3
+        if mextest == 1
+          eval(sprintf('[Phi3_file,Phi3_file_full]=%s_constr3(q, x, s3);', PName_Legs));
+        else
+          eval(sprintf('[Phi3_file,Phi3_file_full]=%s_constr3_mex(q, x, s3);', PName_Legs));
+        end
+        [Phi3_class,Phi3_class_full] = R.constr3(q, x);
+        test_Phi3 = Phi3_class - Phi3_file;
+        test_Phi3_full = Phi3_class_full - Phi3_file_full;
+        if any(abs([test_Phi3(:); test_Phi3_full(:)]) > 1e-10) || ...
+            any(isnan([test_Phi3(:); test_Phi3_full(:)]))
+          error('Berechnung von constr3 stimmt nicht zwischen Template-Funktion und Klasse');
         end
         %% Teste constr3grad_q
         if mextest == 1
@@ -636,6 +674,7 @@ for i_FG = 1:size(EEFG_Ges,1)
           error('Berechnung von constr2grad_x stimmt nicht zwischen Template-Funktion und Klasse');
         end
       end
+      fprintf('PKM %s getestet: mex=%d, taskred=%d\n', PName, mextest-1, trtest-1);
     end % for mextest
     end % for trtest
     fprintf('PKM %s erfolgreich getestet\n', PName);
