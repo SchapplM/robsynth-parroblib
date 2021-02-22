@@ -527,9 +527,7 @@ for i_FG = 1:size(EEFG_Ges,1)
             any(isnan([test_Phi4dxD(:);test_Phi4dxD(:)]))
           error('Berechnung von constr4gradD_x stimmt nicht zwischen Template-Funktion und Klasse');
         end
-        if i_FG == 2
-          continue % Für 3T0R nicht definiert.
-        end
+
         %% Teste constr3
         if mextest == 1
           eval(sprintf('[Phi3_file,Phi3_file_full]=%s_constr3(q, x, s3);', PName_Legs));
@@ -594,6 +592,9 @@ for i_FG = 1:size(EEFG_Ges,1)
         if any(abs([test_Phi3dxD(:);test_Phi3dxD_full(:)]) > 1e-10) || ...
             any(isnan([test_Phi3dxD(:);test_Phi3dxD_full(:)]))
           error('Berechnung von constr3gradD_x stimmt nicht zwischen Template-Funktion und Klasse');
+        end
+        if i_FG == 2
+          continue % Für 3T0R nicht definiert.
         end
         %% Teste constr2grad_q
         if mextest == 1
