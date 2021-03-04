@@ -35,7 +35,7 @@
 function parroblib_gen_bitarrays(EEFG_update)
 if nargin == 0
   EEFG_update = logical(... % Aktualisiere alle Roboter
-    [1 1 0 0 0 1; 1 1 1 0 0 0;  1 1 1 0 0 1; ...
+    [1 1 0 0 0 0; 1 1 0 0 0 1; 1 1 1 0 0 0;  1 1 1 0 0 1; ...
      1 1 1 1 1 0; 1 1 1 1 1 1]);
 end
 if size(EEFG_update,2)~=6
