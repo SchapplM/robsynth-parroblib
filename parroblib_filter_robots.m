@@ -20,6 +20,10 @@
 %   Array mit zusätzlichen Infos für alle Strukturen aus PNames_Akt (in den Zeilen).
 %   Spalten:
 %   1: Rangverlust der Jacobi-Matrix (in den vorgesehenen FG der PKM)
+%   2: Nummer des (höchsten) aktuierten Gelenks (von Gestell an gezählt)
+%      (z.B. "3" bei RRPRRR-Beinkette (UPS))
+%   3: Nummer des (höchsten) aktuierten technischen Gelenks
+%      (z.B. "2" bei UPS-Beinkette)
 % 
 % TODO: Aktuell sind nur symmetrische PKM berücksichtigt.
 % 
@@ -68,4 +72,9 @@ I_unchecked = isnan(ActTab.Rankloss_Platform);
 I = I_rankloss|I_unchecked;
 % Ausgabevariablen zuweisen
 PNames_Akt = ActTab.Name(I);
-AdditionalInfo_Akt = ActTab.Rankloss_Platform(I);
+AdditionalInfo_Akt = NaN(sum(I),3);
+AdditionalInfo_Akt(:,1) = ActTab.Rankloss_Platform(I);
+
+% Lese die Nummer des letzten aktuierten Gelenks aus
+AdditionalInfo_Akt(:,2) = ActTab.MaxIdxActJoint(I);
+AdditionalInfo_Akt(:,3) = ActTab.MaxIdxActTechJoint(I);

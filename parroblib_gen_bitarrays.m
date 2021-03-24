@@ -12,6 +12,8 @@
 %     Name der PKM-Kinematik (mit Koppelgelenk): "P6PRRRRR1G1P5"
 %   Beinkette
 %     Name der seriellen Beinkette (siehe serroblib): "S6PRRRRR1"
+%   Beinkette_Tech
+%     Name der technischen Gelenke der seriellen Beinkette: "UPS"
 %   EEFG [1x6]
 %     Einträge mit 1/0, je nachdem welcher EE-FG bewegt werden kann. FG
 %     werden im Basis-KS gezählt (Plattform-Geschw. und -winkelgeschw.)
@@ -28,6 +30,12 @@
 %   Values_Angle_Parameters
 %     Mögliche Werte für die freien Winkelparameter der Beinketten. Siehe
 %     parroblib_load_robot; Werte 'o', 'a', 'o', 'b' für jeden Parameter.
+%   MaxIdxActJoint
+%     Nummer des aktuierten Gelenks in allen Gelenk-FG. Eintrag bspw.
+%     "3" bei RRPRRR-Beinkette (die auch UPS-Kette ist)
+%   MaxIdxActTechJoint
+%     Nummer des aktuierten technischen Gelenks. Eintrag bspw. "2" bei UPS.
+%     Kardan- und Kugelgelenke zählen als ein technisches Gelenk.
 
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2020-11
 % (C) Institut für Mechatronische Systeme, Leibniz Universität Hannover
@@ -43,6 +51,8 @@ if size(EEFG_update,2)~=6
 end
 
 repopath=fileparts(which('parroblib_path_init.m'));
+serroblibpath=fileparts(which('serroblib_path_init.m'));
+SerRob_DB_all = load(fullfile(serroblibpath, 'serrob_list.mat'));
 for iFG = 1:size(EEFG_update,1)
   EEstr = sprintf('%dT%dR', sum(EEFG_update(iFG,1:3)), sum(EEFG_update(iFG,4:6)));
   %% Kinematik-Tabelle durchsuchen
@@ -67,6 +77,19 @@ for iFG = 1:size(EEFG_update,1)
   KinTab = removevars(KinTab, varnames_kin(end-5:end));
   KinTab = addvars(KinTab, EEFG);
   KinTab.Properties.VariableNames(end) = {'EEFG'};
+  
+  % Füge zusätzliche Spalten hinzu, die nicht in der CSV-Datei der PKM-
+  % Datenbank stehen (da die Informationen indirekt in der SerRobLib sind).
+  % Zeichenkette für technische Gelenke der Beinkette eintragen
+  Beinkette_Tech = cell(length(KinTab.Name), 1);
+  for k = 1:length(KinTab.Name)
+    I_SR_k = strcmp(SerRob_DB_all.Names, KinTab.Beinkette{k});
+    SName_TechJoint = fliplr(regexprep(num2str(SerRob_DB_all.AdditionalInfo(I_SR_k,7)), ...
+      {'1','2','3','4','5'}, {'R','P','C','U','S'}));
+    Beinkette_Tech{k} = SName_TechJoint;
+  end
+  KinTab = addvars(KinTab, Beinkette_Tech);
+  KinTab.Properties.VariableNames(end) = {'Beinkette_Tech'};
   
   %% Kinematik-Tabelle speichern
   % Prüfe, ob die aktuell ausgelesene CSV-Datei der gleiche Stand ist wie
@@ -195,6 +218,45 @@ for iFG = 1:size(EEFG_update,1)
       ActTab = [ActTab;ActTab_i]; %#ok<AGROW>
     end
   end
+  
+  %% Tabelle nachbearbeiten: Zusätzliche Informationen eintragen
+  MaxIdxActJoint = NaN(length(ActTab.Name),1);
+  MaxIdxActTechJoint = NaN(length(ActTab.Name),1);
+  for k = 1:length(ActTab.Name)
+    PName_k = ActTab.Name{k};
+    % Finde die aktuierte PKM in der Kinematik-Tabelle
+    I_k = find(strcmp(KinTab.Name, PName_k(1:end-2)));
+    assert(length(I_k)==1, sprintf('Kein eindeutiger Eintrag für %s in Kinematik-DB', PName_k(1:end-2)));
+    SName_TechJoint = KinTab.Beinkette_Tech{I_k};
+    % Einzelne technische Gelenke durchgehen und zählen
+    TechJointNumbersInChain = zeros(1,6);
+    jj = 0;
+    for kk = 1:length(SName_TechJoint)
+      switch SName_TechJoint(kk)
+        case 'R', jv = 1;
+        case 'P', jv = 1;
+        case 'U', jv = 2;
+        case 'S', jv = 2;
+        case 'C', jv = 2;
+      end
+      jj = jj + jv;
+      if kk == 1
+        TechJointNumbersInChain(1:jj) = kk;
+      else
+        TechJointNumbersInChain(jj-jv+1:jj) = kk;%TechJointNumbersInChain(jj-jv)+jv;
+      end
+    end
+    % Bestimme maximalen Index des aktuierten Gelenks (unabhängig von
+    % technischer Realisierung, nur Gelenk-FG-Nummer)
+    MaxIdxActJoint(k) = max(ActTab.Act_Leg1(k,:).*(1:size(ActTab.Act_Leg1,2)));
+    % Bestimme Index des technischen Gelenks für das aktuierte Gelenke.
+    % Annahme: Symmetrische Aktuierung
+    MaxIdxActTechJoint(k) = TechJointNumbersInChain(MaxIdxActJoint(k));
+  end
+  ActTab = addvars(ActTab, MaxIdxActJoint);
+  ActTab.Properties.VariableNames(end) = {'MaxIdxActJoint'};
+  ActTab = addvars(ActTab, MaxIdxActTechJoint);
+  ActTab.Properties.VariableNames(end) = {'MaxIdxActTechJoint'};
   %% Aktuierungs-Tabelle speichern
   % Prüfe, ob die aktuell ausgelesene CSV-Datei der gleiche Stand ist wie
   % die binär einzulesende Datei

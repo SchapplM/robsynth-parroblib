@@ -17,6 +17,7 @@
 %   5=Parasitäre Bewegung
 %   6=noch nicht geprüft
 %   7=Unbehandelter Fall (Fehler)
+%   8=Kugelgelenk-Isomorphismus (Gestell- oder Plattform-Koppelgelenk)
 % Rangerfolg: 
 %   0: Rangverlust in Jacobi-Matrix. PKM verliert FG und funktioniert nicht.
 %   1: Kein Rangverlust in Jacobi-Matrix. Gültige PKM.
