@@ -22,10 +22,14 @@ EEFG_Ges = [1 1 0 0 0 1; ...
             1 1 1 0 0 1; ...
             1 1 1 1 1 0; ...
             1 1 1 1 1 1];
+% Initialisierung von Variablen
+numPKM_genlegchain = 0;
+numPKM_varlegchain = 0;
+
 for i_FG = 1:size(EEFG_Ges,1)
   EE_FG = logical(EEFG_Ges(i_FG,:));
   fprintf('\nPrüfe Anzahl der PKM mit EE-FG %dT%dR\n', sum(EE_FG(1:3)), sum(EE_FG(4:6)));
-  % Lese PKM-Datenbank aus
+  % Lese PKM-Datenbank aus. Wähle nur PKM ohne Rangverlust.
   [PNames_Kin, PNames_Akt, AdditionalInfo_Akt] = parroblib_filter_robots(EE_FG, 0);
   % Stelle verschiedene Eigenschaften der PKM zusammen. Zunächst bezogen
   % auf Kinematiken (Mechanismen) ohne Betrachtung der Aktuierung.
@@ -148,6 +152,8 @@ for i_FG = 1:size(EEFG_Ges,1)
   I_act_lowacttechjoint = AdditionalInfo_Akt(:,3) <= n_akt;
   fprintf('%d PKM mit allgemeinen Beinketten\n', sum(~I_act_var&I_act_lowacttechjoint));
   fprintf('%d PKM mit Varianten-Beinketten\n', sum(I_act_var&I_act_lowacttechjoint));
+  numPKM_genlegchain = numPKM_genlegchain + sum(~I_act_var&I_act_lowacttechjoint);
+  numPKM_varlegchain = numPKM_varlegchain + sum(I_act_var&I_act_lowacttechjoint);
   % PNames_Akt(~I_act_var&I_act_lowactjoint)
   
   % Anzahl der technischen Gelenke bezogen auf die aktuierten PKM
@@ -167,3 +173,8 @@ for i_FG = 1:size(EEFG_Ges,1)
     % disp(PNames_Akt(I_act_ntj&I_act_lowacttechjoint)');
   end
 end
+fprintf('\nGesamte Anzahl der PKM:\n');
+fprintf('%d PKM mit allgemeinen Beinketten\n', numPKM_genlegchain);
+fprintf('%d PKM mit Varianten-Beinketten\n', numPKM_varlegchain);
+fprintf('%d allgemeine kinematische Ketten\n', sum(~I_SR_var));
+fprintf('%d Varianten der allg. kinematische Ketten\n', sum(I_SR_var));
