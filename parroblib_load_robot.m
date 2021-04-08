@@ -51,6 +51,7 @@ function [NLEG, LEG_Names, Actuation, Coupling, ActNr, symrob, EE_dof0, ...
   PName_Kin, PName_Legs, AdditionalInfo_Akt, StructuralDHParam] = ...
   parroblib_load_robot(Name)
 %% Initialisierung
+assert(isa(Name, 'char'), 'Name muss char sein');
 NLEG = 0;
 LEG_Names = {};
 Actuation = {};
