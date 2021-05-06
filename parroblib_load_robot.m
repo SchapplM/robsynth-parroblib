@@ -6,6 +6,11 @@
 % Name
 %   Name des Roboters in der Datenbank (Kinematik und Aktuierung)
 %   Format: P6RRPRRR14V3G1P1A1
+% Modus
+%   Schalter für Umfang des Zugriffs auf die Datenbank
+%   0: Sehr schnell. Keine Dateien öffnen (ermöglicht nur wenige
+%      Informationen)
+%   1: Alle Informationen. Längerer Lesezugriff
 % 
 % Ausgabe:
 % NLEG [1x1]
@@ -49,8 +54,11 @@
 
 function [NLEG, LEG_Names, Actuation, Coupling, ActNr, symrob, EE_dof0, ...
   PName_Kin, PName_Legs, AdditionalInfo_Akt, StructuralDHParam] = ...
-  parroblib_load_robot(Name)
+  parroblib_load_robot(Name, Modus)
 %% Initialisierung
+if nargin < 2
+  Modus = 1;
+end
 assert(isa(Name, 'char'), 'Name muss char sein');
 NLEG = 0;
 LEG_Names = {};
@@ -86,9 +94,14 @@ else
   Coupling = [str2double(res{5}), str2double(res{6})];
 end
 PName_Kin = [PName_Legs, sprintf('G%dP%d', Coupling(1), Coupling(2))];
-
+LEG_Names = repmat({['S', sprintf('%d',length(res{2})), PName_Legs(3:end)]}, 1, NLEG);
 ActNr = str2double(res{7});
 PName_Akt = [PName_Kin, sprintf('A%d', ActNr)];
+if Modus == 0
+  % Keine Tabellen öffnen. Nur Plausibilitätsprüfung und Extraktion von
+  % Informationen aus dem Roboternamen.
+  return
+end
 %% csv-Tabelle öffnen: Kinematik
 % Da Anzahl Beinketten gegeben ist, aber die PKM nach FG gespeichert sind,
 % müssen mehrere Tabellen durchsucht werden.
