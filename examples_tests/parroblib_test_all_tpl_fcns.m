@@ -177,6 +177,10 @@ for i_FG = 1:size(EEFG_Ges,1)
       'Leg_T_0_W_vec', Leg_T_0_W_vec, ...
       'Leg_phi_W_0', s.Leg_phi_W_0,...
       'Leg_phiconv_W_0', s.Leg_phiconv_W_0);
+    % Struktur aus fkine_coll
+    s_fkine_coll = struct( ...
+      'Leg_pkin_gen', s.Leg_pkin_gen,...
+      'Leg_T_0_W_vec', Leg_T_0_W_vec);
     % Struktur aus constr1grad_tq
     s_q_1 = struct( ...
       'I_constr_t_red', s.I_constr_t_red,...
@@ -382,6 +386,23 @@ for i_FG = 1:size(EEFG_Ges,1)
         if any(abs([test_X2(:);test_XD2(:);test_XDD2(:)]) > 1e-8) || ...
            any(isnan([test_X2(:);test_XD2(:);test_XDD2(:)]))
           error('Berechnung von fkineEE_traj stimmt nicht als Aufruf der Template-Funktion in der Klasse');
+        end
+      end
+      %% Teste fkine_coll
+      for jj = 1:n
+        q = Q_test(jj,:)';
+        if mextest == 1
+          eval(sprintf('[Tc_file, JP_file]=%s_fkine_coll(q, s_fkine_coll);', PName_Legs));
+        else
+          % if jj == 1, matlabfcn2mex({sprintf('%s_fkine_coll', PName_Legs)}); end
+          eval(sprintf('[Tc_file, JP_file]=%s_fkine_coll_mex(q, s_fkine_coll);', PName_Legs));
+        end
+        [Tc_class, JP_class] = R.fkine_coll(q);
+        test_Tc = Tc_class - Tc_file;
+        test_JP = JP_class - JP_file;
+        if any(abs([test_Tc(:);test_JP(:)]) > 1e-8) || ...
+           any(isnan([test_Tc(:);test_JP(:)]))
+          error('Berechnung von fkine_coll stimmt nicht zwischen Template-Funktion und Klasse');
         end
       end
       %% Teste constr4D_traj
