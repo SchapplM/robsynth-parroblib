@@ -2,7 +2,7 @@
 % der mex-Funktionen. Automatische Neu-Erzeugung, falls Syntax-Fehler.
 % Dieses Skript ist dann nützlich, wenn die Schnittstellen im Robotik-Repo
 % geändert wurden und noch mex-Dateien vorliegen, die mit der alten Version
-% kompiliert wurden.
+% kompiliert wurden. Es werden auch die zugrunde liegenden m-Dateien geprüft.
 
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2021-04
 % (C) Institut für Mechatronische Systeme, Leibniz Universität Hannover
@@ -19,8 +19,15 @@ for i_FG = 1:size(EEFG_Ges,1)
   EE_FG = logical(EEFG_Ges(i_FG,:));
   EE_FG_str = sprintf('%dT%dR', sum(EE_FG(1:3)), sum(EE_FG(4:6)));
   [PNames_Kin, PNames_Act] = parroblib_filter_robots(EE_FG, 6);
-  fprintf('Prüfe %d PKM mit %s\n', length(PNames_Kin), EE_FG_str);
-  for ii = 1:length(PNames_Kin)
+  % Prüfe nur eine PKM je Gestell- und Plattform-Nummer (die Template-
+  % Funktionen sind für alle G-P-Varianten identisch.
+  PNames_noGP = cell(size(PNames_Kin));
+  for i = 1:length(PNames_Kin)
+    PNames_noGP{i} = PNames_Kin{i}(1:end-4); % Annahme: Nur einstellige Nummern
+  end
+  [~,III] = unique(PNames_noGP);
+  fprintf('Prüfe %d PKM mit %s\n', length(III), EE_FG_str);
+  for ii = III'
     I_act = find(contains(PNames_Act, PNames_Kin{ii}),1,'first');
     PName = PNames_Act{I_act};
     [~, LEG_Names, ~, ~, ~, ~, ~, ~, PName_Legs, ~] = parroblib_load_robot(PName);
@@ -28,46 +35,63 @@ for i_FG = 1:size(EEFG_Ges,1)
     tpl_dir = fullfile(parroblib_path, sprintf('sym_%s', EE_FG_str), ...
       PName_Legs, 'tpl');
     mexfilelist = dir(fullfile(tpl_dir, '*_mex.mex*'));
-    if isempty(mexfilelist)
+    mfilelist = dir(fullfile(tpl_dir, '*.m'));
+    filelist = [mexfilelist; mfilelist];
+    if isempty(filelist)
       % Nichts zu prüfen. Es gibt keine mex-Dateien
       continue
     end
-    fprintf('Prüfe PKM %d/%d (%s) (%d mex-Dateien liegen in tpl-Ordner)\n', ...
-      ii, length(PNames_Kin), PNames_Kin{ii}, length(mexfilelist))
+    fprintf('Prüfe PKM %d/%d (%s) (%d mex-Dateien und %d m-Dateien liegen in tpl-Ordner %s)\n', ...
+      find(III==ii), length(III), PNames_Kin{ii}, length(mexfilelist), length(mfilelist), tpl_dir)
     % Initialisiere Matlab-Klasse und setze auf Nutzung von Mex-Funktionen
     RP = parroblib_create_robot_class(PName, 1, 0.3);
+    RP_mex_status = true;
     list_missing_mex = RP.fill_fcn_handles(true, false);
     % Gehe alle mex-Dateien durch, die da sind.
-    for kk = 1:length(mexfilelist)
+    for kk = 1:length(filelist)
+      if ~contains(filelist(kk).name, '_mex')
+        % Prüfe ab jetzt die m-Dateien. Die mex-Dateien sind fertig.
+        if RP_mex_status == true
+          RP.fill_fcn_handles(false, false);
+          RP_mex_status = false;
+        end
+      end
       for retryiter = 1:3 % mehrfache Neuversuche zur Fehlerkorrektur
         recompile = false;
         % Einzelne Fälle für die mex-Dateien durchgehen und jeweils
         % Dummy-Aufruf der Funktionen, um Syntax-Fehler aufzudecken.
-        if contains(mexfilelist(kk).name, 'invkin_mex')
+        if contains(filelist(kk).name, 'invkin_mex') || ...
+            contains(filelist(kk).name, 'invkin.m')
           try
-            RP.invkin2(NaN(6,1), zeros(RP.NJ,1));
+            RP.invkin2(zeros(6,1), zeros(RP.NJ,1));
           catch err
-            recompile = true;
+            if ~strcmp(err.identifier, 'MATLAB:svd:matrixWithNaNInf')
+              recompile = true;
+            end
           end
         end
-        if contains(mexfilelist(kk).name, 'invkin3_mex')
+        if contains(filelist(kk).name, 'invkin3')
           try
-            RP.invkin4(NaN(6,1), zeros(RP.NJ,1));
+            RP.invkin4(zeros(6,1), zeros(RP.NJ,1));
           catch err
-            recompile = true;
+            if ~strcmp(err.identifier, 'MATLAB:svd:matrixWithNaNInf')
+              recompile = true;
+            end
           end
         end
-        if contains(mexfilelist(kk).name, 'invkin_traj_mex')
+        if contains(filelist(kk).name, 'invkin_traj')
           try
-            RP.invkin2_traj(NaN(2,6), NaN(2,6), NaN(2,6), [0;1], zeros(RP.NJ,1));
+            RP.invkin2_traj(zeros(2,6), zeros(2,6), zeros(2,6), [0;1], zeros(RP.NJ,1));
           catch err
-            recompile = true;
+            if ~strcmp(err.identifier, 'MATLAB:svd:matrixWithNaNInf')
+              recompile = true;
+            end
           end
         end
         % Falls ein Fehler vorliegt, wird neu kompiliert oder generiert.
         if recompile
           warning('Fehler beim Aufruf von Funktion %s. Fehler: %s', ...
-            mexfilelist(kk).name, err.message);
+            filelist(kk).name, err.message);
           if retryiter == 2
             warning('Zweiter Versuch ohne Erfolg. Voraussichtlich sind die Vorlagen-Funktionen veraltet');
             serroblib_create_template_functions({LEG_Names{1}},  false,false); %#ok<CCAT1>
@@ -75,12 +99,15 @@ for i_FG = 1:size(EEFG_Ges,1)
           elseif retryiter == 3
             error('Auch beim dritten Versuch kein Erfolg');
           end
-          [~,mexbasename] = fileparts(mexfilelist(kk).name);
-          matlabfcn2mex({mexbasename(1:end-4)}); % ohne "_mex"
+          if contains(filelist(kk).name, '_mex')
+            % Mex-Dateien werden neu kompiliert. m-Dateien nicht.
+            [~,mexbasename] = fileparts(filelist(kk).name);
+            matlabfcn2mex({mexbasename(1:end-4)}); % ohne "_mex"
+          end
         else
           % Alles funktioniert. Keine Neuversuche notwendig.
           if retryiter > 1
-            fprintf('Mex-Datei %s wurde korrigiert\n', mexfilelist(kk).name);
+            fprintf('Datei %s wurde korrigiert\n', filelist(kk).name);
           end
           break
         end % recompile
