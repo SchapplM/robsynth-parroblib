@@ -30,6 +30,8 @@ for i_FG = 1:size(EEFG_Ges,1)
   for ii = III'
     I_act = find(contains(PNames_Act, PNames_Kin{ii}),1,'first');
     PName = PNames_Act{I_act};
+    % Debug: Einzelnen Roboter prüfen.
+%     if ~contains(PName, 'P3PRRRR3'), continue; end
     [~, LEG_Names, ~, ~, ~, ~, ~, ~, PName_Legs, ~] = parroblib_load_robot(PName);
     % Suche nach den mex-Dateien
     tpl_dir = fullfile(parroblib_path, sprintf('sym_%s', EE_FG_str), ...
@@ -63,7 +65,8 @@ for i_FG = 1:size(EEFG_Ges,1)
         if contains(filelist(kk).name, 'invkin_mex') || ...
             contains(filelist(kk).name, 'invkin.m')
           try
-            RP.invkin2(zeros(6,1), zeros(RP.NJ,1));
+            % Gebe mehr als einen Startwert vor (neue Schnittstelle seit 2021-06)
+            RP.invkin2(zeros(6,1), rand(RP.NJ,3));
           catch err
             if ~strcmp(err.identifier, 'MATLAB:svd:matrixWithNaNInf')
               recompile = true;
@@ -72,7 +75,10 @@ for i_FG = 1:size(EEFG_Ges,1)
         end
         if contains(filelist(kk).name, 'invkin3')
           try
-            RP.invkin4(zeros(6,1), zeros(RP.NJ,1));
+            % Gebe mehr als einen Startwert vor (neue Schnittstelle seit 2021-06)
+            [~,~,~,Stats] = RP.invkin4(zeros(6,1), rand(RP.NJ,3));
+            % Prüfe, ob neue Ausgabe (seit 2021-06) da ist.
+            tmp = Stats.coll;
           catch err
             if ~strcmp(err.identifier, 'MATLAB:svd:matrixWithNaNInf')
               recompile = true;
