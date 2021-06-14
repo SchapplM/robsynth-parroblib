@@ -15,9 +15,10 @@ clc
 tpl_fcn_neu = true;
 test_mex = true; % Benutze mex-Funktionen beim Testen (schneller, aber kein Debuggen möglich)
 recompile_mex = true; % nur notwendig, falls Template-Dateien geändert wurden.
-max_num_pkm = 3; % Reduziere die Anzahl der geprüften PKM pro FG
+max_num_pkm = 5; % Reduziere die Anzahl der geprüften PKM pro FG
 shuffle_pkm_selection = true; % Zufällige Auswahl der PKM
 max_single_points = 50; % Anzahl der zu prüfenden Einzelpunkte
+force_new_synthesis = true;
 % Speicherort der Parameter
 rob_path = fileparts(which('robotics_toolbox_path_init.m'));
 tmpdir_params = fullfile(rob_path, 'examples_tests', 'tmp_ParRob', 'param_dimsynthres');
@@ -30,44 +31,55 @@ EEFG_Ges = [1 1 0 0 0 1; ...
             1 1 1 1 1 0; ...
             1 1 1 1 1 1];
 ResStat = table();
-for i_FG = 1:size(EEFG_Ges,1)
+i_FG_Range = 1:size(EEFG_Ges,1); % Hier definieren, für Debuggen mit Matlab-Parallelinstanzen
+for i_FG = i_FG_Range
+for allow_rankloss = [false, true]
   % Aufgabenredundanz ist bei 2T1R, 3T1R und 3T3R möglich.
   if any(i_FG == [1 3 5]), taskred_possible = true;
   else,                    taskred_possible = false; end
   EE_FG = logical(EEFG_Ges(i_FG,:));
   EE_FG_red = EE_FG; EE_FG_red(6) = 0;
-  [PNames_Kin, ~] = parroblib_filter_robots(EE_FG, 6);
-  if isempty(PNames_Kin)
+  if allow_rankloss
+    [PNames_Kin, PNames_Act] = parroblib_filter_robots(EE_FG, 6);
+  else
+    [PNames_Kin, PNames_Act] = parroblib_filter_robots(EE_FG, 0);
+  end
+  if isempty(PNames_Act)
     continue % Es gibt keine PKM mit diesen FG.
   end
-  III = 1:length(PNames_Kin);
+  III = 1:length(PNames_Act);
   if shuffle_pkm_selection
     III = III(randperm(length(III)));
   end
-%  % Debug:
+  % Debug:
 %   if i_FG == 1
-%     III = find(strcmp(PNames_Kin, 'P3RRR1G1P1'));
+%     III = find(strcmp(PNames_Act, 'P3RRR1G1P1A1'));
 %   elseif i_FG == 2
-%     III = find(strcmp(PNames_Kin, 'P3RRRRR10V1G2P2'));
+%     III = find(strcmp(PNames_Act, 'P3RRRRR10V1G2P2A1'));
 %   elseif i_FG == 3
-%     III = find(strcmp(PNames_Kin, 'P4PRRRR3V1G1P2'));
+%     III = find(strcmp(PNames_Act, 'P4PRRRR3V1G1P2A1'));
 %   elseif i_FG == 4
-%     III = find(strcmp(PNames_Kin, 'P5RPRRR8V1G9P8'));
+%     III = find(strcmp(PNames_Act, 'P5RPRRR8V1G9P8A1'));
 %   elseif i_FG == 5
-%     III = find(strcmp(PNames_Kin, 'P6RRPRRR14V3G1P4'));
+%     III = find(strcmp(PNames_Act, 'P6RRPRRR14V3G1P4A1')); % P6RRRRRR6G7P2A1
 %   end
+  if isempty(III)
+    warning('Keine passenden PKM mit FG %dT%dR und allow_rankloss=%d', ...
+      sum(EE_FG(1:3)), sum(EE_FG(4:6)), allow_rankloss);
+    continue
+  end
   for ii = III(1:min(max_num_pkm, length(III))) % Debug: find(strcmp(PNames_Kin, 'P6RRPRRR14V3G1P4'));
-    PName = [PNames_Kin{ii},'A1']; % Nehme nur die erste Aktuierung (ist egal)
+    PName = PNames_Act{ii};
     if size(ResStat,1)>0 && any(strcmp(ResStat.Name, PName))
       warning('PKM %s steht schon in der Ergebnis-Tabelle. Überspringe', PName);
       continue
     end
-    row_ii = {PName, 0, NaN(1,3), NaN(1,3), NaN(1,4), NaN(1,4), false, NaN(1,8)};
+    row_ii = {PName, 0, NaN(1,3), NaN(1,3), NaN(1,6), NaN(1,6), false, NaN(1,19)};
     ResStat = [ResStat; row_ii]; %#ok<AGROW>
     ResStat.Properties.VariableNames = {'Name', 'DimSynth_Erfolg', ...
       'IK_M1_Anteil_Identisch', 'IK_M1_Anteil_Erfolg', 'IK_M2_Anteil_Identisch', ...
       'IK_M2_Anteil_Erfolg', 'IK_Traj_Erfolg', 'IK_Traj_ErfolgDetail'};
-    [~, LEG_Names, ~, ~, ~, ~, ~, ~, PName_Legs, ~] = parroblib_load_robot(PName);
+    [~, LEG_Names, ~, ~, ~, ~, ~, PName_Kin, PName_Legs, AdditionalInfo_Akt] = parroblib_load_robot(PName);
     paramfile_robot = fullfile(tmpdir_params, sprintf('%s_params.mat', PName));
     fprintf('Untersuche PKM %s\n', PName);
     RP = parroblib_create_robot_class(PName, 1, 0.3);
@@ -75,13 +87,17 @@ for i_FG = 1:size(EEFG_Ges,1)
     % Varianten-Modells, falls notwendig)
     serroblib_create_template_functions({LEG_Names{1}},  ~tpl_fcn_neu,false); %#ok<CCAT1>
     if recompile_mex
-      matlabfcn2mex({[RP.Leg(1).mdlname,'_invkin_eulangresidual'], [RP.Leg(1).mdlname,'_invkin_traj']});
+      matlabfcn2mex({[RP.Leg(1).mdlname,'_invkin_eulangresidual']});
+      matlabfcn2mex({[RP.Leg(1).mdlname,'_invkin_traj']});
     end
-    parroblib_create_template_functions({PNames_Kin{ii}},~tpl_fcn_neu,false); %#ok<CCAT1>
+    parroblib_create_template_functions({PName_Kin},~tpl_fcn_neu,false); %#ok<CCAT1>
     % Nur die benötigten Funktionen neu kompilieren
     if recompile_mex
-      matlabfcn2mex({[PName_Legs,'_invkin'], [PName_Legs,'_invkin3'], ...
+      mexerr = matlabfcn2mex({[PName_Legs,'_invkin'], [PName_Legs,'_invkin3'], ...
         [PName_Legs,'_invkin_traj']});
+      if mexerr, error('Fehler beim Kompilieren'); end
+%       matlabfcn2mex({[PName_Legs,'_invkin_traj']});
+%       matlabfcn2mex({[PName_Legs,'_invkin3']});
     end
     % Initialisierung der Funktionen: Kompilierte Funktionen nehmen
     % (notwendig für Struktursynthese)
@@ -146,7 +162,7 @@ for i_FG = 1:size(EEFG_Ges,1)
     else
       fprintf('Es gibt keine abgespeicherten Parameter. Führe Maßsynthese durch\n');
     end
-    if ~params_success
+    if ~params_success || force_new_synthesis
       % Führe Maßsynthese neu aus. Parameter nicht erfolgreich geladen
       Set.optimization.objective = 'condition';
       Set.optimization.ee_rotation = false;
@@ -238,6 +254,8 @@ for i_FG = 1:size(EEFG_Ges,1)
         'q0 außerhalb der Grenzen, obwohl gerade erst eingestellt');
     end
     qlim = cat(1,RP.Leg(:).qlim);
+    qDlim = cat(1,RP.Leg(:).qDlim);
+    qDDlim = cat(1,RP.Leg(:).qDDlim);
     
     ResStat.DimSynth_Erfolg(strcmp(ResStat.Name, PName)) = 1;
     % Allgemeine Einstellungen der IK:
@@ -353,14 +371,15 @@ for i_FG = 1:size(EEFG_Ges,1)
           for kkk = 1:RP.NLEG
             subplot(2,RP.NLEG,sprc2no(2,RP.NLEG,1,kkk)); hold on; grid on;
             plot(Stats_kls.condJ(:,kkk), '-');
-            plot(Stats_tpl.condJ(:,kkk), '-');
+            plot(Stats_tpl.condJ(:,kkk), '--');
             ylabel('Cond. Legs');
             title(sprintf('Leg %d', kkk));
             subplot(2,RP.NLEG,sprc2no(2,RP.NLEG,2,kkk)); hold on; grid on;
-            plot(Stats_kls.lambda(:,kkk), '-');
-            plot(Stats_tpl.lambda(:,kkk), '-');
+            hdl1=plot(Stats_kls.lambda(:,kkk*2-1), '-');
+            hdl2=plot(Stats_tpl.lambda(:,kkk*2-1), '--');
             ylabel('Lambda. Legs');
           end
+          legend([hdl1(1);hdl2(1)], {'invkin_ser', 'invkin2'}, 'interpreter', 'none');
           linkxaxes
           error(['invkin_ser vs invkin2 (Punkt %d/%d): IK Status nicht ', ...
             'gleich. Klassenmethode: %d, Vorlagen-Funktion: %d'], i, ...
@@ -387,8 +406,9 @@ for i_FG = 1:size(EEFG_Ges,1)
           error('invkin_ser vs invkin2: Ausgabe Tc_stack stimmt nicht überein');
         end
         
-        % Teste IK bezogen auf Plattform-KS
-        if jj == 3
+        % Teste IK bezogen auf Plattform-KS (nur ohne Aufgabenredundanz).
+        % Nur Sinnvoll, falls IK vorher konvergiert ist.
+        if jj == 3 || ~ik_res_iks
           continue
         end
         % Nehme Ergebnis der EE-IK als Startwert. Die IK sollte sofort
@@ -403,8 +423,8 @@ for i_FG = 1:size(EEFG_Ges,1)
         'Zeiten: invkin_ser: mean %1.1fms (std %1.1fms), invkin2: mean %1.1fms (std %1.1fms)\n'], ...
         jj, max_single_points, 1e3*mean(calctimes(:,1)), ...
         1e3*std(calctimes(:,1)), 1e3*mean(calctimes(:,2)), 1e3*std(calctimes(:,2)));
-      ikstat_neq_m1(jj) = num_niO / max_single_points;
-      ikstat_niO_m1(jj) = num_neq / max_single_points;
+      ikstat_neq_m1(jj) = num_neq / max_single_points;
+      ikstat_niO_m1(jj) = num_niO / max_single_points;
       if jj == 1 % Nur bei Nr. 1 bei Fehler abbrechen. Nr. 2 hat evtl durch die anderen Startwerte eine schlechte Konvergenz. Bei Nr. 3 (3T2R) noch nicht sehr robust
         if ikstat_niO_m1(jj) > 0.80 % bei ungünstigen Kinematikparametern evtl schlechte Konvergenz
           error(['invkin_ser vs invkin2: Mehr als 80%% (%d/%d) der IK-Versuche ', ...
@@ -421,9 +441,9 @@ for i_FG = 1:size(EEFG_Ges,1)
     fprintf('Vergleich invkin_ser vs invkin2 für 3 Fälle erfolgreich\n');
     %% Teste inverse Kinematik für Einzelpunkte nach zweiter Methode
     fprintf('Vergleiche Klassenmethode (invkin3) und Template-Methode (invkin4) für Einzelpunkt-IK Variante 2\n');
-    ikstat_neq_m2 = NaN(1,4);
-    ikstat_niO_m2 = NaN(1,4);
-    for jj = 1:4
+    ikstat_neq_m2 = NaN(1,6);
+    ikstat_niO_m2 = NaN(1,6);
+    for jj = 1:5
       calctimes = NaN(max_single_points,2);
       % Geht vorerst nur für 3T3R
       if ~taskred_possible
@@ -432,7 +452,8 @@ for i_FG = 1:size(EEFG_Ges,1)
       % Standard-FG-Auswahl
       RP.update_EE_FG(EE_FG, EE_FG);
       s_jj = s;
-      s_jj.n_max = 800; % damit schneller fertig. Muss reichen.
+      s_jj.wn = zeros(4,1);
+      s_jj.n_max = 1000; % Standard-wert. könnte auch weniger sein.
       s_jj.Kn = ones(RP.NJ,1);
       s_jj.maxstep_ns = 1e-6; % damit schneller aufgehört wird (Nullraumbewegung erst fast abgeschlossen)
       switch jj
@@ -444,31 +465,37 @@ for i_FG = 1:size(EEFG_Ges,1)
           % Teste IK mit Aufgabenredundanz
           % 3T2R-IK
           s_jj.scale_lim = 0.0; % Keine Skalierung an Grenze
-          s_jj.wn = [0;0]; % Ohne Optimierung
+          s_jj.wn = [0;0;0;0]; % Ohne Optimierung
           RP.update_EE_FG(EE_FG, EE_FG_red);
         case 3
           % Teste IK mit Aufgabenredundanz
           % 3T2R-IK
           s_jj.scale_lim = 0.0;
-          s_jj.wn = [1;0;0]; % Mit Optimierung der Gelenkgrenzen
+          s_jj.wn = [1;0;0;0]; % Mit Optimierung der Gelenkgrenzen
           RP.update_EE_FG(EE_FG, EE_FG_red);
         case 4
           % Teste 3T2R-IK mit Aufgabenredundanz (und Optimierung)
           s_jj.scale_lim = 0.0;
-          s_jj.wn = [0;0;1]; % Mit Optimierung der Konditionszahl (ohne Betrachtung der Grenzen)
+          s_jj.wn = [0;0;1;0]; % Mit Optimierung der IK-Konditionszahl (ohne Betrachtung der Grenzen)
           RP.update_EE_FG(EE_FG, EE_FG_red);
         case 5
+          % Teste 3T2R-IK mit Aufgabenredundanz (und Optimierung)
+          s_jj.scale_lim = 0.0;
+          s_jj.wn = [0;0;0;1]; % Mit Optimierung der PKM-Konditionszahl (ohne Betrachtung der Grenzen)
+          RP.update_EE_FG(EE_FG, EE_FG_red);
+        case 6
           % Teste 3T2R-IK mit Aufgabenredundanz (und Optimierung)
           % TODO: Das konvergiert im allgemeinen nicht wirklich gut.
           % Ohne scale_lim werden die Grenzen verletzt, mit gibt es keine
           % Lösung.
           s_jj.scale_lim = 0.8; % Keine Überschreitung der Grenzen erlauben (wegen hyperb. Bestrafung)
-          s_jj.wn = [1;1;1]; % Mit Optimierung der Konditionszahl (mit Grenzen)
+          s_jj.wn = [1;1;1;0]; % Mit Optimierung der Konditionszahl (mit Grenzen)
           RP.update_EE_FG(EE_FG, EE_FG_red);
       end
       num_niO = 0;
       num_neq = 0;
       for i = 1:max_single_points
+        if jj >= 4 && i >= 5, break; end % reduziere Anzahl. Dauert sonst zu lange.
         k = II_traj(i);
         t1=tic();
         [q_kls_3, Phi_kls_3, Tc_stack_kls_3, Stats_kls_3]=RP.invkin3(Traj_0.X(k,:)', q0, s_jj);
@@ -484,10 +511,10 @@ for i_FG = 1:size(EEFG_Ges,1)
           fprintf(['Fall %d: Zeiten für eine Auswertung: %1.1fms für ', ...
             'invkin3 und %1.1fms für invkin4\n'], jj, 1e3*calctimes(i,1), 1e3*calctimes(i,2));
         end
-        ik_res2_ik2 = (all(abs(Phi_tpl_3(RP.I_constr_t_red))<s.Phit_tol) && ...
-          all(abs(Phi_tpl_3(RP.I_constr_r_red))<s.Phir_tol));% IK-Status Funktionsdatei
-        ik_res2_iks = (all(abs(Phi_kls_3(RP.I_constr_t_red))<s.Phit_tol) && ...
-          all(abs(Phi_kls_3(RP.I_constr_r_red))<s.Phir_tol)); % IK-Status Klassenmethode
+        ik_res2_ik2 = max(abs(Phi_tpl_3(RP.I_constr_t_red)))<s.Phit_tol && ...
+          max(abs(Phi_tpl_3(RP.I_constr_r_red)))<s.Phir_tol;% IK-Status Funktionsdatei
+        ik_res2_iks = max(abs(Phi_kls_3(RP.I_constr_t_red)))<s.Phit_tol && ...
+          max(abs(Phi_kls_3(RP.I_constr_r_red)))<s.Phir_tol; % IK-Status Klassenmethode
         % Ergebnis der IK (Gültigkeit der Lösung) neu nachrechnen
         Phi_kls_3_v2 = RP.constr3(q_kls_3, Traj_0.X(k,:)');
         Phi_tpl_3_v2 = RP.constr3(q_tpl_3, Traj_0.X(k,:)');
@@ -501,6 +528,17 @@ for i_FG = 1:size(EEFG_Ges,1)
         if ik_res2_iks ~= ik_res2_iks_v2
           error('Ausgabe Phi von invkin3 stimmt nicht bei erneuter Berechnung');
         end
+        if all(Stats_kls_3.condJ(~isnan(Stats_kls_3.condJ)) > 1e10) && ...
+           all(Stats_tpl_3.condJ(~isnan(Stats_tpl_3.condJ)) > 1e10)
+          % Fehler tritt bei 3T1R-PKM auf.
+          warning('Die IK-Jacobi ist durchgängig singulär. PKM nicht sinnvoll.');
+          break
+        end
+        if (Stats_kls_3.condJ(Stats_kls_3.iter) > 1e4 || isnan(Stats_kls_3.condJ(Stats_kls_3.iter))) && ...
+           (Stats_tpl_3.condJ(Stats_tpl_3.iter) > 1e4 || isnan(Stats_tpl_3.condJ(Stats_tpl_3.iter)))
+          warning('Die IK-Jacobi ist im letzten Schritt singulär (beide Methoden). PKM nicht sinnvoll.');
+          break
+        end
         if ik_res2_ik2 ~= ik_res2_iks % Vergleiche IK-Status (Erfolg / kein Erfolg)
           error('invkin3 vs invkin4: IK Status nicht gleich');
         elseif ~ik_res2_iks  % beide IK-Status false
@@ -509,9 +547,14 @@ for i_FG = 1:size(EEFG_Ges,1)
           num_niO = num_niO + 1;
           warning(['invkin3 vs invkin4 %d/%d: Pose %d/%d: IK Status beide nicht ', ...
             'erfolgreich (Fall %d)'], i, max_single_points, k, size(Traj_0.X,1), jj);
-          continue % TODO: Entscheiden, was passieren soll.
+          % Lasse ein paar fehlerhafte Berechnungen zu. Muss nicht immer
+          % konvergieren, aber meistens.
+          if num_niO < 6 % damit 10% Fehler (bei 50 Punkte) erlaubt.
+            continue
+          end
           % Debuggen:
           change_current_figure(10);clf;
+          set(10, 'Name', 'invkin3vs4_q', 'NumberTitle', 'off');
           RPstr = ['R', 'P'];
           for kkk = 1:RP.NJ
             legnum = find(kkk>=RP.I1J_LEG, 1, 'last');
@@ -519,20 +562,21 @@ for i_FG = 1:size(EEFG_Ges,1)
             subplot(ceil(sqrt(RP.NJ)), ceil(RP.NJ/ceil(sqrt(RP.NJ))), kkk);
             hold on; grid on;
             plot(Stats_kls_3.Q(1,kkk), 'ko');
-            plot(Stats_kls_3.Q(:,kkk), '-');
-            hdl1=plot(Stats_tpl_3.Q(:,kkk), '-');
-            hdl2=plot([1,Stats_kls_3.iter], repmat(RP.Leg(legnum).qlim(legjointnum,:),2,1), 'r:');
+            hdl1=plot(Stats_kls_3.Q(:,kkk), '-');
+            hdl2=plot(Stats_tpl_3.Q(:,kkk), '-');
+            plot([1,Stats_kls_3.iter], repmat(RP.Leg(legnum).qlim(legjointnum,:),2,1), 'r:');
             title(sprintf('q %d (%s), L%d,J%d', kkk, RPstr(RP.MDH.sigma(kkk)+1), legnum, legjointnum));
             grid on;
           end
           linkxaxes
           legend([hdl1(1);hdl2(1)], {'invkin3', 'invkin4'}, 'interpreter', 'none');
           change_current_figure(11);clf;
+          set(11, 'Name', 'invkin3vs4_Phi', 'NumberTitle', 'off');
           for kkk = 1:RP.NLEG
             Ic_Leg = RP.I_constr_red(RP.I_constr_red>(kkk-1)*6 & RP.I_constr_red<(kkk*6+1));
             subplot(3,3,kkk); hold on; grid on;
-            plot(Stats_kls_3.PHI(:,Ic_Leg), '-');
-            plot(Stats_tpl_3.PHI(:,Ic_Leg), '--');
+            hdl1=plot(Stats_kls_3.PHI(:,Ic_Leg), '-');
+            hdl2=plot(Stats_tpl_3.PHI(:,Ic_Leg), '--');
             title(sprintf('Phi Leg %d', kkk));
             subplot(3,3,RP.NLEG+1); hold on; grid on;
             plot(sum(Stats_kls_3.PHI(:,Ic_Leg).^2,2), '-');
@@ -544,20 +588,27 @@ for i_FG = 1:size(EEFG_Ges,1)
           hdl2=plot(sum(Stats_tpl_3.PHI(:,RP.I_constr_red).^2,2), '--');
           legend([hdl1(1);hdl2(1)], {'invkin3', 'invkin4'}, 'interpreter', 'none');
           title('Norm Phi');
+          subplot(3,3,RP.NLEG+3); hold on; grid on;
+          hdl1=plot(max(abs(Stats_kls_3.PHI(:,RP.I_constr_red)),[],2), '-');
+          hdl2=plot(max(abs(Stats_tpl_3.PHI(:,RP.I_constr_red)),[],2), '--');
+          legend([hdl1(1);hdl2(1)], {'invkin3', 'invkin4'}, 'interpreter', 'none');
+          title('Max Abs Phi');
           linkxaxes
           change_current_figure(12);clf;
-          for kkk = 1:4
+          set(12, 'Name', 'invkin3vs4_h', 'NumberTitle', 'off');
+          for kkk = 1:5
             if kkk == 1, hlabel = 'hges';
-            else, hlabel = sprintf('h %d', kkk-1); end
-            subplot(2,4,sprc2no(2,4,1,kkk)); hold on; grid on;
+            else, hlabel = sprintf('h %d (wn=%1.1f)', kkk-1, s_jj.wn(kkk-1)); end
+            subplot(2,5,sprc2no(2,5,1,kkk)); hold on; grid on;
             plot(Stats_kls_3.h(:,kkk), '-');
             plot(Stats_tpl_3.h(:,kkk), '--');
             ylabel(hlabel);
-            subplot(2,4,sprc2no(2,4,2,kkk)); hold on; grid on;
-            plot(diff(Stats_kls_3.h(:,kkk)), '-');
-            plot(diff(Stats_tpl_3.h(:,kkk)), '--');
+            subplot(2,5,sprc2no(2,5,2,kkk)); hold on; grid on;
+            hdl1=plot(diff(Stats_kls_3.h(:,kkk)), '-');
+            hdl2=plot(diff(Stats_tpl_3.h(:,kkk)), '--');
             ylabel(sprintf('diff %s', hlabel));
           end
+          legend([hdl1(1);hdl2(1)], {'invkin3', 'invkin4'}, 'interpreter', 'none');
           sgtitle(sprintf('Zielfunktion Nebenoptimierung'));
           linkxaxes
           error('Halt');
@@ -575,9 +626,12 @@ for i_FG = 1:size(EEFG_Ges,1)
             'überein. Max. Abweichung %1.1e'], max(abs(ik_test_Tc_stack_2(:))));
         end
       end
+      numtests = sum(~isnan(calctimes(:,1)));
       fprintf(['Klassen- und Template-Methode für Einzelpunkt-IK Variante 2 stimmen überein (Fall %d, %d Punkte).\n', ...
         'Zeiten: invkin3: mean %1.1fms (std %1.1fms), invkin4: mean %1.1fms (std %1.1fms)\n'], ...
-        jj, max_single_points, 1e3*mean(calctimes(:,1)), 1e3*std(calctimes(:,1)), 1e3*mean(calctimes(:,2)), 1e3*std(calctimes(:,2)));
+        jj, max_single_points, 1e3*mean(calctimes(1:numtests,1)), ...
+        1e3*std(calctimes(1:numtests,1)), 1e3*mean(calctimes(1:numtests,2)), ...
+        1e3*std(calctimes(1:numtests,2)));
       ikstat_neq_m2(jj) = num_niO / max_single_points;
       ikstat_niO_m2(jj) = num_neq / max_single_points;
       % Prüfe, ob IK-Ergebnis zufriedenstellend.
@@ -592,15 +646,20 @@ for i_FG = 1:size(EEFG_Ges,1)
     end
     ResStat.IK_M2_Anteil_Identisch(strcmp(ResStat.Name, PName),:) = 1-ikstat_neq_m2;
     ResStat.IK_M2_Anteil_Erfolg(strcmp(ResStat.Name, PName),:) = 1-ikstat_niO_m2;
-    fprintf('Vergleich invkin3 vs invkin4 für 2 Fälle erfolgreich\n');
+    fprintf('Vergleich invkin3 vs invkin4 für 5 Fälle erfolgreich\n');
     %% Teste inverse Kinematik für Trajektorie
+    warning('off', 'Coder:MATLAB:rankDeficientMatrix');
+    warning('off', 'MATLAB:rankDeficientMatrix');
+%     continue % Das hier nicht testen
     % Debug:
-%     RP.fill_fcn_handles(false);
 %     parroblib_create_template_functions({PName}, false);
 %     matlabfcn2mex({[PName(1:end-6), '_invkin_traj']});
     fprintf('Vergleiche Klassenmethode (invkin_traj) und Template-Methode (invkin2_traj) für Trajektorien-IK\n');
-    trajikstat = NaN(1,8);
-    for jj = 1:8
+    trajikstat = NaN(1,19);
+    ResStat_TrajIK = table();
+    jj = 0;
+    for ikoptvar1 = 1:2 % Nullraum in Antriebs- oder Gesamt-Koordinaten
+    for ikoptvar2 = 1:12 % Fälle für Nullraumkriterien
       calctimes = NaN(1,2);
       % Zurücksetzen der Aufgaben-FG auf Standard-Wert
       RP.update_EE_FG(RP.I_EE, RP.I_EE);
@@ -609,62 +668,146 @@ for i_FG = 1:size(EEFG_Ges,1)
       s_jj.Phir_tol = 1e-12; % Sehr feine Toleranz, damit Fehler-Schwellwerte ...
       s_jj.Phit_tol = 1e-12; % ... nicht dadurch überschritten werden
       s_jj.simplify_acc = false;
-      switch jj
+      s_jj.wn = zeros(10,1);
+      switch ikoptvar2
         case 1
           % Teste IK mit vollständigen Freiheitsgraden
           % Standard-Einstellungen: 3T3R-IK
           s_jj.mode_IK = 1; % benutze invkin_ser für Positionskorrektur
+          Name_jj = 'mode_IK=1, nicht red.';
         case 2
           % Standard-Einstellungen: 3T3R-IK
           s_jj.mode_IK = 2; % benutze invkin3 für Positionskorrektur
+          Name_jj = 'mode_IK=2, nicht red.';
         case 3
           % Vereinfachte Berechnung der Beschleunigung, vollständige FG
           s_jj.simplify_acc = true;
+          Name_jj = 'simplify_acc, nicht red.';
         case 4
           % Teste IK mit Aufgabenredundanz (ohne Nebenbedingung)
           if ~taskred_possible, continue; end
-          s_jj.mode_IK = 3;
           RP.update_EE_FG(EE_FG, EE_FG_red);
+          Name_jj = 'mode_IK=3, ohne Opt.';
         case 5
-          % Teste IK mit Aufgabenredundanz ohne Nebenbedingungen
-          if ~taskred_possible, continue; end
-          s_jj.mode_IK = 3;
-          RP.update_EE_FG(EE_FG, EE_FG_red);
-        case 6
           % Vereinfachte Berechnung der Beschleunigung, Aufgabenredundanz
           % ohne Nebenbedingungen
           if ~taskred_possible, continue; end
           s_jj.simplify_acc = true;
           RP.update_EE_FG(EE_FG, EE_FG_red);
+          Name_jj = 'simplify_acc, ohne Opt.';
+        case 6
+          % Teste IK mit Aufgabenredundanz (mit Nebenbedingung)
+          if ~taskred_possible, continue; end
+          s_jj.wn = [1;0;0;0;0;0]; % quadratische Abstandsfunktion von Pos.-Grenzen (ohne Dämpfung)
+          RP.update_EE_FG(EE_FG, EE_FG_red);
+          Name_jj = 'Krit. 1 (P)';
         case 7
           % Teste IK mit Aufgabenredundanz (mit Nebenbedingung)
           if ~taskred_possible, continue; end
-          s_jj.mode_IK = 3;
-          s_jj.wn = [1;0;1;0;0]; % quadratische Abstandsfunktion von Grenzen (Pos./Geschw.)
+          s_jj.wn = [0;0;1;0;0;0]; % quadratische Abstandsfunktion von Geschw.-Grenzen
           RP.update_EE_FG(EE_FG, EE_FG_red);
+          Name_jj = 'Dämpfung';
         case 8
           % Teste IK mit Aufgabenredundanz (mit Nebenbedingung)
           if ~taskred_possible, continue; end
-          s_jj.mode_IK = 3; % Benutze beide IK-Verfahren für Positions-Korrektur
-          s_jj.wn = [0;0;0;0;1]; % Konditionszahl
+          s_jj.wn = [1;0;.1;0;0;0]; % quadratische Abstandsfunktion von Grenzen (Pos./Geschw.)
+          s_jj.wn(7) = 0.3; % Auch D-Rückführung
           RP.update_EE_FG(EE_FG, EE_FG_red);
+          Name_jj = 'Krit. 1 (PD), Dämpfung';
+        case 9
+          % Teste IK mit Aufgabenredundanz (mit Nebenbedingung)
+          if ~taskred_possible, continue; end
+          s_jj.wn = [0;0;0.1;0;1;0]; % Konditionszahl IK-Jacobi
+          s_jj.wn(9) = 0.3; % Auch D-Rückführung
+          RP.update_EE_FG(EE_FG, EE_FG_red);
+          Name_jj = 'Krit. IK-Jacobi (PD), Dämpfung';
+        case 10
+          % Teste IK mit Aufgabenredundanz (mit Nebenbedingung)
+          if ~taskred_possible, continue; end
+          if AdditionalInfo_Akt ~= 0, continue; end % Geht nur, falls voller Rang bei PKM-Jacobi
+          % TODO: Nur, falls voller Rang
+          s_jj.wn = [0;0;0.5;0;0;1]; % Konditionszahl PKM-Jacobi
+          s_jj.wn(10) = 0.3; % Auch D-Rückführung
+          RP.update_EE_FG(EE_FG, EE_FG_red);
+          Name_jj = 'Krit. PKM-Jacobi (PD), Dämpfung';
+        case 11
+          % Teste IK mit Aufgabenredundanz (mit Nebenbedingung)
+          if ~taskred_possible, continue; end
+          s_jj.mode_IK = 3;
+          s_jj.wn = [1;0;.1;0;0;0]; % quadr.+hyperbolische Abstandsfunktion von Grenzen (Pos.); Dämpfung
+          s_jj.wn(7) = 0.3; % Auch D-Rückführung der quadrat. Grenzen
+          s_jj.wn(8) = 1; % Nur D-Rückführung der hyperb. Grenzen
+          RP.update_EE_FG(EE_FG, EE_FG_red);
+          Name_jj = 'Krit. 1+2 (PD), Dämpfung';
+        case 12
+          % Teste IK mit Aufgabenredundanz (mit Nebenbedingung)
+          % TODO: Dieser Fall funktioniert noch nicht.
+          if ~taskred_possible, continue; end
+          s_jj.mode_IK = 3;
+          s_jj.wn = [0.2;0.2;.7;0;0;1]; % quadr.+hyperbolische Abstandsfunktion von Grenzen (Pos.); Dämpfung
+          s_jj.wn(7) = 0.01; % schwache D-Rückführung der quadrat. Grenzen
+          s_jj.wn(8) = 0.01; % schwache D-Rückführung der hyperb. Grenzen
+          s_jj.wn(10) = 0.3; % Auch D-Rückführung PKM-Jacobi
+          RP.update_EE_FG(EE_FG, EE_FG_red);
+          Name_jj = 'PKM-Jacobi, alles Mix 1';
       end
-      fprintf('Fall %d: Starte Trajektorien-IK (%d Bahnpunkte)\n', jj, size(Traj_0.X,1));
+      if ikoptvar1 == 2
+        % Berechne die Nullraumbewegung immer in Gesamt-Koordinaten
+        % Nur berücksichtigen, falls Optimierungskriterien genannt sind
+        if ~any(s_jj.wn), continue; end
+        s_jj.thresh_ns_qa = 1;
+        Name_jj = [Name_jj, ', vollst. Gelenkraum']; %#ok<AGROW>
+      else
+        s_jj.thresh_ns_qa = 1e4;
+      end
+    	jj = jj + 1;
+      fprintf(['Fall %d (ikoptvar1=%d; ikoptvar2=%d): Starte Trajektorien-IK ', ...
+        '(%d Bahnpunkte) (%s)\n'], jj, ikoptvar1, ikoptvar2, size(Traj_0.X,1), Name_jj);
       % Berechne IK des ersten Traj.-Punktes, damit beide Verfahren
       % gleich anfangen (sonst mehr Möglichkeit für Abweichungen).
-      [q0_traj, Phi_q0, ~, Stats] = RP.invkin_ser(Traj_0.X(1,:)', q0, s);
-      Stats.PHI(isnan(Stats.PHI))=0; % Für Summenbildung unten
-      [q0_traj2, Phi_q02, ~, Stats2] = RP.invkin3(Traj_0.X(1,:)', q0, s);
-      [~,Phivoll_q0_test] = RP.constr3(q0_traj2, Traj_0.X(1,:)');
-      Phi_q0_test = Phivoll_q0_test(RP.I_constr_red);
-      if any(abs(Phi_q0) > 1e-6) || any(isnan(Phi_q0)) % invkin_ser geht nicht
-        error('IK für Anfangspunkt nicht berechenbar. Muss funktionieren, da Parameter aus Maßsynthese');
+      s_pik = s; % gleiche Gewichtung der Nullraumbewegung wählen
+      s_pik.wn = s_jj.wn([1 2 5 6]);
+      [q0_traj2, Phi_q02, ~, Stats2] = RP.invkin_ser(Traj_0.X(1,:)', q0, s);
+      Stats2.PHI(isnan(Stats2.PHI))=0; % Für Summenbildung unten
+      if taskred_possible
+        % Bei Nullraumbewegung muss der Anfangswert in den Grenzen liegen.
+        % Sonst wird direkt bei Start der Trajektorie mit Maximal- 
+        % beschleunigung versucht, die Grenzen einzuhalten
+        s_pik.scale_lim = 1.0;
       end
-      if any(abs(Phi_q02) > 1e-6) ~= any(abs(Phi_q0_test) > 1e-6)
+      [q0_traj3, Phi_q03, ~, Stats3] = RP.invkin3(Traj_0.X(1,:)', q0, s_pik);
+      if isinf(invkin_optimcrit_limits2(q0_traj3, qlim))
+        warning('Anfangswert aus invkin3 verletzt Gelenkwinkel-Grenzen');
+      end
+      % Benutze immer invkin3 für den Startpunkt der Trajektorie
+      q0_traj = q0_traj3;
+      if Stats3.iter == s_pik.n_max
+        warning(['Nullraumbewegung für Startpunkt ist nicht konvergiert. ', ...
+          'Damit Trajektorien-Start nicht aus Ruhelage (schlecht für Konvergenz)']);
+      end
+      if all(Stats3.condJ(~isnan(Stats3.condJ)) > 1e10)
+        % Fehler tritt bei 3T1R-PKM auf.
+        warning(['Die IK-Jacobi (für constr3 bei Start-Konfig.) ist durch', ...
+          'gängig singulär. PKM nicht sinnvoll.']);
+        continue
+      end
+      if all(Stats2.condJ(~isnan(Stats2.condJ(:,1)),1) > 1e10)
+        % Fehler tritt bei 3T1R-PKM auf.
+        warning(['Die IK-Jacobi (für Beinkette 1 in invkin_ser bei Start-', ...
+          'Konfig.) ist durchgängig singulär. PKM nicht sinnvoll.']);
+        continue
+      end
+      [~,Phivoll_q0_test] = RP.constr3(q0_traj3, Traj_0.X(1,:)');
+      Phi_q0_test = Phivoll_q0_test(RP.I_constr_red);
+      if any(abs(Phi_q02) > 1e-6) || any(isnan(Phi_q02)) % invkin_ser geht nicht
+        error(['IK für Anfangspunkt nicht berechenbar (mit invkin_ser). ', ...
+          'Muss funktionieren, da Parameter aus Maßsynthese']);
+      end
+      if any(abs(Phi_q03) > 1e-6) ~= any(abs(Phi_q0_test) > 1e-6)
         error('Berechnung der kinematischen ZB am Anfang mit constr3 ist anders als aus invkin3.');
       end
       % invkin3 geht nicht, aber invkin_ser
-      if all(abs(Phi_q0) < 1e-6) && any(abs(Phi_q02) > 1e-6)
+      if all(abs(Phi_q02) < 1e-6) && any(abs(Phi_q03) > 1e-6)
         warning('IK zum Startpunkt der Trajektorie stimmt nicht mit invkin3, aber mit invkin_ser');
         if false % Debuggen
           figure(1); clf; hold on; grid on;
@@ -672,93 +815,268 @@ for i_FG = 1:size(EEFG_Ges,1)
           s_plot = struct( 'ks_legs', [RP.I1L_LEG; RP.I1L_LEG+1; RP.I2L_LEG], 'straight', 0);
           RP.plot( q0_traj, Traj_0.X(1,:)', s_plot );
           change_current_figure(13);clf;
+          set(13,'Name','invkin_traj_debug_start_ik_q', 'numbertitle', 'off');
           RPstr = ['R', 'P'];
           for kkk = 1:RP.NJ
             legnum = find(kkk>=RP.I1J_LEG, 1, 'last');
             legjointnum = kkk-(RP.I1J_LEG(legnum)-1);
             subplot(ceil(sqrt(RP.NJ)), ceil(RP.NJ/ceil(sqrt(RP.NJ))), kkk);
             hold on; grid on;
-            plot(Stats.Q(1,kkk), 'ko');
-            hdl1=plot(Stats.Q(:,kkk), '-');
-            hdl2=plot(Stats2.Q(:,kkk), '--');
-            plot([1,max([Stats.iter,Stats2.iter])], repmat(RP.Leg(legnum).qlim(legjointnum,:),2,1), 'r-');
+            plot(Stats2.Q(1,kkk), 'ko');
+            hdl1=plot(Stats2.Q(:,kkk), '-');
+            hdl2=plot(Stats3.Q(:,kkk), '--');
+            plot([1,max([Stats2.iter,Stats3.iter])], repmat(RP.Leg(legnum).qlim(legjointnum,:),2,1), 'r-');
             title(sprintf('q %d (%s), L%d,J%d', kkk, RPstr(RP.MDH.sigma(kkk)+1), legnum, legjointnum));
             grid on;
           end
           legend([hdl1;hdl2], {'invkin_ser', 'invkin3'}, 'interpreter', 'none');
           linkxaxes
           change_current_figure(14);clf;hold on; grid on;
-          plot(sum(Stats.PHI.^2,2));
           plot(sum(Stats2.PHI.^2,2));
+          plot(sum(Stats3.PHI.^2,2));
           legend({'invkin_ser', 'invkin3'}, 'interpreter', 'none');
         end
+        figure(14);clf;
+        set(14,'Name','invkin_traj_debug_start_ik3', 'numbertitle', 'off');
+        subplot(2,2,1);
+        hdl1=plot(max(abs(Stats3.PHI(:,RP.I_constr_red)),[],2));
+        title('Max Abs Phi'); grid on;
+        subplot(2,2,2);
+        plot(Stats3.h(:,1));
+        title('h ges'); grid on;
+        subplot(2,2,3);
+        plot(diff(Stats3.Q));
+        title('diff (q)'); grid on;
+        linkxaxes
+        % Benutze in diesem Fall das Ergebnis von invkin_ser als Startwert
+        % für Trajektorie
+        q0_traj = q0_traj2;
       end
       t1=tic();
-      [Q_t_kls, QD_t_kls, QDD_t_kls, Phi1_t_kls,~,~, JointPos_all_kls] = ...
+      [Q_t_kls, QD_t_kls, QDD_t_kls, Phi1_t_kls,Jinv_t_kls,JinvD_t_kls, JointPos_all_kls, Stats_kls] = ...
         RP.invkin_traj(Traj_0.X, Traj_0.XD, Traj_0.XDD, Traj_0.t, q0_traj, s_jj);% Klassen
       calctimes(1)=toc(t1);
       t1=tic();
-      [Q_t_tpl, QD_t_tpl, QDD_t_tpl, Phi1_t_tpl,~,~, JointPos_all_tpl] = ...
+      [Q_t_tpl, QD_t_tpl, QDD_t_tpl, Phi1_t_tpl,Jinv_t_tpl,JinvD_t_tpl, JointPos_all_tpl, Stats_tpl] = ...
         RP.invkin2_traj(Traj_0.X, Traj_0.XD, Traj_0.XDD, Traj_0.t, q0_traj, s_jj);% Template
       calctimes(2)=toc(t1);
-      trajik_iO = [all(abs(Phi1_t_kls(:)) < 1e-6), all(abs(Phi1_t_tpl(:)) < 1e-6)];
+      trajik_iO = [all(abs(Phi1_t_kls(:)) < 1e-6), ...
+                   all(abs(Phi1_t_tpl(:)) < 1e-6)];
+      if ~trajik_iO(1)
+        warning(['Zwangsbedingungen werden in invkin_traj verletzt. Max: ', ...
+          '%1.1e; %d mal NaN'], max(abs(Phi1_t_kls(:))), sum(any(isnan(Phi1_t_kls),2)));
+      end
+      if ~trajik_iO(2)
+        warning(['Zwangsbedingungen werden in invkin2_traj verletzt. Max: ', ...
+          '%1.1e; %d mal NaN'], max(abs(Phi1_t_tpl(:))), sum(any(isnan(Phi1_t_tpl),2)));
+      end
       trajikstat(jj) = trajik_iO(1);
-      if any(~trajik_iO)
-        if any(jj == [4 5 6 7 8]) % TODO: Das ist noch unbefriedigend. Sollte eigentlich immer gehen.
-          Ifirst = find(any(abs(Phi1_t_kls)>1e-6|isnan(Phi1_t_kls),2), 1, 'first');
+     
+      % Teste, ob Ergebnisse gleich sind
+      test_QDD = QDD_t_kls - QDD_t_tpl;
+      test_QDD(abs(test_QDD)<1e-10) = 0;
+      test_QD = QD_t_kls - QD_t_tpl;
+      test_QD(abs(test_QD)<1e-10) = 0;
+      test_Q = Q_t_kls - Q_t_tpl;
+      test_Q(abs(test_Q)<1e-10) = 0;
+      test_JP = JointPos_all_kls - JointPos_all_tpl;
+      test_Jinv = Jinv_t_kls - Jinv_t_tpl;
+      test_JinvD = JinvD_t_kls - JinvD_t_tpl;
+      % Prüfe, wie lange die Ergebnisse gleich sind (fangen gleich an und
+      % gehen dann ausinenander)
+      I_test_Q_viol =     find(any(abs(test_Q)    >1e-4,2), 1, 'first');
+      I_test_QD_viol =    find(any(abs(test_QD)   >1e-2,2), 1, 'first');
+      I_test_QDD_viol =   find(any(abs(test_QDD)  >1e-1,2), 1, 'first');
+      I_test_JP_viol =    find(any(abs(test_JP)   >1e-3,2), 1, 'first');
+      I_test_Jinv_viol =  find(any(abs(test_Jinv) >1e-3,2), 1, 'first');
+      I_test_JinvD_viol = find(any(abs(test_JinvD)>1e-1,2), 1, 'first');
+      I_test_firstviol = min([I_test_Q_viol;I_test_QD_viol;I_test_QDD_viol; ...
+        I_test_JP_viol; I_test_Jinv_viol; I_test_JinvD_viol]);
+      if I_test_firstviol == 1
+        if Stats_kls.h(1,7) > 1e6
+          % Bei Nullraumbewegung aus PKM-Jacobi-Matrix kann bei
+          % Singularität die Richtung drehen. Ist Prinzipbedingt.
+          warning(['Abweichung bei erstem Zeitschritt. Voraussichtliche ', ...
+            'Ursache ist die singuläre PKM-Jacobi.']);
+          continue
+        end
+        error(['Implementierungen unterscheiden sich bereits im ersten ', ...
+          'Zeitschritt. Hier dürften eigentlich keine Abweichungen sein']);
+      end
+      Iabort_kls = find(any(abs(Phi1_t_kls)>1e-6|isnan(Phi1_t_kls),2), 1, 'first');
+      Iabort_tpl = find(any(abs(Phi1_t_tpl)>1e-6|isnan(Phi1_t_tpl),2), 1, 'first');
+      Iabort = min([Iabort_kls;Iabort_tpl]);
+      % Nehme die Korrelation als Vergleich. Sehr kurze Ausreißer können
+      % mit manchen IK-Gewichtungen ausgeglichen werden.
+      corrQ = diag(corr(Q_t_kls, Q_t_tpl));
+      corrQD = diag(corr(QD_t_kls, QD_t_tpl));
+      corrQDD = diag(corr(QDD_t_kls, QDD_t_tpl));
+      meancorr_Q = mean([corrQ;corrQD;corrQDD]);
+      if meancorr_Q < 0.98
+        warning(['Verläufe der Gelenkgrößen nach beiden Implementierungen ', ...
+          'korrelieren schlecht: im Mittel q:%1.3f, qD:%1.3f, qDD:%1.3f'], ...
+          mean(corrQ), mean(corrQD), mean(corrQDD));
+      end
+      % Prüfe, wann die Grenzen das erste mal überschritten werden. Dann
+      % ist meistens keine Übereinstimmung der Implementierungen mehr zu
+      % erwarten
+      I_qviol_kls = Q_t_kls<repmat(qlim(:,1)',size(Q_t_kls,1),1) | ...
+                    Q_t_kls>repmat(qlim(:,2)',size(Q_t_kls,1),1);
+      I_qviol_tpl = Q_t_tpl<repmat(qlim(:,1)',size(Q_t_tpl,1),1) | ...
+                    Q_t_tpl>repmat(qlim(:,2)',size(Q_t_tpl,1),1);
+      I_qDviol_kls = QD_t_kls<repmat(qDlim(:,1)',size(QD_t_kls,1),1) | ...
+                     QD_t_kls>repmat(qDlim(:,2)',size(QD_t_kls,1),1);
+      I_qDviol_tpl = QD_t_tpl<repmat(qDlim(:,1)',size(QD_t_tpl,1),1) | ...
+                     QD_t_tpl>repmat(qDlim(:,2)',size(QD_t_tpl,1),1);
+      I_qDDviol_kls = QDD_t_kls<repmat(qDDlim(:,1)',size(QDD_t_kls,1),1) | ...
+                      QDD_t_kls>repmat(qDDlim(:,2)',size(QDD_t_kls,1),1);
+      I_qDDviol_tpl = QDD_t_tpl<repmat(qDDlim(:,1)',size(QDD_t_tpl,1),1) | ...
+                      QDD_t_tpl>repmat(qDDlim(:,2)',size(QDD_t_tpl,1),1); 
+      I_qviol_kls_first = find(any(I_qviol_kls,2),1,'first');
+      I_qviol_tpl_first = find(any(I_qviol_tpl,2),1,'first');
+      I_qDviol_kls_first = find(any(I_qDviol_kls,2),1,'first');
+      I_qDviol_tpl_first = find(any(I_qDviol_tpl,2),1,'first');
+      I_qDDviol_kls_first = find(any(I_qDDviol_kls,2),1,'first');
+      I_qDDviol_tpl_first = find(any(I_qDDviol_tpl,2),1,'first');
+      I_limviol_first = min([I_qviol_kls_first;I_qviol_tpl_first;I_qDviol_kls_first;...
+        I_qDviol_tpl_first;I_qDDviol_kls_first;I_qDDviol_tpl_first]);
+      wn = [s_jj.wn(:)', zeros(1, 10-length(s_jj.wn))];
+      trajik_ident = max(abs(test_Q(:)))<1e-4 && ...
+                     max(abs(test_QD(:)))<1e-2 && ...
+                     max(abs(test_QDD(:)))<1e-1 && ...
+                     max(abs(test_JP(:)))<1e-3 && ...
+                     max(abs(test_Jinv(:)))<1e-3 && ...
+                     max(abs(test_JinvD(:)))<1e-3;
+      if isempty(Iabort)
+        refnum = size(test_Q,1);
+        percent_traj = 100;
+      else
+        refnum = Iabort;
+        percent_traj = 100*Iabort/size(test_Q,1);
+      end
+      if isempty(I_test_firstviol)
+        percent_ident = 100;
+      else
+        percent_ident = 100*I_test_firstviol/refnum;
+      end
+      if isempty(I_limviol_first)
+        percent_limviolfree = 100;
+      else
+        percent_limviolfree = 100*I_limviol_first/size(test_Q,1);
+      end
+      row_jj = {Name_jj, jj, [ikoptvar1,ikoptvar2], s_jj.thresh_ns_qa, ...
+        calctimes, trajik_iO, percent_ident, ...
+        meancorr_Q, percent_limviolfree, percent_traj, wn};
+      ResStat_TrajIK = [ResStat_TrajIK; row_jj]; %#ok<AGROW>
+      ResStat_TrajIK.Properties.VariableNames = {'Beschreibung', 'jj', 'ikoptvar', ...
+        'Gelenkraum', 'Rechenzeit', 'Erfolg', 'Identisch_bis_Proz', 'Korr_mittl', ...
+        'ErsteGrenzVerl_Proz', 'ProzentTraj', 'Gewichtung'};
+      if I_test_firstviol < refnum
+        warning('Implementierungen haben nur bis Schritt %d/%d (t=%1.3f) das exakt gleiche Ergebnis (%1.1f%%)', ...
+          I_test_firstviol-1, refnum, Traj_0.t(I_test_firstviol-1), 100*(I_test_firstviol-1)/refnum);
+      end
+      if any(~trajik_iO) && ... % eine Implementierung funktioniert nicht
+          ~s_jj.simplify_acc % bei simplify_acc kann die Berechnung evtl scheitern.
+        if any(s_jj.wn) % Die Nullraumbewegung ist noch nicht immer vorteilhaft. Ohne muss es gehen.
           warning(['Traj.-IK funktioniert nicht (Abbruch bei %d/%d). Fall ', ...
-            '%d allerdings ungünstig und kann zu Singularitäten führen. ', ...
-            'Also kein Fehler.'], Ifirst, size(Phi1_t_kls,1), jj);
+            'ikoptvar2=%d funktioniert aufgrund der Nullraumbewegung nicht immer. ', ...
+            'Also kein Fehler.'], Iabort, size(Phi1_t_kls,1), ikoptvar2);
+          continue
+        end
+        if s_jj.simplify_acc && all(EE_FG_red==RP.I_EE_Task)
+          warning(['Methode simplify_acc kann zu numerischen Fehlern führen. ', ...
+            'Werte nicht als kritischen Fehler.']);
           continue
         end
         if ~all(~trajik_iO)
           % Bei numerischen Problemen kann es rundungsbedingt vorkommen,
           % dass eine Implementierung funktioniert, und die andere nicht.
-          error(['Ergebnis der Traj.-IK zwischen beiden Implementierungen ', ...
+          warning(['Ergebnis der Traj.-IK zwischen beiden Implementierungen ', ...
             'unterschiedlich. Klasse %d vs Vorlage %d'], trajik_iO(1), trajik_iO(2));
         end
-        test_QDD = QDD_t_kls - QDD_t_tpl;
-        test_QDD(abs(test_QDD)<1e-10) = 0;
-        test_QD = QD_t_kls - QD_t_tpl;
-        test_QD(abs(test_QD)<1e-10) = 0;
-        test_Q = Q_t_kls - Q_t_tpl;
-        test_Q(abs(test_Q)<1e-10) = 0;
         RPstr = ['R', 'P'];
         change_current_figure(13);clf;
+        set(13,'Name','traj_Q', 'NumberTitle', 'off');
         for kkk = 1:RP.NJ
           legnum = find(kkk>=RP.I1J_LEG, 1, 'last');
           legjointnum = kkk-(RP.I1J_LEG(legnum)-1);
           subplot(ceil(sqrt(RP.NJ)), ceil(RP.NJ/ceil(sqrt(RP.NJ))), kkk);
           hold on; grid on;
-          hdl1=plot(Q_t_kls(:,kkk), '-');
-          hdl2=plot(Q_t_tpl(:,kkk), '--');
+          hdl1=plot(Traj_0.t, Q_t_kls(:,kkk), '-');
+          hdl2=plot(Traj_0.t, Q_t_tpl(:,kkk), '--');
+          plot(Traj_0.t([1,end]), repmat(qlim(kkk,:),2,1), 'r-');
           title(sprintf('q %d (%s), L%d,J%d', kkk, RPstr(RP.MDH.sigma(kkk)+1), legnum, legjointnum));
           grid on;
         end
+        legend([hdl1, hdl2], {'Klasse', 'Vorlage'});
         linkxaxes
         change_current_figure(14);clf;
+        set(14,'Name','traj_QD', 'NumberTitle', 'off');
         for kkk = 1:RP.NJ
           legnum = find(kkk>=RP.I1J_LEG, 1, 'last');
           legjointnum = kkk-(RP.I1J_LEG(legnum)-1);
           subplot(ceil(sqrt(RP.NJ)), ceil(RP.NJ/ceil(sqrt(RP.NJ))), kkk);
           hold on; grid on;
-          hdl1=plot(QD_t_kls(:,kkk), '-');
-          hdl2=plot(QD_t_tpl(:,kkk), '--');
+          hdl1=plot(Traj_0.t, QD_t_kls(:,kkk), '-');
+          hdl2=plot(Traj_0.t, QD_t_tpl(:,kkk), '--');
+          plot(Traj_0.t([1,end]), repmat(qDlim(kkk,:),2,1), 'r-');
           title(sprintf('qD %d (%s), L%d,J%d', kkk, RPstr(RP.MDH.sigma(kkk)+1), legnum, legjointnum));
           grid on;
         end
+        legend([hdl1, hdl2], {'Klasse', 'Vorlage'});
         linkxaxes
         change_current_figure(15);clf;
+        set(15,'Name','traj_QDD', 'NumberTitle', 'off');
         for kkk = 1:RP.NJ
           legnum = find(kkk>=RP.I1J_LEG, 1, 'last');
           legjointnum = kkk-(RP.I1J_LEG(legnum)-1);
           subplot(ceil(sqrt(RP.NJ)), ceil(RP.NJ/ceil(sqrt(RP.NJ))), kkk);
           hold on; grid on;
-          hdl1=plot(QDD_t_kls(:,kkk), '-');
-          hdl2=plot(QDD_t_tpl(:,kkk), '--');
+          hdl1=plot(Traj_0.t, QDD_t_kls(:,kkk), '-');
+          hdl2=plot(Traj_0.t, QDD_t_tpl(:,kkk), '--');
+          plot(Traj_0.t([1,end]), repmat(qDDlim(kkk,:),2,1), 'r-');
           title(sprintf('qDD %d (%s), L%d,J%d', kkk, RPstr(RP.MDH.sigma(kkk)+1), legnum, legjointnum));
           grid on;
         end
+        legend([hdl1, hdl2], {'Klasse', 'Vorlage'});
+        linkxaxes
+        change_current_figure(16);clf;
+        set(16,'Name','traj_h', 'NumberTitle', 'off');
+        hname = {'Summe', 'Pos. Quadr.', 'Pos. Hyperb.', 'Geschw. Quadr.', ...
+          'Geschw. Hyperb.', 'cond(Phi_q)', 'cond(J)'};
+        for kkk = 1:6
+          if s_jj.wn(kkk)
+            hname{kkk+1} = [hname{kkk+1}, sprintf(', wn=%1.2f', s_jj.wn(kkk))];
+          end
+        end
+        for kkk = 1:7
+          subplot(2,4,kkk);hold on;
+          hdl1=plot(Traj_0.t, Stats_kls.h(:,kkk), '-');
+          hdl2=plot(Traj_0.t, Stats_tpl.h(:,kkk), '--');
+          title(sprintf('h %d (%s)', kkk, hname{kkk}));
+          grid on;
+        end
+        legend([hdl1, hdl2], {'Klasse', 'Vorlage'});
+        linkxaxes
+        change_current_figure(17);clf;
+        set(17,'Name','traj_X', 'NumberTitle', 'off');
+        [X_t_kls, XD_t_kls, XDD_t_kls] = RP.fkineEE_traj(Q_t_kls, QD_t_kls, QDD_t_kls);
+        [X_t_tpl, XD_t_tpl, XDD_t_tpl] = RP.fkineEE_traj(Q_t_tpl, QD_t_tpl, QDD_t_tpl);
+        for kkk = 1:6
+          subplot(3,6,sprc2no(3,6,1,kkk));hold on;
+          hdl1=plot(Traj_0.t, X_t_kls(:,kkk), '-');
+          hdl2=plot(Traj_0.t, X_t_tpl(:,kkk), '--');
+          ylabel(sprintf('x %d', kkk)); grid on;
+          subplot(3,6,sprc2no(3,6,2,kkk));hold on;
+          hdl1=plot(Traj_0.t, XD_t_kls(:,kkk), '-');
+          hdl2=plot(Traj_0.t, XD_t_tpl(:,kkk), '--');
+          ylabel(sprintf('xD %d', kkk)); grid on;
+          subplot(3,6,sprc2no(3,6,3,kkk));hold on;
+          hdl1=plot(Traj_0.t, XDD_t_kls(:,kkk), '-');
+          hdl2=plot(Traj_0.t, XDD_t_tpl(:,kkk), '--');
+          ylabel(sprintf('xDD %d', kkk)); grid on;
+        end
+        legend([hdl1, hdl2], {'Klasse', 'Vorlage'});
         linkxaxes
         error('Eine Trajektorien-IK funktioniert nicht. Darf nicht sein, da Parameter aus Maßsynthese kommen');
       end
@@ -863,12 +1181,10 @@ for i_FG = 1:size(EEFG_Ges,1)
           end
         end
       end
-      test_JP = JointPos_all_kls - JointPos_all_tpl;
-      test_Q = Q_t_kls - Q_t_tpl;
       if any(abs(test_Q(:))>1e-4)
         Ifirst = find(any(abs(test_Q)>1e-3,2), 1, 'first');
         warning(['Fall %d: invkin_traj vs invkin2_traj: Q1 aus kls und tpl ', ...
-          'stimmen nicht überein. Max. Abweichung %1.1e. Erstes Vorkommnis: ', ...
+          'stimmen nicht überein. Max. Abweichung %1.3e. Erstes Vorkommnis: ', ...
           'Zeitschritt %d'], jj, max(abs(test_Q(:))), Ifirst);
       end
       if any(abs(test_JP(:))>1e-3)
@@ -877,16 +1193,18 @@ for i_FG = 1:size(EEFG_Ges,1)
           max(abs(test_JP(:))));
       end
       fprintf(['Fall %d: Klassen- und Template-Methode für Traj.-IK stimmen überein.\n', ...
-        'Gesamt %1.1fs. Zeiten: invkin_traj: %1.2fs (%1.1fms pro Bahnpunkt),', ...
+        'Gesamt %1.2fs. Zeiten: invkin_traj: %1.2fs (%1.1fms pro Bahnpunkt),', ...
         'invkin2_traj: %1.2fs (%1.1fms pro Bahnpunkt).\n'], ...
-        jj, sum(calctimes(:)), 1000*calctimes(1)/size(Q,1), calctimes(1), ...
+        jj, sum(calctimes(:)), calctimes(1), 1000*calctimes(1)/size(Q,1), ...
         calctimes(2), 1000*calctimes(2)/size(Q,1));
     end
+    end
     ResStat.IK_Traj_Erfolg(strcmp(ResStat.Name, PName)) = all(trajikstat(1:3)); % Marker ob alle erfolgreich. Zählt auch NaN als erfolgreich (passt). Nur die betrachten, die funktionieren müssen.
-    ResStat.IK_Traj_ErfolgDetail(strcmp(ResStat.Name, PName),:) = trajikstat;
+    ResStat.IK_Traj_ErfolgDetail(strcmp(ResStat.Name, PName),:) = trajikstat(1:19);
     fprintf('Untersuchung für PKM %s abgeschlossen.\n', PName);
   end % for ii (PKM)
   fprintf('Untersuchung für EE-FG %dT%dR abgeschlossen.\n', sum(EE_FG(1:3)), sum(EE_FG(4:6)));
+end % allow_rankloss
 end % for i_FG
 save(fullfile(resdir, 'parroblib_ik_tpl_test.mat'), 'ResStat');
 writetable(ResStat, fullfile(resdir, 'parroblib_ik_tpl_test.csv'), 'Delimiter', ';');
