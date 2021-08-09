@@ -8,8 +8,9 @@
 %   Modus der Schreibsperre: 'free', 'check', 'lock'
 % content
 %   Ressourcen, die geschützt werden: 'csv', PKM-Kinematik (z.B. 'P3PRRRR7')
-%   csv beinhaltet alle Tabellen für die betroffenen Freiheitsgrade
+%   'csv' beinhaltet alle Tabellen für die betroffenen Freiheitsgrade
 %   PKM betrifft das kompilieren der Funktionen für die jeweilige PKM.
+%   'template' beinhaltet den Temp-Ordner für die Generierung aus Vorlagen
 % EEFG
 %   EE-FG des Roboters im Format [1 1 1 0 0 0] (Bool)
 % patience
@@ -45,8 +46,11 @@ expression_robname = 'P(\d)([RP]+)(\d+)[V]?';
 if strcmp(content, 'csv')
   filename = 'writelock_csv.lock';
   filedir = fullfile(repopath, folder);
-  lockfile = fullfile(filedir, filename);
   ressource_name = sprintf('%s/%dT%dR', content, sum(EEFG(1:3)), sum(EEFG(4:6)));
+elseif strcmp(content, 'template')
+  filename = 'writelock_template.lock';
+  filedir = fullfile(repopath, 'template_functions');
+  ressource_name = 'Template';
 elseif ~isempty(is_robname)
   expression_robname2 = '(.*)[G]';
   [robname_kin, ~] = regexp(content,expression_robname2, 'tokens','match');
@@ -57,11 +61,11 @@ elseif ~isempty(is_robname)
   end
   filename = 'writelock_mex.lock';
   filedir = fullfile(repopath, folder, pkm_kin);
-  lockfile = fullfile(filedir, filename);
   ressource_name = pkm_kin;
 else
   error('Fall content=%s nicht definiert', content);
 end
+lockfile = fullfile(filedir, filename);
 %% Sperrung aufheben (falls gefordert)
 if strcmp(mode, 'free')
   if verbosity
