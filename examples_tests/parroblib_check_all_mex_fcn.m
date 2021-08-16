@@ -88,6 +88,9 @@ for i_FG = 1:size(EEFG_Ges,1)
         if contains(filelist(kk).name, 'invkin_traj')
           try
             RP.invkin2_traj(zeros(2,6), zeros(2,6), zeros(2,6), [0;1], zeros(RP.NJ,1));
+            % Prüfe auch Trajektorie mit nur einem Punkt (Bug, der am
+            % 16.08.2021 behoben wurde).
+            RP.invkin2_traj(zeros(1,6), zeros(1,6), zeros(1,6), 0, zeros(RP.NJ,1));
           catch err
             if ~strcmp(err.identifier, 'MATLAB:svd:matrixWithNaNInf')
               recompile = true;
