@@ -79,6 +79,10 @@ for i_FG = 1:size(EEFG_Ges,1)
             [~,~,~,Stats] = RP.invkin4(zeros(6,1), rand(RP.NJ,3));
             % Prüfe, ob neue Ausgabe (seit 2021-06) da ist.
             tmp = Stats.coll;
+            % Prüfe, ob Korrektur von Fehler bei Kollisionsprüfung da ist
+            % Behoben ca. 2021-07; max/min mit Eingabe variabler Länge
+            s = struct('avoid_collision_finish', true);
+            [~,~,~,Stats] = RP.invkin4(zeros(6,1), rand(RP.NJ,3), s);
           catch err
             if ~strcmp(err.identifier, 'MATLAB:svd:matrixWithNaNInf')
               recompile = true;
