@@ -33,29 +33,29 @@ for i_FG = 1:size(EEFG_Ges,1)
     % Debug: Einzelnen Roboter prüfen.
 %     if ~contains(PName, 'P3PRRRR3'), continue; end
     [~, LEG_Names, ~, ~, ~, ~, ~, ~, PName_Legs, ~] = parroblib_load_robot(PName);
-    % Suche nach den mex-Dateien
+    % Suche nach den m- und mex-Dateien
     tpl_dir = fullfile(parroblib_path, sprintf('sym_%s', EE_FG_str), ...
       PName_Legs, 'tpl');
     mexfilelist = dir(fullfile(tpl_dir, '*_mex.mex*'));
     mfilelist = dir(fullfile(tpl_dir, '*.m'));
-    filelist = [mexfilelist; mfilelist];
+    filelist = [mfilelist;mexfilelist];
     if isempty(filelist)
       % Nichts zu prüfen. Es gibt keine mex-Dateien
       continue
     end
     fprintf('Prüfe PKM %d/%d (%s) (%d mex-Dateien und %d m-Dateien liegen in tpl-Ordner %s)\n', ...
       find(III==ii), length(III), PNames_Kin{ii}, length(mexfilelist), length(mfilelist), tpl_dir)
-    % Initialisiere Matlab-Klasse und setze auf Nutzung von Mex-Funktionen
+    % Initialisiere Matlab-Klasse und setze auf Nutzung von M-Funktionen
     RP = parroblib_create_robot_class(PName, 1, 0.3);
-    RP_mex_status = true;
-    list_missing_mex = RP.fill_fcn_handles(true, false);
-    % Gehe alle mex-Dateien durch, die da sind.
+    % Gehe alle m- und mex-Dateien durch, die da sind. Fange mit m an.
+    % Dadurch werden die Vorlagen-Funktionen meistens schon neu generiert.
+    RP.fill_fcn_handles(false, false); RP_mex_status = false;
     for kk = 1:length(filelist)
-      if ~contains(filelist(kk).name, '_mex')
-        % Prüfe ab jetzt die m-Dateien. Die mex-Dateien sind fertig.
-        if RP_mex_status == true
-          RP.fill_fcn_handles(false, false);
-          RP_mex_status = false;
+      if contains(filelist(kk).name, '_mex')
+        % Prüfe ab jetzt die mex-Dateien. Die m-Dateien sind fertig.
+        if RP_mex_status == false
+          RP.fill_fcn_handles(true, false);
+          RP_mex_status = true;
         end
       end
       for retryiter = 1:3 % mehrfache Neuversuche zur Fehlerkorrektur
