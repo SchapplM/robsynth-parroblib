@@ -75,14 +75,14 @@ for i_FG = 1:size(EEFG_Ges,1)
         end
         if contains(filelist(kk).name, 'invkin3')
           try
-            % Gebe mehr als einen Startwert vor (neue Schnittstelle seit 2021-06)
-            [~,~,~,Stats] = RP.invkin4(zeros(6,1), rand(RP.NJ,3));
-            % Prüfe, ob neue Ausgabe (seit 2021-06) da ist.
-            tmp = Stats.coll;
             % Prüfe, ob Korrektur von Fehler bei Kollisionsprüfung da ist
             % Behoben ca. 2021-07; max/min mit Eingabe variabler Länge
             s = struct('avoid_collision_finish', true);
             [~,~,~,Stats] = RP.invkin4(zeros(6,1), rand(RP.NJ,3), s);
+            % Gebe mehr als einen Startwert vor (neue Schnittstelle seit 2021-06)
+            [~,~,~,Stats] = RP.invkin4(zeros(6,1), rand(RP.NJ,3));
+            % Prüfe, ob neue Ausgabe (seit 2021-06) da ist.
+            tmp = Stats.coll;
           catch err
             if ~strcmp(err.identifier, 'MATLAB:svd:matrixWithNaNInf')
               recompile = true;
@@ -91,10 +91,11 @@ for i_FG = 1:size(EEFG_Ges,1)
         end
         if contains(filelist(kk).name, 'invkin_traj')
           try
-            RP.invkin2_traj(zeros(2,6), zeros(2,6), zeros(2,6), [0;1], zeros(RP.NJ,1));
-            % Prüfe auch Trajektorie mit nur einem Punkt (Bug, der am
-            % 16.08.2021 behoben wurde).
+            % Prüfe Trajektorie mit nur einem Punkt (Bug, der am 16.08.2021
+            % behoben wurde). Prüfung zuerst, damit Syntax-Fehler vor Inf/NaN-Fehler kommt.
             RP.invkin2_traj(zeros(1,6), zeros(1,6), zeros(1,6), 0, zeros(RP.NJ,1));
+            % Prüfe mit Dummy-Trajektorie (aus zwei Punkten)
+            RP.invkin2_traj(zeros(2,6), zeros(2,6), zeros(2,6), [0;1], zeros(RP.NJ,1));
           catch err
             if ~strcmp(err.identifier, 'MATLAB:svd:matrixWithNaNInf')
               recompile = true;
