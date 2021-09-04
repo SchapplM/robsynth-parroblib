@@ -75,6 +75,13 @@ for i_FG = 1:size(EEFG_Ges,1)
         end
         if contains(filelist(kk).name, 'invkin3')
           try
+            % Prüfe Dateiinhalte auf charakteristische Einträge
+            if ~RP_mex_status % Nicht für mex-Dateien
+              filetext = fileread(fullfile(tpl_dir, filelist(kk).name));
+              if ~contains(filetext, 'collbodies_thresh')
+                error('Textfragment "collbodies_thresh" nicht gefunden. Alte Version.');
+              end
+            end
             % Prüfe, ob Korrektur von Fehler bei Kollisionsprüfung da ist
             % Behoben ca. 2021-07; max/min mit Eingabe variabler Länge
             s = struct('avoid_collision_finish', true);
@@ -91,6 +98,14 @@ for i_FG = 1:size(EEFG_Ges,1)
         end
         if contains(filelist(kk).name, 'invkin_traj')
           try
+            % Prüfe Dateiinhalte auf charakteristische Einträge
+            if ~RP_mex_status % Nicht für mex-Dateien
+              filetext = fileread(fullfile(tpl_dir, filelist(kk).name));
+              if ~contains(filetext, 'collbodies_thresh')
+                error('Textfragment "collbodies_thresh" nicht gefunden. Alte Version.');
+              end
+            end
+            % Führe die Funktion aus
             % Prüfe Trajektorie mit nur einem Punkt (Bug, der am 16.08.2021
             % behoben wurde). Prüfung zuerst, damit Syntax-Fehler vor Inf/NaN-Fehler kommt.
             RP.invkin2_traj(zeros(1,6), zeros(1,6), zeros(1,6), 0, zeros(RP.NJ,1));
