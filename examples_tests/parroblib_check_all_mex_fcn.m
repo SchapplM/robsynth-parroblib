@@ -78,8 +78,8 @@ for i_FG = 1:size(EEFG_Ges,1)
             % Prüfe Dateiinhalte auf charakteristische Einträge
             if ~RP_mex_status % Nicht für mex-Dateien
               filetext = fileread(fullfile(tpl_dir, filelist(kk).name));
-              if ~contains(filetext, 'collbodies_thresh')
-                error('Textfragment "collbodies_thresh" nicht gefunden. Alte Version.');
+              if ~contains(filetext, 'installspace_thresh')
+                error('Textfragment "installspace_thresh" nicht gefunden. Alte Version.');
               end
             end
             % Prüfe, ob Korrektur von Fehler bei Kollisionsprüfung da ist
@@ -101,8 +101,8 @@ for i_FG = 1:size(EEFG_Ges,1)
             % Prüfe Dateiinhalte auf charakteristische Einträge
             if ~RP_mex_status % Nicht für mex-Dateien
               filetext = fileread(fullfile(tpl_dir, filelist(kk).name));
-              if ~contains(filetext, 'collbodies_thresh')
-                error('Textfragment "collbodies_thresh" nicht gefunden. Alte Version.');
+              if ~contains(filetext, 'installspace_thresh')
+                error('Textfragment "installspace_thresh" nicht gefunden. Alte Version.');
               end
             end
             % Führe die Funktion aus
