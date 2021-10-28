@@ -165,6 +165,7 @@ for allow_rankloss = [false, true]
     if ~params_success || force_new_synthesis
       % Führe Maßsynthese neu aus. Parameter nicht erfolgreich geladen
       Set.optimization.objective = 'condition';
+      Set.optimization.condition_limit_sing = inf; % Singularität ist kein Abbruchkriterium
       Set.optimization.ee_rotation = false;
       Set.optimization.ee_translation = false;
       Set.optimization.movebase = false;
@@ -179,11 +180,13 @@ for allow_rankloss = [false, true]
       Set.general.verbosity = 3;
       Set.general.nosummary = true;
       Traj = Traj_W;
-      cds_start
+      cds_start(Set, Traj);
+      resmaindir = fullfile(Set.optimization.resdir, Set.optimization.optname);
+      ds = load(fullfile(resmaindir, [Set.optimization.optname, '_settings.mat']));
+      Structures = ds.Structures;
       if isempty(Structures)
         error('PKM %s wurde erst aus Datenbank gewählt und danach nicht mehr gefunden. Fehler.', PName);
       end
-      resmaindir = fullfile(Set.optimization.resdir, Set.optimization.optname);
       i_select = 0;
       for i = 1:length(Structures) % alle Ergebnisse durchgehen (falls mehrere theta-Varianten)
         resfile1 = fullfile(resmaindir, sprintf('Rob%d_%s_Details.mat', Structures{i}.Number, PName));
