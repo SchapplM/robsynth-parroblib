@@ -63,9 +63,11 @@ assert(isa(Name, 'char'), 'Name muss char sein');
 NLEG = 0;
 LEG_Names = {};
 Actuation = {};
+Coupling = [0 0];
 ActNr = 0;
 symrob = true;
 EE_dof0 = NaN(1,6);
+PName_Kin = '';
 AdditionalInfo_Akt = NaN(1,1);
 StructuralDHParam = {};
 repopath=fileparts(which('parroblib_path_init.m'));
@@ -75,16 +77,27 @@ repopath=fileparts(which('parroblib_path_init.m'));
 % TODO: Anpassung an nicht-serielle, nicht-symmetrische PKM
 expression = 'P(\d)([RP]+)(\d+)[V]?(\d*)[G]?(\d*)[P]?(\d*)A(\d+)'; % Format "P3RRR1G1P1A1" oder "P3RRR1V1G1P1A1"
 [tokens, ~] = regexp(Name,expression,'tokens','match');
-if isempty(tokens)
+expression_kin = 'P(\d)([RP]+)(\d+)[V]?(\d*)';
+[tokens_kin, ~] = regexp(Name,expression_kin,'tokens','match');
+if isempty(tokens_kin)
   error('Eingegebener Name %s entspricht nicht dem Namensschema', Name);
+elseif isempty(tokens)
+  % Eingabe entspricht dem Beinketten-Namen ohne G-/P-Nummer und Aktuierung
+  Name = [Name, 'G1P1A0']; % Fülle mit Platzhaltern auf
+  [tokens, ~] = regexp(Name,expression,'tokens','match');
+end
+res_kin = tokens_kin{1};
+NLEG = str2double(res_kin{1});
+if isempty(res_kin{4}) % serielle Kette ist keine abgeleitete Variante
+  PName_Legs = ['P', res_kin{1}, res_kin{2}, res_kin{3}];
+else % serielle Kette ist eine Variante abgeleitet aus Hauptmodell
+  PName_Legs = ['P', res_kin{1}, res_kin{2}, res_kin{3}, 'V', res_kin{4}];
+end
+LEG_Names = repmat({['S', sprintf('%d',length(res_kin{2})), PName_Legs(3:end)]}, 1, NLEG);
+if isempty(tokens)
+  error('Eingabe ist ungültig (Fall darf nicht auftreten)');
 end
 res = tokens{1};
-NLEG = str2double(res{1});
-if isempty(res{4}) % serielle Kette ist keine abgeleitete Variante
-  PName_Legs = ['P', res{1}, res{2}, res{3}];
-else % serielle Kette ist eine Variante abgeleitet aus Hauptmodell
-  PName_Legs = ['P', res{1}, res{2}, res{3}, 'V', res{4}];
-end
 if isempty(res{5})
   % Für Kompatibilität zu alten Aufrufen der Funktion. Akzeptiere auch
   % Eingaben der Form
@@ -94,7 +107,6 @@ else
   Coupling = [str2double(res{5}), str2double(res{6})];
 end
 PName_Kin = [PName_Legs, sprintf('G%dP%d', Coupling(1), Coupling(2))];
-LEG_Names = repmat({['S', sprintf('%d',length(res{2})), PName_Legs(3:end)]}, 1, NLEG);
 ActNr = str2double(res{7});
 PName_Akt = [PName_Kin, sprintf('A%d', ActNr)];
 if Modus == 0
