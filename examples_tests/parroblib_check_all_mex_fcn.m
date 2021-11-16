@@ -47,6 +47,11 @@ for i_FG = 1:size(EEFG_Ges,1)
       find(III==ii), length(III), PNames_Kin{ii}, length(mexfilelist), length(mfilelist), tpl_dir)
     % Initialisiere Matlab-Klasse und setze auf Nutzung von M-Funktionen
     RP = parroblib_create_robot_class(PName, 1, 0.3);
+    % Zufallswerte für Parameter setzen. Sonst kommen NaN-Fehler und
+    % überdecken die Syntax-Fehler
+    for i = 1:RP.NLEG % Test-Werte sind nicht symmetrisch. Ist aber egal.
+      RP.Leg(i).gen_testsettings(true, true); 
+    end
     % Gehe alle m- und mex-Dateien durch, die da sind. Fange mit m an.
     % Dadurch werden die Vorlagen-Funktionen meistens schon neu generiert.
     RP.fill_fcn_handles(false, false); RP_mex_status = false;
