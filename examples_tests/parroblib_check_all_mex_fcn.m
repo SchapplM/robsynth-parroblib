@@ -83,18 +83,11 @@ for i_FG = 1:size(EEFG_Ges,1)
         end
         if contains(filelist(kk).name, 'invkin3')
           try
-            % Prüfe Dateiinhalte auf charakteristische Einträge
-            if ~RP_mex_status % Nicht für mex-Dateien
-              filetext = fileread(fullfile(tpl_dir, filelist(kk).name));
-              if ~contains(filetext, 'Stats.maxcolldepth')
-                error('Textfragment "Stats.maxcolldepth" nicht gefunden. Alte Version.');
-              end
-            end
             % Prüfe, ob Korrektur von Fehler bei Kollisionsprüfung da ist
             % Behoben ca. 2021-07; max/min mit Eingabe variabler Länge
             s = struct('avoid_collision_finish', true);
             [~,~,~,Stats] = RP.invkin4(zeros(6,1), rand(RP.NJ,3), s);
-            if Stats.version < 1 % hier wird die aktuelle Version eingetragen
+            if Stats.version < 2 % hier wird die aktuelle Version eingetragen
               error('Version der Datei ist zu alt (%d).', Stats.version);
             end
             % Gebe mehr als einen Startwert vor (neue Schnittstelle seit 2021-06)
@@ -121,7 +114,7 @@ for i_FG = 1:size(EEFG_Ges,1)
             % Prüfe Trajektorie mit nur einem Punkt (Bug, der am 16.08.2021
             % behoben wurde). Prüfung zuerst, damit Syntax-Fehler vor Inf/NaN-Fehler kommt.
             [~, ~, ~, ~, ~, ~, ~, Stats] = RP.invkin2_traj(zeros(1,6), zeros(1,6), zeros(1,6), 0, zeros(RP.NJ,1));
-            if Stats.version < 1 % hier wird die aktuelle Version eingetragen
+            if Stats.version < 2 % hier wird die aktuelle Version eingetragen
               error('Version der Datei ist zu alt (%d).', Stats.version);
             end
             % Prüfe mit Dummy-Trajektorie (aus zwei Punkten)
