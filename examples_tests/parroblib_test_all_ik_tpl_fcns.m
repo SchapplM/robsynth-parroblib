@@ -18,7 +18,7 @@ recompile_mex = true; % nur notwendig, falls Template-Dateien geändert wurden.
 max_num_pkm = 5; % Reduziere die Anzahl der geprüften PKM pro FG
 shuffle_pkm_selection = true; % Zufällige Auswahl der PKM
 max_single_points = 50; % Anzahl der zu prüfenden Einzelpunkte
-force_new_synthesis = true;
+force_new_synthesis = false;
 % Speicherort der Parameter
 rob_path = fileparts(which('robotics_toolbox_path_init.m'));
 tmpdir_params = fullfile(rob_path, 'examples_tests', 'tmp_ParRob', 'param_dimsynthres');
@@ -496,9 +496,10 @@ for allow_rankloss = [false, true]
           RP.update_EE_FG(EE_FG, EE_FG_red);
       end
       num_niO = 0;
+      num_mixedres = 0;
       num_neq = 0;
       for i = 1:max_single_points
-        if jj >= 4 && i >= 5, break; end % reduziere Anzahl. Dauert sonst zu lange.
+        if jj >= 4 && i >= 10, break; end % reduziere Anzahl. Dauert sonst zu lange.
         k = II_traj(i);
         t1=tic();
         [q_kls_3, Phi_kls_3, Tc_stack_kls_3, Stats_kls_3]=RP.invkin3(Traj_0.X(k,:)', q0, s_jj);
@@ -543,7 +544,22 @@ for allow_rankloss = [false, true]
           break
         end
         if ik_res2_ik2 ~= ik_res2_iks % Vergleiche IK-Status (Erfolg / kein Erfolg)
-          error('invkin3 vs invkin4: IK Status nicht gleich');
+          % Darf nicht passieren. Erlaube aber wenige Male
+          num_mixedres = num_mixedres + 1; %#ok<NASGU>
+          warning('invkin3 vs invkin4: IK Status nicht gleich (tpl=%d, class=%d, i=%d/%d)', ...
+            ik_res2_ik2, ik_res2_iks, i, max_single_points);
+%           if num_mixedres < 2 % keinen erlauben
+%             continue
+%           end
+          error('Zu viele gleichartige Fehler. Vermutlich systematisch');
+          if ~ik_res2_ik2 %#ok<UNRCH> % Debuggen für den Fall, dass die Vorlagen-Funktion falsch ist
+            RP.fill_fcn_handles(true);
+            [q_tpl_3_mex, Phi_tpl_3_mex, Tc_stack_tpl_3_mex, Stats_tpl_3_mex]=...
+              RP.invkin4(Traj_0.X(k,:)', q0, s_jj);
+            RP.fill_fcn_handles(false);
+            [q_tpl_3_nomex, Phi_tpl_3_nomex, Tc_stack_tpl_3_nomex, Stats_tpl_3_nomex]=RP.invkin4(Traj_0.X(k,:)', q0, s_jj);
+            RP.fill_fcn_handles(true);
+          end
         elseif ~ik_res2_iks  % beide IK-Status false
           % Gebe keinen Fehler aus. In der Struktursynthese wird die
           % Einzelpunkt-IK nur für die Eckpunkte benutzt.
@@ -649,7 +665,8 @@ for allow_rankloss = [false, true]
     end
     ResStat.IK_M2_Anteil_Identisch(strcmp(ResStat.Name, PName),:) = 1-ikstat_neq_m2;
     ResStat.IK_M2_Anteil_Erfolg(strcmp(ResStat.Name, PName),:) = 1-ikstat_niO_m2;
-    fprintf('Vergleich invkin3 vs invkin4 für 5 Fälle erfolgreich\n');
+    fprintf(['Vergleich invkin3 vs invkin4 für 5 Fälle erfolgreich. ', ...
+      'Jeweils %d Konfigurationen getestet\n'], sum(~isnan(calctimes(:,1))));
     %% Teste inverse Kinematik für Trajektorie
     warning('off', 'Coder:MATLAB:rankDeficientMatrix');
     warning('off', 'MATLAB:rankDeficientMatrix');
