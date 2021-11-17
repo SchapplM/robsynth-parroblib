@@ -583,8 +583,11 @@ for i_FG = 1:size(EEFG_Ges,1)
         end
         [Phi3_dqD_class, Phi3_dqD_class_full] = R.constr3gradD_q(q, qD, x, xD);
         test_Phi3dqD = Phi3_dqD_class - Phi3_dqD_file;
+        test_Phi3dqD_rel = test_Phi3dqD ./ Phi3_dqD_class;
         test_Phi3dqD_full = Phi3_dqD_class_full - Phi3_dqD_file_full;
-        if any(abs([test_Phi3dqD(:);test_Phi3dqD_full(:)]) > 1e-10) || ...
+        test_Phi3dqD_full_rel = test_Phi3dqD_full ./ Phi3_dqD_class_full;
+        if any(abs([test_Phi3dqD(:);test_Phi3dqD_full(:)]) > 1e-10 & ...
+            abs([test_Phi3dqD_rel(:);test_Phi3dqD_full_rel(:)]) > 1e-6) || ...
             any(isnan([test_Phi3dqD(:);test_Phi3dqD_full(:)]))
           error('Berechnung von constr3gradD_q stimmt nicht zwischen Template-Funktion und Klasse');
         end
@@ -609,8 +612,11 @@ for i_FG = 1:size(EEFG_Ges,1)
         end
         [Phi3_dxD_class,Phi3_dxD_class_full] = R.constr3gradD_x(q, qD, x, xD);
         test_Phi3dxD = Phi3_dxD_class - Phi3_dxD_file;
+        test_Phi3dxD_rel = test_Phi3dxD ./ Phi3_dxD_class;
         test_Phi3dxD_full = Phi3_dxD_class_full - Phi3_dxD_file_full;
-        if any(abs([test_Phi3dxD(:);test_Phi3dxD_full(:)]) > 1e-10) || ...
+        test_Phi3dxD_full_rel = test_Phi3dxD_full ./ Phi3_dxD_class_full;
+        if any(abs([test_Phi3dxD(:);test_Phi3dxD_full(:)]) > 1e-10 & ...
+            abs([test_Phi3dxD_rel(:);test_Phi3dxD_full_rel(:)]) > 1e-6) || ...
             any(isnan([test_Phi3dxD(:);test_Phi3dxD_full(:)]))
           error('Berechnung von constr3gradD_x stimmt nicht zwischen Template-Funktion und Klasse');
         end
