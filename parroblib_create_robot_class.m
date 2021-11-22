@@ -80,6 +80,7 @@ parroblib_addtopath({Name})
 
 RP = ParRob(Name);
 RP.create_symmetric_robot(NLEG, RS);
+RP.I_EE = logical(EE_dof0); % Schon hier belegnDient zu Logik-Prüfungen in Methode initialize
 RP.initialize();
 % Vervollständige Koppelpunkt-Parameter mit Standard-Einstellungen
 if length(p_Base) > 1
