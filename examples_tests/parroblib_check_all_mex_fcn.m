@@ -47,6 +47,11 @@ for i_FG = 1:size(EEFG_Ges,1)
       find(III==ii), length(III), PNames_Kin{ii}, length(mexfilelist), length(mfilelist), tpl_dir)
     % Initialisiere Matlab-Klasse und setze auf Nutzung von M-Funktionen
     RP = parroblib_create_robot_class(PName, 1, 0.3);
+    % Zufallswerte für Parameter setzen. Sonst kommen NaN-Fehler und
+    % überdecken die Syntax-Fehler
+    for i = 1:RP.NLEG % Test-Werte sind nicht symmetrisch. Ist aber egal.
+      RP.Leg(i).gen_testsettings(true, true); 
+    end
     % Gehe alle m- und mex-Dateien durch, die da sind. Fange mit m an.
     % Dadurch werden die Vorlagen-Funktionen meistens schon neu generiert.
     RP.fill_fcn_handles(false, false); RP_mex_status = false;
@@ -66,7 +71,10 @@ for i_FG = 1:size(EEFG_Ges,1)
             contains(filelist(kk).name, 'invkin.m')
           try
             % Gebe mehr als einen Startwert vor (neue Schnittstelle seit 2021-06)
-            RP.invkin2(zeros(6,1), rand(RP.NJ,3));
+            [~,~,~,Stats]=RP.invkin2(zeros(6,1), rand(RP.NJ,3));
+            if Stats.version < 1 % hier wird die aktuelle Version eingetragen
+              error('Version der Datei ist zu alt (%d).', Stats.version);
+            end
           catch err
             if ~strcmp(err.identifier, 'MATLAB:svd:matrixWithNaNInf')
               recompile = true;
@@ -75,17 +83,13 @@ for i_FG = 1:size(EEFG_Ges,1)
         end
         if contains(filelist(kk).name, 'invkin3')
           try
-            % Prüfe Dateiinhalte auf charakteristische Einträge
-            if ~RP_mex_status % Nicht für mex-Dateien
-              filetext = fileread(fullfile(tpl_dir, filelist(kk).name));
-              if ~contains(filetext, 'Stats.maxcolldepth')
-                error('Textfragment "Stats.maxcolldepth" nicht gefunden. Alte Version.');
-              end
-            end
             % Prüfe, ob Korrektur von Fehler bei Kollisionsprüfung da ist
             % Behoben ca. 2021-07; max/min mit Eingabe variabler Länge
             s = struct('avoid_collision_finish', true);
             [~,~,~,Stats] = RP.invkin4(zeros(6,1), rand(RP.NJ,3), s);
+            if Stats.version < 2 % hier wird die aktuelle Version eingetragen
+              error('Version der Datei ist zu alt (%d).', Stats.version);
+            end
             % Gebe mehr als einen Startwert vor (neue Schnittstelle seit 2021-06)
             [~,~,~,Stats] = RP.invkin4(zeros(6,1), rand(RP.NJ,3));
             % Prüfe, ob neue Ausgabe (seit 2021-06) da ist.
@@ -99,16 +103,20 @@ for i_FG = 1:size(EEFG_Ges,1)
         if contains(filelist(kk).name, 'invkin_traj')
           try
             % Prüfe Dateiinhalte auf charakteristische Einträge
-            if ~RP_mex_status % Nicht für mex-Dateien
-              filetext = fileread(fullfile(tpl_dir, filelist(kk).name));
-              if ~contains(filetext, 'Stats.h_coll_thresh')
-                error('Textfragment "Stats.h_coll_thresh" nicht gefunden. Alte Version.');
-              end
-            end
+            % (mit Versionsprüfung obsolet)
+            % if ~RP_mex_status % Nicht für mex-Dateien
+            %   filetext = fileread(fullfile(tpl_dir, filelist(kk).name));
+            %   if ~contains(filetext, 'dof_3T1R')
+            %     error('Textfragment "dof_3T1R" nicht gefunden. Alte Version.');
+            %   end
+            % end
             % Führe die Funktion aus
             % Prüfe Trajektorie mit nur einem Punkt (Bug, der am 16.08.2021
             % behoben wurde). Prüfung zuerst, damit Syntax-Fehler vor Inf/NaN-Fehler kommt.
-            RP.invkin2_traj(zeros(1,6), zeros(1,6), zeros(1,6), 0, zeros(RP.NJ,1));
+            [~, ~, ~, ~, ~, ~, ~, Stats] = RP.invkin2_traj(zeros(1,6), zeros(1,6), zeros(1,6), 0, zeros(RP.NJ,1));
+            if Stats.version < 2 % hier wird die aktuelle Version eingetragen
+              error('Version der Datei ist zu alt (%d).', Stats.version);
+            end
             % Prüfe mit Dummy-Trajektorie (aus zwei Punkten)
             RP.invkin2_traj(zeros(2,6), zeros(2,6), zeros(2,6), [0;1], zeros(RP.NJ,1));
           catch err

@@ -19,7 +19,7 @@ tpl_fcn_neu = true;
 test_mex = true;
 test_taskred = true;
 recompile_mex = true; % nur notwendig, falls Template-Dateien geändert wurden.
-max_num_pkm = 1; % Reduziere die Anzahl der geprüften PKM pro FG
+max_num_pkm = 2; % Reduziere die Anzahl der geprüften PKM pro FG
 shuffle_pkm_selection = true; % Zufällige Auswahl der PKM. Zum Debuggen deaktivieren.
 
 %% Alle PKM durchgehen
@@ -583,8 +583,11 @@ for i_FG = 1:size(EEFG_Ges,1)
         end
         [Phi3_dqD_class, Phi3_dqD_class_full] = R.constr3gradD_q(q, qD, x, xD);
         test_Phi3dqD = Phi3_dqD_class - Phi3_dqD_file;
+        test_Phi3dqD_rel = test_Phi3dqD ./ Phi3_dqD_class;
         test_Phi3dqD_full = Phi3_dqD_class_full - Phi3_dqD_file_full;
-        if any(abs([test_Phi3dqD(:);test_Phi3dqD_full(:)]) > 1e-10) || ...
+        test_Phi3dqD_full_rel = test_Phi3dqD_full ./ Phi3_dqD_class_full;
+        if any(abs([test_Phi3dqD(:);test_Phi3dqD_full(:)]) > 1e-10 & ...
+            abs([test_Phi3dqD_rel(:);test_Phi3dqD_full_rel(:)]) > 1e-6) || ...
             any(isnan([test_Phi3dqD(:);test_Phi3dqD_full(:)]))
           error('Berechnung von constr3gradD_q stimmt nicht zwischen Template-Funktion und Klasse');
         end
@@ -609,8 +612,11 @@ for i_FG = 1:size(EEFG_Ges,1)
         end
         [Phi3_dxD_class,Phi3_dxD_class_full] = R.constr3gradD_x(q, qD, x, xD);
         test_Phi3dxD = Phi3_dxD_class - Phi3_dxD_file;
+        test_Phi3dxD_rel = test_Phi3dxD ./ Phi3_dxD_class;
         test_Phi3dxD_full = Phi3_dxD_class_full - Phi3_dxD_file_full;
-        if any(abs([test_Phi3dxD(:);test_Phi3dxD_full(:)]) > 1e-10) || ...
+        test_Phi3dxD_full_rel = test_Phi3dxD_full ./ Phi3_dxD_class_full;
+        if any(abs([test_Phi3dxD(:);test_Phi3dxD_full(:)]) > 1e-10 & ...
+            abs([test_Phi3dxD_rel(:);test_Phi3dxD_full_rel(:)]) > 1e-6) || ...
             any(isnan([test_Phi3dxD(:);test_Phi3dxD_full(:)]))
           error('Berechnung von constr3gradD_x stimmt nicht zwischen Template-Funktion und Klasse');
         end
@@ -637,11 +643,16 @@ for i_FG = 1:size(EEFG_Ges,1)
           eval(sprintf('[Phi2D_dq_file,Phi2D_dq_file_full]=%s_constr2gradD_q_mex(q, qD, x, xD, s_qD_2);', PName_Legs));
         end
         [Phi2D_dq_class,Phi2D_dq_class_full] = R.constr2gradD_q(q, qD, x, xD);
+        % Absoluten und relativen Fehler gleichzeitig testen, da 1e-10 auch
+        % mal knapp überschritten werden kann.
         test_Phi2Ddq = Phi2D_dq_class - Phi2D_dq_file;
+        test_Phi2Ddq_rel = test_Phi2Ddq ./ Phi2D_dq_class;
         test_Phi2Ddq_full = Phi2D_dq_class_full - Phi2D_dq_file_full;
-        if any(abs([test_Phi2Ddq(:);test_Phi2Ddq_full(:)]) > 1e-10) || ...
+        test_Phi2Ddq_full_rel = test_Phi2Ddq_full ./ Phi2D_dq_class_full;
+        if any(abs([test_Phi2Ddq(:);test_Phi2Ddq_full(:)])         > 1e-10 & ...
+               abs([test_Phi2Ddq_rel(:);test_Phi2Ddq_full_rel(:)]) > 1e-6) || ...
             any(isnan([test_Phi2Ddq(:);test_Phi2Ddq_full(:)]))
-          error('Berechnung von constr2grad_q stimmt nicht zwischen Template-Funktion und Klasse');
+          error('Berechnung von constr2gradD_q stimmt nicht zwischen Template-Funktion und Klasse');
         end
         %% Teste constr2grad_rr
         if mextest == 1
@@ -677,10 +688,15 @@ for i_FG = 1:size(EEFG_Ges,1)
         end
         [Phi2D_rr_class, Phi2D_rr_class_full] = R.constr2gradD_rr(q, qD, x, xD);
         test_Phi2Drr = Phi2D_rr_class - Phi2D_rr_file;
+        test_Phi2Drr_rel = test_Phi2Drr ./ Phi2D_rr_class;
         test_Phi2Drr_full = Phi2D_rr_class_full - Phi2D_rr_file_full;
-        if any(abs([test_Phi2Drr(:);test_Phi2Drr_full(:)]) > 1e-10) || ...
+        test_Phi2Drr_full_rel = test_Phi2Drr_full ./ Phi2D_rr_class_full;
+        if any(abs([test_Phi2Drr(:);test_Phi2Drr_full(:)])         > 1e-10 & ...
+               abs([test_Phi2Drr_rel(:);test_Phi2Drr_full_rel(:)]) > 1e-6) || ...
             any(isnan([test_Phi2Drr(:);test_Phi2Drr_full(:)]))
-          error('Berechnung von constr2grad_r stimmt nicht zwischen Template-Funktion und Klasse');
+          error(['Berechnung von constr2gradD_rr stimmt nicht zwischen ', ...
+            'Template-Funktion und Klasse. Fehler %1.1e bzw. %1.1e'], ...
+            max(abs(test_Phi2Drr(:))), max(abs(test_Phi2Drr_full(:))));
         end
         %% Teste constr2gradD_x
         if mextest == 1
@@ -690,10 +706,13 @@ for i_FG = 1:size(EEFG_Ges,1)
         end
         [Phi2D_dx_class, Phi2D_dx_class_full] = R.constr2gradD_x(q, qD, x, xD);
         test_Phi2Ddx = Phi2D_dx_class - Phi2D_dx_file;
+        test_Phi2Ddx_rel = test_Phi2Ddx ./ Phi2D_dx_class;
         test_Phi2Ddx_full = Phi2D_dx_class_full - Phi2D_dx_file_full;
-        if any(abs([test_Phi2Ddx(:);test_Phi2Ddx_full(:)]) > 1e-10) || ...
+        test_Phi2Ddx_full_rel = test_Phi2Ddx_full ./ Phi2D_dx_class_full;
+        if any(abs([test_Phi2Ddx(:);test_Phi2Ddx_full(:)]) > 1e-10 & ...
+               abs([test_Phi2Ddx_rel(:);test_Phi2Ddx_full_rel(:)]) > 1e-10) || ...
             any(isnan([test_Phi2Ddx(:);test_Phi2Ddx_full(:)]))
-          error('Berechnung von constr2grad_x stimmt nicht zwischen Template-Funktion und Klasse');
+          error('Berechnung von constr2gradD_x stimmt nicht zwischen Template-Funktion und Klasse');
         end
       end
       fprintf('PKM %s getestet: mex=%d, taskred=%d\n', PName, mextest-1, trtest-1);
