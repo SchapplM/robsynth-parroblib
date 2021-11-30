@@ -41,6 +41,8 @@ Datenbank auslesen und benutzen:
 * `parroblib_generate_mapleinput`: Eingabedaten zur Code-Generierung für diesen Roboter erstellen
 * `parroblib_generate_code`: Kinematik- und Dynamikfunktionen symbolisch mit der HybrDyn-Toolbox berechnen lassen.
 * `parroblib_addtopath`: Matlab-Funktionen dieses Roboters zum Matlab-Pfad hinzufügen, damit die Funktionsaufrufe funktionieren.
+* `parroblib_create_template_functions.m`: Matlab-Funktionen aus Vorlagen erzeugen. Die Funktionen sind kompilierbar und schneller als in der Matlab-Klasse implementierte Methoden
+* `parroblib_update_template_functions.m`: Aktualisiere die Vorlagen-Funktionen auf die neuste Version
 
 Datenbank ordnen:
 * `parroblib_remove_robot`: Entfernen eines Roboters aus der Datenbank. Das ist nützlich, um im nachhinein unbrauchbare Roboter zu entfernen oder um Roboter zu Testzwecken temporär hinzuzufügen.
