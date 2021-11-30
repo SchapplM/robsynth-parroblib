@@ -10,7 +10,8 @@
 %   Schalter für Umfang des Zugriffs auf die Datenbank
 %   0: Sehr schnell. Keine Dateien öffnen (ermöglicht nur wenige
 %      Informationen)
-%   1: Alle Informationen. Längerer Lesezugriff
+%   1: Kinematik-Tabelle öffnen
+%   2: Alle Informationen. Längerer Lesezugriff
 % 
 % Ausgabe:
 % NLEG [1x1]
@@ -57,7 +58,7 @@ function [NLEG, LEG_Names, Actuation, Coupling, ActNr, symrob, EE_dof0, ...
   parroblib_load_robot(Name, Modus)
 %% Initialisierung
 if nargin < 2
-  Modus = 1;
+  Modus = 2;
 end
 assert(isa(Name, 'char'), 'Name muss char sein');
 NLEG = 0;
@@ -82,8 +83,8 @@ expression_kin = 'P(\d)([RP]+)(\d+)[V]?(\d*)';
 if isempty(tokens_kin)
   error('Eingegebener Name %s entspricht nicht dem Namensschema', Name);
 elseif isempty(tokens)
-  % Eingabe entspricht dem Beinketten-Namen ohne G-/P-Nummer und Aktuierung
-  Name = [Name, 'G1P1A0']; % Fülle mit Platzhaltern auf
+  % Eingabe entspricht dem Beinketten-Namen mit G-/P-Nummer, ohne Aktuierung
+  Name = [Name, 'A0']; % Fülle mit Platzhaltern auf
   [tokens, ~] = regexp(Name,expression,'tokens','match');
 end
 res_kin = tokens_kin{1};
@@ -95,7 +96,7 @@ else % serielle Kette ist eine Variante abgeleitet aus Hauptmodell
 end
 LEG_Names = repmat({['S', sprintf('%d',length(res_kin{2})), PName_Legs(3:end)]}, 1, NLEG);
 if isempty(tokens)
-  error('Eingabe ist ungültig (Fall darf nicht auftreten)');
+  error('Eingabe %s ist ungültig (Fall darf nicht auftreten)', Name);
 end
 res = tokens{1};
 if isempty(res{5})
@@ -163,6 +164,16 @@ symrob = true; % TOOD: Berücksichtigung nicht-kinematisch-symmetrischer PKM
 for i = 1:NLEG
   LEG_Names{i} = LEG_Names{1};
 end
+
+%% EE-FG abspeichern
+% EE-FG sind in Kinematik-Tabelle enthalten
+for i = 1:6
+  EE_dof0(i) = str2double(csvline_kin{2+i});
+end
+if Modus == 1
+  % Nur Kinematik-Tabelle öffnen. Geht dann etwas schneller.
+  return
+end
 %% csv-Tabelle öffnen: Aktuierung
 % Ergebnis: Tabellenzeile csvline_act für den gesuchten Roboter
 acttabfile = fullfile(repopath, ['sym_', EEstr], PName_Legs, 'actuation.csv');
@@ -220,8 +231,3 @@ elseif ActNr ~= 0
   warning('Aktuierung %d (%s) nicht in Aktuierungstabelle %s gefunden', ActNr, PName_Kin, acttabfile);
 end
 
-%% EE-FG abspeichern
-% EE-FG sind in Kinematik-Tabelle enthalten
-for i = 1:6
-  EE_dof0(i) = str2double(csvline_kin{2+i});
-end
