@@ -59,6 +59,9 @@ for ii = III'
     PName_Legs, 'tpl');
   mexfilelist = dir(fullfile(tpl_dir, '*_mex.mex*'));
   mfilelist = dir(fullfile(tpl_dir, '*.m'));
+  % Füge Dummy-Einträge hinzu für invkin_ser-Funktion
+  mexfilelist(length(mexfilelist)+1).name = 'invkin_ser_mex';
+  mfilelist(length(mfilelist)+1).name = 'invkin_ser';
   filelist = [mfilelist;mexfilelist];
   if isempty(filelist)
     % Nichts zu prüfen. Es gibt keine mex-Dateien
@@ -107,6 +110,17 @@ for ii = III'
           recompile = true;
         end
       end
+      if contains(filelist(kk).name, 'invkin_ser_mex') || ...
+          contains(filelist(kk).name, 'invkin_ser.m')
+        % Dummy-Eintrag in Dateiliste. Diese Datei gibt es nicht. Diese
+        % Funktion ruft aber kompilierte SerRob-Funktionen auf.
+        try
+          s = struct('n_max', 1, 'retry_limit', -1); % keine Ausführung
+          RP.invkin_ser(zeros(6,1), rand(RP.NJ,3), s);
+        catch err
+          recompile = true;
+        end
+      end
       if contains(filelist(kk).name, 'invkin3')
         try
           s = struct('n_max', 1, 'retry_limit', -1); % Keine Durchführung des Algorithmus
@@ -151,9 +165,15 @@ for ii = III'
           error('Auch beim dritten Versuch kein Erfolg');
         end
         if contains(filelist(kk).name, '_mex')
-          % Mex-Dateien werden neu kompiliert. m-Dateien nicht.
-          [~,mexbasename] = fileparts(filelist(kk).name);
-          matlabfcn2mex({mexbasename(1:end-4)}); % ohne "_mex"
+          if ~isempty(filelist(kk).bytes) % nicht für Dummy-Eintrag machen
+            % Mex-Dateien werden neu kompiliert. m-Dateien nicht.
+            [~,mexbasename] = fileparts(filelist(kk).name);
+            matlabfcn2mex({mexbasename(1:end-4)}); % ohne "_mex"
+          else
+            % Funktion für SerRob-Klasse neu generieren. Fehler kommt bei
+            % Dummy-Eintrag (invkin_ser) daher.
+            serroblib_update_template_functions(LEG_Names(1), verbosity);
+          end
         end
       else
         % Alles funktioniert. Keine Neuversuche notwendig.
