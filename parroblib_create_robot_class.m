@@ -88,19 +88,22 @@ if length(p_Base) > 1
   % notwendigen Parameter angegeben und weiß was er tut.
   p_Base_all = p_Base;
 elseif any(Coupling(1) == [1,2,3])
+  % Einziger Parameter ist der Gestell-Radius
   p_Base_all = p_Base;
 elseif Coupling(1) == 4
   % Pyramide symmetrische Anordnung. Nehme standardmäßig halben
   % Punktradius als Punktabstand und 30 Grad Steigung
   p_Base_all = [p_Base; 30*pi/180];
 elseif any(Coupling(1) == [5,6,7])
-  % Paarweiser Anordnung. Nehme standardmäßig halben
+  % Paarweiser Anordnung. Nehme standardmäßig halben Radius als
+  % Paar-Abstand
   p_Base_all = [p_Base; p_Base/2];
 elseif Coupling(1) == 8
   % Pyramide mit paarweiser Anordnung. Nehme standardmäßig halben
   % Punktradius als Punktabstand und 30 Grad Steigung
   p_Base_all = [p_Base; p_Base/2; 30*pi/180];
-elseif Coupling(1) == 9
+elseif any(Coupling(1) == [9 10])
+  % Einziger Parameter ist der Gestell-Radius
   p_Base_all = p_Base;
 else
   error('Gestell-Methode %d nicht definiert', Coupling(1));

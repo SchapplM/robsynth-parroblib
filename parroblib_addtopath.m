@@ -19,7 +19,8 @@ for i = 1:length(Names)
   Name = Names{i};
   [NLEG, LEG_Names, ~, Coupling, ActNr, ~, EEdof0, PName_Kin, PName_Legs] = parroblib_load_robot(Name);
   EEstr = sprintf('%dT%dR', sum(EEdof0(1:3)), sum(EEdof0(4:6)));
-  % Pfade für Matlab-Funktionen der PKM hinzufügen
+  % Pfade für Matlab-Funktionen der PKM hinzufügen (gleicher Code in
+  % ParRob/fill_fcn_handles)
   switch Coupling(1) % siehe align_base_coupling.m
     case 1
       basecoupling_equiv = [5,4,8];
@@ -39,6 +40,11 @@ for i = 1:length(Names)
       basecoupling_equiv = 4;
     case 9
       basecoupling_equiv = [4,8];
+    case 10
+      % Beide Methoden haben senkrechte Gestellgelenke
+      basecoupling_equiv = 1; % TODO: Prüfen, ob das stimmt
+    otherwise
+      error('Fall %d nicht implementiert', Coupling(1));
   end
   % Code für die eigentlich gesuchte Darstellung vorne anstellen (zuerst
   % suchen)
