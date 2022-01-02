@@ -148,6 +148,13 @@ for ii = III'
           end
         end
       end
+      if contains(filelist(kk).name, 'fkine_coll')
+        try
+          RP.fkine_coll2(zeros(RP.NJ,1));
+        catch err
+          recompile = true;
+        end
+      end
       % Falls ein Fehler vorliegt, wird neu kompiliert oder generiert.
       if recompile
         if verbosity
