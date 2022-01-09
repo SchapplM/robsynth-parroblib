@@ -113,10 +113,12 @@ if length(p_platform) > 1
   % Annahme: Bei Vorgabe mehrere Parameter hat der Benutzer alle
   % notwendigen Parameter angegeben und weiß was er tut.
   p_platform_all = p_platform;
-elseif any(Coupling(2) == [1,2,3 8])
+elseif any(Coupling(2) == [1,2,3])
   p_platform_all = p_platform;
 elseif any(Coupling(2) == [4,5,6])
   p_platform_all = [p_platform; p_platform/2];
+elseif Coupling(2) == 8
+  p_platform_all = [p_platform; 0];
 else
   error('Plattform-Methode %d nicht definiert', Coupling(2));
 end
