@@ -12,7 +12,7 @@
 % (C) Institut für Mechatronische Systeme, Leibniz Universität Hannover
 
 function parroblib_update_template_functions(Names, verbosity)
-
+orig_state = warning('off', 'all'); % Warnungen temporär unterdrücken
 %% Prüfe Eingabe
 if nargin < 1 || isempty(Names) % keine Eingabe einer Liste. Nehme alle.
   % Stelle Liste aller Roboter zusammen
@@ -169,6 +169,7 @@ for ii = III'
           serroblib_create_template_functions({LEG_Names{1}},  false,false); %#ok<CCAT1>
           parroblib_create_template_functions({PName_Kin},false,false);
         elseif retryiter == 3
+          warning(orig_state);
           error('Auch beim dritten Versuch kein Erfolg');
         end
         if contains(filelist(kk).name, '_mex')
@@ -192,3 +193,4 @@ for ii = III'
     end % retryiter
   end % kk (Mex-Dateien)
 end % ii (PKM)
+warning(orig_state);
