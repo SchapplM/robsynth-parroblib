@@ -170,6 +170,11 @@ for ii = III'
           parroblib_create_template_functions({PName_Kin},false,false);
         elseif retryiter == 3
           warning(orig_state);
+          % Kompiliere nochmal und zeige auch den Bericht dazu zum Debuggen
+          if contains(filelist(kk).name, '_mex')
+            [~,mexbasename] = fileparts(filelist(kk).name);
+            matlabfcn2mex({mexbasename(1:end-4)}, true, false, true);
+          end
           error('Auch beim dritten Versuch kein Erfolg');
         end
         if contains(filelist(kk).name, '_mex')
