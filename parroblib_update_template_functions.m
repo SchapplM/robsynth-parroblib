@@ -31,7 +31,9 @@ end
 %% Bestimme aktuelle Version der jeweiligen Vorlagen-Funktion
 filelist = {'pkm_invkin.m.template', 'pkm_invkin3.m.template', ...
   'pkm_invkin_traj.m.template'};
-fileversions = struct('pkm_invkin', 0, 'pkm_invkin3', 0, 'pkm_invkin_traj', 0);
+fileversions = struct('fkine_coll', 0, 'pkm_invkin', 0, 'pkm_invkin3', 0, ...
+  'pkm_invkin_traj', 0);
+files_found = fileversions; % Merke, welche Dateien da sind
 kinematics_dir = fullfile(fileparts(which('robotics_toolbox_path_init.m')), ...
   'kinematics');
 for i = 1:length(filelist)
@@ -99,6 +101,9 @@ for ii = III'
       % Dummy-Aufruf der Funktionen, um Syntax-Fehler aufzudecken.
       if contains(filelist(kk).name, 'invkin_mex') || ...
           contains(filelist(kk).name, 'invkin.m')
+        if ~RP_mex_status % markiere die Datei als vorhanden (ohne Mex)
+          files_found.pkm_invkin = true;
+        end
         try
           s = struct('n_max', 1, 'retry_limit', -1); % keine Ausführung
           [~,~,~,Stats]=RP.invkin2(zeros(6,1), rand(RP.NJ,3), s);
@@ -122,6 +127,9 @@ for ii = III'
         end
       end
       if contains(filelist(kk).name, 'invkin3')
+        if ~RP_mex_status % markiere die Datei als vorhanden (ohne Mex)
+          files_found.pkm_invkin3 = true;
+        end
         try
           s = struct('n_max', 1, 'retry_limit', -1); % Keine Durchführung des Algorithmus
           [~,~,~,Stats] = RP.invkin4(zeros(6,1), rand(RP.NJ,3), s);
@@ -134,6 +142,9 @@ for ii = III'
         end
       end
       if contains(filelist(kk).name, 'invkin_traj')
+        if ~RP_mex_status % markiere die Datei als vorhanden (ohne Mex)
+          files_found.pkm_invkin_traj = true;
+        end
         try
           [~, ~, ~, ~, ~, ~, ~, Stats] = RP.invkin2_traj(zeros(1,6), zeros(1,6), zeros(1,6), 0, zeros(RP.NJ,1));
           if Stats.version < fileversions.pkm_invkin_traj % hier wird die aktuelle Version eingetragen
@@ -149,6 +160,9 @@ for ii = III'
         end
       end
       if contains(filelist(kk).name, 'fkine_coll')
+        if ~RP_mex_status % markiere die Datei als vorhanden (ohne Mex)
+          files_found.fkine_coll = true;
+        end
         try
           RP.fkine_coll2(zeros(RP.NJ,1));
         catch err
@@ -197,5 +211,17 @@ for ii = III'
       end % recompile
     end % retryiter
   end % kk (Mex-Dateien)
+  % Prüfe die Funktionen auf Vollständigkeit. Es gibt immer min. eine Datei
+  for f = fields(files_found)'
+    if ~all(files_found.(f{1}))
+      % Es gibt aus Vorlagen generierte Dateien, aber manche Nicht- 
+      % Mex-Dateien fehlen. Diese wurden manuell gelöscht. Neu erstellen
+      if verbosity
+        fprintf('Datei %s fehlt, aber %d Dateien vorhanden.\n', f{1}, length(filelist));
+      end
+      parroblib_create_template_functions({PName_Kin}, false, false);
+      break;
+    end
+  end
 end % ii (PKM)
 warning(orig_state);
