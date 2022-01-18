@@ -86,15 +86,17 @@ for allow_rankloss = [false, true]
     % Erzeuge IK-Funktionen der Beinkette neu (automatische Auswahl des
     % Varianten-Modells, falls notwendig)
     serroblib_create_template_functions({LEG_Names{1}},  ~tpl_fcn_neu,false); %#ok<CCAT1>
+    mexerr = false;
     if recompile_mex
-      matlabfcn2mex({[RP.Leg(1).mdlname,'_invkin_eulangresidual']});
-      matlabfcn2mex({[RP.Leg(1).mdlname,'_invkin_traj']});
+      mexerr=mexerr||matlabfcn2mex({[RP.Leg(1).mdlname,'_invkin_eulangresidual']});
+      mexerr=mexerr||matlabfcn2mex({[RP.Leg(1).mdlname,'_invkin_traj']});
     end
     parroblib_create_template_functions({PName_Kin},~tpl_fcn_neu,false); %#ok<CCAT1>
     % Nur die benötigten Funktionen neu kompilieren
     if recompile_mex
-      mexerr = matlabfcn2mex({[PName_Legs,'_invkin'], [PName_Legs,'_invkin3'], ...
-        [PName_Legs,'_invkin_traj']});
+      mexerr=mexerr||matlabfcn2mex({[PName_Legs,'_invkin']});
+      mexerr=mexerr||matlabfcn2mex({[PName_Legs,'_invkin3']});
+      mexerr=mexerr||matlabfcn2mex({[PName_Legs,'_invkin_traj']});
       if mexerr, error('Fehler beim Kompilieren'); end
 %       matlabfcn2mex({[PName_Legs,'_invkin_traj']});
 %       matlabfcn2mex({[PName_Legs,'_invkin3']});
@@ -446,6 +448,9 @@ for allow_rankloss = [false, true]
     fprintf('Vergleiche Klassenmethode (invkin3) und Template-Methode (invkin4) für Einzelpunkt-IK Variante 2\n');
     ikstat_neq_m2 = NaN(1,6);
     ikstat_niO_m2 = NaN(1,6);
+    n_tests_abort = 10;
+    fprintf('Breche diesen Tests bereits nach %d/%d Prüfungen ab.\n', ...
+      n_tests_abort, max_single_points);
     for jj = 1:5
       calctimes = NaN(max_single_points,2);
       % Geht vorerst nur für 3T3R
@@ -455,7 +460,8 @@ for allow_rankloss = [false, true]
       % Standard-FG-Auswahl
       RP.update_EE_FG(EE_FG, EE_FG);
       s_jj = s;
-      s_jj.wn = zeros(4,1);
+      s_jj.debug = true; % Abbruch wenn interne Fehler in PTP-IK-Funktion
+      s_jj.wn = zeros(RP.idx_ik_length.wnpos,1);
       s_jj.n_max = 1000; % Standard-wert. könnte auch weniger sein.
       s_jj.Kn = ones(RP.NJ,1);
       s_jj.maxstep_ns = 1e-6; % damit schneller aufgehört wird (Nullraumbewegung erst fast abgeschlossen)
@@ -465,26 +471,28 @@ for allow_rankloss = [false, true]
           % Standard-Einstellungen: 3T3R-IK
           s_jj.scale_lim = 0; % keine Skalierung an Grenze sinnvoll
         case 2
-          % Teste IK mit Aufgabenredundanz
+          % Teste IK mit Aufgabenredundanz, ohne Optimierung
           % 3T2R-IK
           s_jj.scale_lim = 0.0; % Keine Skalierung an Grenze
-          s_jj.wn = [0;0;0;0]; % Ohne Optimierung
           RP.update_EE_FG(EE_FG, EE_FG_red);
         case 3
           % Teste IK mit Aufgabenredundanz
           % 3T2R-IK
           s_jj.scale_lim = 0.0;
-          s_jj.wn = [1;0;0;0]; % Mit Optimierung der Gelenkgrenzen
+          % Mit Optimierung der Gelenkgrenzen
+          s_jj.wn(RP.idx_ikpos_wn.qlim_par) = 1;
           RP.update_EE_FG(EE_FG, EE_FG_red);
         case 4
           % Teste 3T2R-IK mit Aufgabenredundanz (und Optimierung)
           s_jj.scale_lim = 0.0;
-          s_jj.wn = [0;0;1;0]; % Mit Optimierung der IK-Konditionszahl (ohne Betrachtung der Grenzen)
+          % Mit Optimierung der IK-Konditionszahl (ohne Betrachtung der Grenzen)
+          s_jj.wn(RP.idx_ikpos_wn.ikjac_cond) = 1;
           RP.update_EE_FG(EE_FG, EE_FG_red);
         case 5
           % Teste 3T2R-IK mit Aufgabenredundanz (und Optimierung)
           s_jj.scale_lim = 0.0;
-          s_jj.wn = [0;0;0;1]; % Mit Optimierung der PKM-Konditionszahl (ohne Betrachtung der Grenzen)
+          % Mit Optimierung der PKM-Konditionszahl (ohne Betrachtung der Grenzen)
+          s_jj.wn(RP.idx_ikpos_wn.jac_cond) = 1;
           RP.update_EE_FG(EE_FG, EE_FG_red);
         case 6
           % Teste 3T2R-IK mit Aufgabenredundanz (und Optimierung)
@@ -492,7 +500,10 @@ for allow_rankloss = [false, true]
           % Ohne scale_lim werden die Grenzen verletzt, mit gibt es keine
           % Lösung.
           s_jj.scale_lim = 0.8; % Keine Überschreitung der Grenzen erlauben (wegen hyperb. Bestrafung)
-          s_jj.wn = [1;1;1;0]; % Mit Optimierung der Konditionszahl (mit Grenzen)
+          % Mit Optimierung der Konditionszahl (mit Grenzen)
+          s_jj.wn(RP.idx_ikpos_wn.qlim_par) = 1;
+          s_jj.wn(RP.idx_ikpos_wn.qlim_hyp) = 1;
+          s_jj.wn(RP.idx_ikpos_wn.ikjac_cond) = 1;
           RP.update_EE_FG(EE_FG, EE_FG_red);
       end
       num_niO = 0;
@@ -502,6 +513,7 @@ for allow_rankloss = [false, true]
         if jj >= 4 && i >= 10, break; end % reduziere Anzahl. Dauert sonst zu lange.
         k = II_traj(i);
         t1=tic();
+        s_jj.debug=false;
         [q_kls_3, Phi_kls_3, Tc_stack_kls_3, Stats_kls_3]=RP.invkin3(Traj_0.X(k,:)', q0, s_jj);
         calctimes(i,1)=toc(t1);
 %         if any(q_kls_3<qlim(:,1)) || any(q_kls_3>qlim(:,2))
@@ -532,14 +544,14 @@ for allow_rankloss = [false, true]
         if ik_res2_iks ~= ik_res2_iks_v2
           error('Ausgabe Phi von invkin3 stimmt nicht bei erneuter Berechnung');
         end
-        if all(Stats_kls_3.condJ(~isnan(Stats_kls_3.condJ)) > 1e10) && ...
-           all(Stats_tpl_3.condJ(~isnan(Stats_tpl_3.condJ)) > 1e10)
+        if all(Stats_kls_3.condJ(~isnan(Stats_kls_3.condJ(:,1)),1) > 1e10) && ...
+           all(Stats_tpl_3.condJ(~isnan(Stats_tpl_3.condJ(:,1)),1) > 1e10)
           % Fehler tritt bei 3T1R-PKM auf.
           warning('Die IK-Jacobi ist durchgängig singulär. PKM nicht sinnvoll.');
           break
         end
-        if (Stats_kls_3.condJ(Stats_kls_3.iter) > 1e4 || isnan(Stats_kls_3.condJ(Stats_kls_3.iter))) && ...
-           (Stats_tpl_3.condJ(Stats_tpl_3.iter) > 1e4 || isnan(Stats_tpl_3.condJ(Stats_tpl_3.iter)))
+        if (Stats_kls_3.condJ(1+Stats_kls_3.iter,1) > 1e4 || isnan(Stats_kls_3.condJ(1+Stats_kls_3.iter,1))) && ...
+           (Stats_tpl_3.condJ(1+Stats_tpl_3.iter,1) > 1e4 || isnan(Stats_tpl_3.condJ(1+Stats_tpl_3.iter,1)))
           warning('Die IK-Jacobi ist im letzten Schritt singulär (beide Methoden). PKM nicht sinnvoll.');
           break
         end
@@ -548,9 +560,9 @@ for allow_rankloss = [false, true]
           num_mixedres = num_mixedres + 1; %#ok<NASGU>
           warning('invkin3 vs invkin4: IK Status nicht gleich (tpl=%d, class=%d, i=%d/%d)', ...
             ik_res2_ik2, ik_res2_iks, i, max_single_points);
-%           if num_mixedres < 2 % keinen erlauben
-%             continue
-%           end
+          if num_mixedres < n_tests_abort/2 % die hälfte darf falsch sein
+            continue
+          end
           error('Zu viele gleichartige Fehler. Vermutlich systematisch');
           if ~ik_res2_ik2 %#ok<UNRCH> % Debuggen für den Fall, dass die Vorlagen-Funktion falsch ist
             RP.fill_fcn_handles(true);
@@ -615,21 +627,31 @@ for allow_rankloss = [false, true]
           linkxaxes
           change_current_figure(12);clf;
           set(12, 'Name', 'invkin3vs4_h', 'NumberTitle', 'off');
+          hnames = fields(RP.idx_ikpos_wn)';
           for kkk = 1:5
             if kkk == 1, hlabel = 'hges';
-            else, hlabel = sprintf('h %d (wn=%1.1f)', kkk-1, s_jj.wn(kkk-1)); end
+            else, hlabel = sprintf('h%d, %s (wn=%1.1f)', kkk-1, hnames{kkk-1}, s_jj.wn(kkk-1)); end
             subplot(2,5,sprc2no(2,5,1,kkk)); hold on; grid on;
             plot(Stats_kls_3.h(:,kkk), '-');
             plot(Stats_tpl_3.h(:,kkk), '--');
-            ylabel(hlabel);
+            ylabel(hlabel, 'interpreter', 'none');
             subplot(2,5,sprc2no(2,5,2,kkk)); hold on; grid on;
             hdl1=plot(diff(Stats_kls_3.h(:,kkk)), '-');
             hdl2=plot(diff(Stats_tpl_3.h(:,kkk)), '--');
-            ylabel(sprintf('diff %s', hlabel));
+            ylabel(sprintf('diff %s', hlabel), 'interpreter', 'none');
           end
           legend([hdl1(1);hdl2(1)], {'invkin3', 'invkin4'}, 'interpreter', 'none');
           sgtitle(sprintf('Zielfunktion Nebenoptimierung'));
           linkxaxes
+          Stats_modes_list = {...
+            {4, 'qlim_par'}
+            {5, 'qlim_hyp'}};
+          change_current_figure(13);clf;
+          set(13, 'Name', 'invkin3vs4_mode', 'NumberTitle', 'off');
+          for iii = 1:length(Stats_modes_list)
+            % TODO: Plotbeschriftung
+            bitget(Stats_kls_3.mode, Stats_modes_list{iii}{1});
+          end
           error('Halt');
         end
         test_q_2 = q_kls_3-q_tpl_3;
@@ -639,7 +661,7 @@ for allow_rankloss = [false, true]
             'nicht überein. Max. Abweichung %1.1e'], i, max_single_points, max(abs(test_q_2)));
         end 
         ik_test_Tc_stack_2 = Tc_stack_kls_3 - Tc_stack_tpl_3;
-        if all(abs(test_q_2)<5e-2) && max(abs(ik_test_Tc_stack_2(:))) > 5e-2
+        if all(abs(test_q_2)<1e-4) && max(abs(ik_test_Tc_stack_2(:))) > 5e-2
           % Muss identisch sein, wenn die Winkel gleich sind.
           error(['invkin3 vs invkin4: Ausgabe Tc_stack stimmt nicht ', ...
             'überein. Max. Abweichung %1.1e'], max(abs(ik_test_Tc_stack_2(:))));
@@ -683,12 +705,16 @@ for allow_rankloss = [false, true]
       calctimes = NaN(1,2);
       % Zurücksetzen der Aufgaben-FG auf Standard-Wert
       RP.update_EE_FG(RP.I_EE, RP.I_EE);
+      % Zurücksetzen der Grenzen
+      RP.xDlim = NaN(6,2);
+      RP.xDDlim = NaN(6,2);
+      % Einstellungen erstellen
       s_jj = rmfield(s, 'retry_limit'); % für Traj.-IK Optionen anpassen.
       s_jj.debug = true; % Abbruch, wenn interne Fehler in Traj.-IK-Fkt.
       s_jj.Phir_tol = 1e-12; % Sehr feine Toleranz, damit Fehler-Schwellwerte ...
       s_jj.Phit_tol = 1e-12; % ... nicht dadurch überschritten werden
       s_jj.simplify_acc = false;
-      s_jj.wn = zeros(10,1);
+      s_jj.wn = zeros(RP.idx_ik_length.wntraj,1);
       switch ikoptvar2
         case 1
           % Teste IK mit vollständigen Freiheitsgraden
@@ -718,45 +744,54 @@ for allow_rankloss = [false, true]
         case 6
           % Teste IK mit Aufgabenredundanz (mit Nebenbedingung)
           if ~taskred_possible, continue; end
-          s_jj.wn = [1;0;0;0;0;0]; % quadratische Abstandsfunktion von Pos.-Grenzen (ohne Dämpfung)
+          % quadratische Abstandsfunktion von Pos.-Grenzen (ohne Dämpfung)
+          s_jj.wn(RP.idx_iktraj_wnP.qlim_par) = 1; 
           RP.update_EE_FG(EE_FG, EE_FG_red);
           Name_jj = 'Krit. 1 (P)';
         case 7
           % Teste IK mit Aufgabenredundanz (mit Nebenbedingung)
           if ~taskred_possible, continue; end
-          s_jj.wn = [0;0;1;0;0;0]; % quadratische Abstandsfunktion von Geschw.-Grenzen
+          % quadratische Abstandsfunktion von Geschw.-Grenzen
+          s_jj.wn(RP.idx_iktraj_wnP.qDlim_par) = 1;
           RP.update_EE_FG(EE_FG, EE_FG_red);
           Name_jj = 'Dämpfung';
         case 8
           % Teste IK mit Aufgabenredundanz (mit Nebenbedingung)
           if ~taskred_possible, continue; end
-          s_jj.wn = [1;0;.1;0;0;0]; % quadratische Abstandsfunktion von Grenzen (Pos./Geschw.)
-          s_jj.wn(7) = 0.3; % Auch D-Rückführung
+          s_jj.wn(RP.idx_iktraj_wnP.qlim_par) = 1;
+          s_jj.wn(RP.idx_iktraj_wnP.qDlim_par) = 0.1;
+          % quadratische Abstandsfunktion von Grenzen (Pos./Geschw.)
+          s_jj.wn(RP.idx_iktraj_wnP.qlim_par) = 1;
+          s_jj.wn(RP.idx_iktraj_wnP.qDlim_par) = 0.1;
+          s_jj.wn(RP.idx_iktraj_wnD.qlim_par) = 0.3; % Auch D-Rückführung
           RP.update_EE_FG(EE_FG, EE_FG_red);
           Name_jj = 'Krit. 1 (PD), Dämpfung';
         case 9
           % Teste IK mit Aufgabenredundanz (mit Nebenbedingung)
           if ~taskred_possible, continue; end
-          s_jj.wn = [0;0;0.1;0;1;0]; % Konditionszahl IK-Jacobi
-          s_jj.wn(9) = 0.3; % Auch D-Rückführung
+          s_jj.wn(RP.idx_iktraj_wnP.qDlim_par) = 0.1;
+          s_jj.wn(RP.idx_iktraj_wnP.ikjac_cond) = 1; % Konditionszahl IK-Jacobi
+          s_jj.wn(RP.idx_iktraj_wnD.ikjac_cond) = 0.3; % Auch D-Rückführung
           RP.update_EE_FG(EE_FG, EE_FG_red);
           Name_jj = 'Krit. IK-Jacobi (PD), Dämpfung';
         case 10
           % Teste IK mit Aufgabenredundanz (mit Nebenbedingung)
           if ~taskred_possible, continue; end
           if AdditionalInfo_Akt ~= 0, continue; end % Geht nur, falls voller Rang bei PKM-Jacobi
-          % TODO: Nur, falls voller Rang
-          s_jj.wn = [0;0;0.5;0;0;1]; % Konditionszahl PKM-Jacobi
-          s_jj.wn(10) = 0.3; % Auch D-Rückführung
+          s_jj.wn(RP.idx_iktraj_wnP.qDlim_par) = 0.5;
+          s_jj.wn(RP.idx_iktraj_wnP.jac_cond) = 1; % Konditionszahl PKM-Jacobi
+          s_jj.wn(RP.idx_iktraj_wnD.jac_cond) = 0.3; % Auch D-Rückführung
           RP.update_EE_FG(EE_FG, EE_FG_red);
           Name_jj = 'Krit. PKM-Jacobi (PD), Dämpfung';
         case 11
           % Teste IK mit Aufgabenredundanz (mit Nebenbedingung)
           if ~taskred_possible, continue; end
           s_jj.mode_IK = 3;
-          s_jj.wn = [1;0;.1;0;0;0]; % quadr.+hyperbolische Abstandsfunktion von Grenzen (Pos.); Dämpfung
-          s_jj.wn(7) = 0.3; % Auch D-Rückführung der quadrat. Grenzen
-          s_jj.wn(8) = 1; % Nur D-Rückführung der hyperb. Grenzen
+          % quadr. Abstandsfunktion von Grenzen (Pos.); Dämpfung
+          s_jj.wn(RP.idx_iktraj_wnP.qlim_par) = 1;
+          s_jj.wn(RP.idx_iktraj_wnP.qDlim_par) = 0.1;
+          s_jj.wn(RP.idx_iktraj_wnD.qlim_par) = 0.3; % Auch D-Rückführung der quadrat. Grenzen
+          s_jj.wn(RP.idx_iktraj_wnD.qlim_hyp) = 1; % Nur D-Rückführung der hyperb. Grenzen
           RP.update_EE_FG(EE_FG, EE_FG_red);
           Name_jj = 'Krit. 1+2 (PD), Dämpfung';
         case 12
@@ -764,12 +799,39 @@ for allow_rankloss = [false, true]
           % TODO: Dieser Fall funktioniert noch nicht.
           if ~taskred_possible, continue; end
           s_jj.mode_IK = 3;
-          s_jj.wn = [0.2;0.2;.7;0;0;1]; % quadr.+hyperbolische Abstandsfunktion von Grenzen (Pos.); Dämpfung
-          s_jj.wn(7) = 0.01; % schwache D-Rückführung der quadrat. Grenzen
-          s_jj.wn(8) = 0.01; % schwache D-Rückführung der hyperb. Grenzen
-          s_jj.wn(10) = 0.3; % Auch D-Rückführung PKM-Jacobi
+          % quadr.+hyperbolische Abstandsfunktion von Grenzen (Pos.); Dämpfung
+          s_jj.wn(RP.idx_iktraj_wnP.qlim_par) = 0.2;
+          s_jj.wn(RP.idx_iktraj_wnP.qlim_hyp) = 0.2;
+          s_jj.wn(RP.idx_iktraj_wnP.qDlim_par) = 0.7;
+          s_jj.wn(RP.idx_iktraj_wnP.jac_cond) = 1;
+          s_jj.wn(RP.idx_iktraj_wnD.qlim_par) = 0.01; % schwache D-Rückführung der quadrat. Grenzen
+          s_jj.wn(RP.idx_iktraj_wnD.qlim_hyp) = 0.01; % schwache D-Rückführung der hyperb. Grenzen
+          s_jj.wn(RP.idx_iktraj_wnD.jac_cond) = 0.3; % Auch D-Rückführung PKM-Jacobi
           RP.update_EE_FG(EE_FG, EE_FG_red);
           Name_jj = 'PKM-Jacobi, alles Mix 1';
+        case 13
+          % Teste die Einhaltung der Beschleunigungs-Grenzen für den EE
+          if ~taskred_possible, continue; end
+          if AdditionalInfo_Akt ~= 0, continue; end % Geht nur, falls voller Rang bei PKM-Jacobi
+          s_jj.wn(RP.idx_iktraj_wnP.qDlim_par) = 0.5;
+          s_jj.wn(RP.idx_iktraj_wnP.jac_cond) = 1; % Konditionszahl PKM-Jacobi
+          s_jj.wn(RP.idx_iktraj_wnD.jac_cond) = 0.3; % Auch D-Rückführung
+          RP.xDlim = [NaN(5,2); [-2*pi, 2*pi]]; % 360°/s max. für EE-Drehung (sehr schnell)
+          RP.xDDlim = RP.xDlim / 0.200; % Max. Geschw. in 200ms aufbauen
+          RP.update_EE_FG(EE_FG, EE_FG_red);
+          Name_jj = 'Opt. PKM-Jac., xDDlim';
+        case 14
+          % Teste die Einhaltung der Beschleunigungs-Grenzen für den EE
+          if ~taskred_possible, continue; end
+          if AdditionalInfo_Akt ~= 0, continue; end % Geht nur, falls voller Rang bei PKM-Jacobi
+          s_jj.wn(RP.idx_iktraj_wnP.qDlim_par) = 0.5;
+          s_jj.wn(RP.idx_iktraj_wnP.jac_cond) = 1; % Konditionszahl PKM-Jacobi
+          s_jj.wn(RP.idx_iktraj_wnD.jac_cond) = 0.3; % Auch D-Rückführung
+          RP.xDlim = [NaN(5,2); [-pi, pi]];
+          RP.xDDlim = RP.xDlim / 0.200;
+          s_jj.enforce_xDlim = true;
+          RP.update_EE_FG(EE_FG, EE_FG_red);
+          Name_jj = 'Opt. PKM-Jac., xDlim';
       end
       if ikoptvar1 == 2
         % Berechne die Nullraumbewegung immer in Gesamt-Koordinaten
@@ -786,7 +848,10 @@ for allow_rankloss = [false, true]
       % Berechne IK des ersten Traj.-Punktes, damit beide Verfahren
       % gleich anfangen (sonst mehr Möglichkeit für Abweichungen).
       s_pik = s; % gleiche Gewichtung der Nullraumbewegung wählen
-      s_pik.wn = s_jj.wn([1 2 5 6]);
+      s_pik.wn = zeros(RP.idx_ik_length.wnpos,1);
+      for f = fields(RP.idx_ikpos_wn)'
+        s_pik.wn(RP.idx_ikpos_wn.(f{1})) = s_jj.wn(RP.idx_iktraj_wnP.(f{1}));
+      end
       [q0_traj2, Phi_q02, ~, Stats2] = RP.invkin_ser(Traj_0.X(1,:)', q0, s);
       Stats2.PHI(isnan(Stats2.PHI))=0; % Für Summenbildung unten
       if taskred_possible
@@ -805,7 +870,7 @@ for allow_rankloss = [false, true]
         warning(['Nullraumbewegung für Startpunkt ist nicht konvergiert. ', ...
           'Damit Trajektorien-Start nicht aus Ruhelage (schlecht für Konvergenz)']);
       end
-      if all(Stats3.condJ(~isnan(Stats3.condJ)) > 1e10)
+      if all(Stats3.condJ(~isnan(Stats3.condJ(:,1)),1) > 1e10)
         % Fehler tritt bei 3T1R-PKM auf.
         warning(['Die IK-Jacobi (für constr3 bei Start-Konfig.) ist durch', ...
           'gängig singulär. PKM nicht sinnvoll.']);
@@ -1098,6 +1163,43 @@ for allow_rankloss = [false, true]
         end
         legend([hdl1, hdl2], {'Klasse', 'Vorlage'});
         linkxaxes
+        change_current_figure(18);clf;
+        set(18,'Name','mode_Traj_IK', 'NumberTitle', 'off');
+        mode_names = {'invkin3/invkin_ser', 'NRB akt.', ...
+          'NR-Proj. Act.Space', ...
+          'NRB: Quadr. q', ...
+          'NRB: Hyperb. q', ...
+          'NRB: Quadr. qD', ...
+          'NRB: Hyperb. qD', ...
+          'NRB: Kondition IK-Jacobi', ...
+          'NRB: Kondition PKM-Jacobi', ...
+          'NRB: Kollision', ...
+          'NRB: Bauraum', ...
+          'NRB: Quad. xlim', ...
+          'NRB: Hyp. xlim', ...
+          'NRB: Quadr.  xlimD', ...
+          'v_qDD lim.', ...
+          'v_qD lim.', ... % NRB-Gradient D-Anteil begrenzt
+          'qDD lim.', ...
+          'xDD lim.', ...
+          'xD lim.', ...
+          'qD lim.', ...
+          'qlim lim.', ...
+          'IK-Jac. sing.', 'PKM-Jac. sing.'};
+
+        for kk = 1:23
+          % Bestimme die Belegung des Status-Bits
+          Bits_kls = bitget(Stats_kls.mode, kk);
+          Bits_tpl = bitget(Stats_tpl.mode, kk);
+          subplot(4,6,kk); hold on;
+          hdl1=stairs(Traj_0.t, Bits_kls, '-');
+          hdl2=stairs(Traj_0.t, Bits_tpl, '--');
+          title(sprintf('%d: %s', kk, mode_names{kk}), 'interpreter', 'none');
+          grid on;
+        end
+        linkxaxes
+        legend([hdl1, hdl2], {'Klasse', 'Vorlage'});
+        
         error('Eine Trajektorien-IK funktioniert nicht. Darf nicht sein, da Parameter aus Maßsynthese kommen');
       end
       % Prüfe das Ergebnis der Traj.-IK in sich. Wenn die IK erfolgreich
