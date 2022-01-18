@@ -200,6 +200,9 @@ for ii = III'
             % Funktion für SerRob-Klasse neu generieren. Fehler kommt bei
             % Dummy-Eintrag (invkin_ser) daher.
             serroblib_update_template_functions(LEG_Names(1), verbosity);
+            % Funktions-Handles neu eintragen. Wenn SerRob-InvKin beim
+            % ersten Versuch fehlte, sonst keine Aktualisierung.
+            RP.fill_fcn_handles(RP_mex_status, false);
           end
         end
       else
