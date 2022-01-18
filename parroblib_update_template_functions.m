@@ -180,12 +180,15 @@ for ii = III'
             fprintf(['Zweiter Versuch ohne Erfolg. Voraussichtlich sind ', ...
               'die Vorlagen-Funktionen veraltet\n']);
           end
-          serroblib_create_template_functions({LEG_Names{1}},  false,false); %#ok<CCAT1>
+          serroblib_create_template_functions({LEG_Names{1}}, false, false); %#ok<CCAT1>
           parroblib_create_template_functions({PName_Kin},false,false);
-        elseif retryiter == 3
+          % Funktionen neu eintragen, falls vorher welche gefehlt haben
+          RP.fill_fcn_handles(RP_mex_status, false);
+        elseif retryiter == 3 && ...  % Kein Fehler für Dummy-Eintrag. 
+            ~isempty(filelist(kk).bytes) % Dann fehlen einfach die Mex-Dateien der SerRob-Klasse. Ist nicht so schlimm.
           warning(orig_state);
           % Kompiliere nochmal und zeige auch den Bericht dazu zum Debuggen
-          if contains(filelist(kk).name, '_mex')
+          if contains(filelist(kk).name, '_mex') && ~isempty(filelist(kk).bytes)
             [~,mexbasename] = fileparts(filelist(kk).name);
             matlabfcn2mex({mexbasename(1:end-4)}, true, false, true);
           end
