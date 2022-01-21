@@ -1,7 +1,7 @@
 % Entferne Roboter aus der Datenbank, die auf Beinketten aufbauen, die
 % aktualisiert wurden (z.B. bezüglich Basis-Orientierung)
 
-% Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2021-01
+% Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2022-01
 % (C) Institut für Mechatronische Systeme, Leibniz Universität Hannover
 
 clc
