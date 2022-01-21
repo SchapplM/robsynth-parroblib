@@ -90,9 +90,8 @@ elseif ~isempty(i)
     T(i,6) = {0}; % Null erfolgreiche Aktuierungen per Definition
     writetable(T,csvtable,'Delimiter', ';');
   else % PKM Erfolgreich (schon in Datenbank) 
-    SName_str = cell2str(SName); % Name der Beinkette (aus Gesamttabelle)
     % Name der PKM-Kinematik zusammenstellen
-    PName = sprintf('P%d%sG%dP%d', NLEG, SName_str(3:end),Coupling(1),Coupling(2));
+    PName = sprintf('P%d%sG%dP%d', NLEG, SName(3:end),Coupling(1),Coupling(2));
     % Finde alle Roboter in der Datenbank mit dieser Anzahl Beinen
     [~, PNames_Akt, AdditionalInfo_Akt] = parroblib_filter_robots(EE_FG0,6);
     % Finde alle Aktuierungen zu dieser Kinematik
