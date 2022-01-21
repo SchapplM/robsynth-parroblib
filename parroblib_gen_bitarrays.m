@@ -62,7 +62,7 @@ for iFG = 1:size(EEFG_update,1)
     return
   end
   % Tabelle lesen (und dabei Überschriften nachbessern)
-  KinTab = readtable(kintabfile_csv, 'HeaderLines', 2);
+  KinTab = readtable(kintabfile_csv, 'NumHeaderLines', 2);
   KinTab_headers = readtable(kintabfile_csv, 'PreserveVariableNames', true);
   varnames_kin = KinTab_headers.Properties.VariableNames;
   varnames_kin{1} = 'Name'; % doppelte Überschriftszeile funktioniert ...
@@ -138,7 +138,7 @@ for iFG = 1:size(EEFG_update,1)
       warning('Zu Kinematik %s gibt es keine Aktuierungstabelle %s', PName_Kin, acttabfile_csv);
       return
     end
-    ActTab_i = readtable(acttabfile_csv, 'HeaderLines', 1);
+    ActTab_i = readtable(acttabfile_csv, 'NumHeaderLines', 1);
     ActTab_i_headers = readtable(acttabfile_csv, 'PreserveVariableNames', ...
       true, 'ReadVariableNames', true);
     if size(ActTab_i,2) == size(ActTab_i_headers,2) - 1
