@@ -23,7 +23,7 @@ EEFG_Ges = logical(...
      if ~any(contains(PNames_Kin, [RobName, 'G']))
        fprintf(['Ordner %s gehört zu keinem Roboter in der csv/mat-Daten', ...
          'bank. Lösche den Ordner.\n'], RobName);
-       delete(fullfile(robdirs(i).folder, RobName));
+       rmdir(fullfile(robdirs(i).folder, RobName), 's');
      end
    end
  end
