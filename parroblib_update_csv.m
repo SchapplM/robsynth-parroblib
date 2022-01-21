@@ -18,6 +18,7 @@
 %   6=noch nicht geprüft
 %   7=Unbehandelter Fall (Fehler)
 %   8=Kugelgelenk-Isomorphismus (Gestell- oder Plattform-Koppelgelenk)
+%   9=Gelöscht.
 % Rangerfolg: 
 %   0: Rangverlust in Jacobi-Matrix. PKM verliert FG und funktioniert nicht.
 %   1: Kein Rangverlust in Jacobi-Matrix. Gültige PKM.
@@ -35,6 +36,7 @@ function parroblib_update_csv(SName, Coupling, EE_FG0, Status, Rangerfolg)
 if nargin <= 4
   Rangerfolg = 0;
 end
+assert(isa(SName, 'char'), 'Eingabe SName muss char sein (kein cell)')
 assert(isa(EE_FG0, 'logical'), 'Eingabe EE_FG0 muss 1x6 logical sein');
 % Prüfe, ob übergebene serielle Kette Variante oder Hauptmodell ist
 if isempty(SName) || ~contains(SName, 'V')
@@ -68,7 +70,7 @@ elseif ~isempty(i)
   LegName = table2cell(T(i,1));
   Coupling_i = table2array(T(i,3:4));
   Status_i = table2array(T(i,5));
-  if ~strcmp(LegName,SName{:}) || ~all(Coupling_i == Coupling)
+  if ~strcmp(LegName,SName) || ~all(Coupling_i == Coupling)
     error('Inkonsistenz beim Laden der Datei %s', csvtable);
   end
   if Status ~= 0  % 0=keine Aktuierung erfolgreich getestet

@@ -46,11 +46,9 @@ expression_act = [expression_kin,'A(\d+)']; % Format "P3RRR1A1"
 if ~isempty(tokens_kin)
   res = tokens_kin{1};
   Name_Typ = 1;
-  Coupling = [str2double(res{5}), str2double(res{6})];
 elseif ~isempty(tokens_act)
   res = tokens_act{1};
   Name_Typ = 2;
-  Coupling = [str2double(res{5}), str2double(res{6})];
   ActNr = str2double(res{7});
 else
   error('Eingegebener Name %s entspricht nicht dem Namensschema', PName_Input);
@@ -123,7 +121,7 @@ if Name_Typ == 1
   delete(kintabfile_copy);
 end
 %% Tabelle für Aktuierung öffnen und Zeile entfernen
-if Name_Typ == 2
+if Name_Typ == 2 || Name_Typ == 1
   acttabfile = fullfile(repopath, ['sym_', EEstr], PName_Legs, 'actuation.csv');
   acttabfile_copy = [acttabfile, '.copy']; % Kopie der Tabelle zur Bearbeitung
 
@@ -141,7 +139,8 @@ if Name_Typ == 2
   while ischar(tline) && ~isempty(tline)
     % Spaltenweise als Cell-Array
     csvline = strsplit(tline, ';', 'CollapseDelimiters', false);
-    if strcmp(csvline{1}, PName_Input)
+    if Name_Typ == 2 && strcmp(csvline{1}, PName_Input) || ...
+        Name_Typ == 1 && contains(csvline{1}, PName_Input)
       % Zu löschenden Roboter gefunden. Diese Zeile nicht in Dateikopie schreiben
       found = true;
     else
@@ -168,14 +167,16 @@ if Name_Typ == 2
   
   % Falls jetzt keine Aktuierungen mehr für das Kinematik-Modell da sind,
   % kann der entsprechende Eintrag auch gelöscht werden
-  removed_Kin = false;
-  if lines_written == 1
-    % Es wurde nur die Überschrift in die Datei geschrieben. Keine
-    % Aktuierung mehr übrig.
-    delete(acttabfile);
-  end
-  if lines_written_kin == 0
-    removed_Kin = parroblib_remove_robot(PName_Kin);
+  if Name_Typ == 2
+    removed_Kin = false;
+    if lines_written == 1
+      % Es wurde nur die Überschrift in die Datei geschrieben. Keine
+      % Aktuierung mehr übrig.
+      delete(acttabfile);
+    end
+    if lines_written_kin == 0
+      removed_Kin = parroblib_remove_robot(PName_Kin);
+    end
   end
 end
 
