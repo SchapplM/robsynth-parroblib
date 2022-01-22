@@ -102,7 +102,7 @@ if ~found(1)
     end
   end
   % Tabelle in Matlab öffnen
-  T = readtable(kintabfile, 'NumHeaderLines', 0, 'ReadVariableNames', 0, 'Delimiter', ';');
+  T = readtable(kintabfile, 'NumHeaderLines', 2, 'Delimiter', ';');
   % Zeile ans Ende der temporären Datentabelle einfügen
   newrow = cell2table(csvline_robkin);
   newrow.Properties.VariableNames = T.Properties.VariableNames;
@@ -112,8 +112,8 @@ if ~found(1)
   % Tabelle temporär schreiben
   writetable(T_sort, kintabtmp2file, 'WriteVariableNames', 0, 'Delimiter', ';');
   % Beide Dateien (Kopfzeilen und Daten) kombinieren
-  fid = fopen(kintabtmp1file, 'a') ;
-  fwrite(fid, fileread(kintabtmp2file)) ;
+  fid = fopen(kintabtmp1file, 'a');
+  fwrite(fid, fileread(kintabtmp2file));
   fclose(fid);
   % Kopieren der temporären Dateien und löschen
   copyfile(kintabtmp1file, kintabfile);

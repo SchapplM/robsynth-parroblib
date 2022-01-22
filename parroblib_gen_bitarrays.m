@@ -77,6 +77,20 @@ for iFG = 1:size(EEFG_update,1)
   KinTab = removevars(KinTab, varnames_kin(end-5:end));
   KinTab = addvars(KinTab, EEFG);
   KinTab.Properties.VariableNames(end) = {'EEFG'};
+
+  % Entferne Zeilen, die ungültige Daten enthalten. Darf eigentlich gar
+  % nicht vorkommen. Mögliche Ursache: Fehler bei Tabellenüberschriften
+  I_valid = true(size(KinTab,1),1);
+  for i = 1:size(KinTab,1)
+    expression_kin = 'P(\d)([RP]+)(\d+)[V]?(\d*)';
+    [tokens_kin, ~] = regexp(KinTab.Name{i},expression_kin,'tokens','match');
+    if isempty(tokens_kin)
+      warning('Zeile "%s" in Tabelle %s fehlerhaft. Überspringe.', ...
+        KinTab.Name{i}, kintabfile_csv)
+      I_valid(i) = false;
+    end
+  end
+  KinTab = KinTab(I_valid,:);
   
   % Füge zusätzliche Spalten hinzu, die nicht in der CSV-Datei der PKM-
   % Datenbank stehen (da die Informationen indirekt in der SerRobLib sind).
@@ -118,7 +132,8 @@ for iFG = 1:size(EEFG_update,1)
     expression = 'P(\d)([RP]+)(\d+)[V]?(\d*)[G]?(\d*)[P]?(\d*)'; % Format "P3RRRG1P11A1" oder "P3RRR1V1G1P1A1"
     [tokens, ~] = regexp(PName_Kin,expression,'tokens','match');
     if isempty(tokens)
-      error('Eintrag %s aus der Tabelle stimmt nicht mit Namensschema überein.', PName_Kin);
+      warning('Eintrag "%s" aus der Tabelle stimmt nicht mit Namensschema überein.', PName_Kin);
+      continue
     end
     res = tokens{1};
     if isempty(res{4}) % serielle Kette ist keine abgeleitete Variante
@@ -135,7 +150,7 @@ for iFG = 1:size(EEFG_update,1)
     acttabfile_csv = fullfile(repopath, ['sym_', EEstr], PName_Legs, 'actuation.csv');
     if ~exist(acttabfile_csv, 'file')
       % Diese Aktuierung zu der Kinematik ist noch nicht gespeichert / generiert.
-      warning('Zu Kinematik %s gibt es keine Aktuierungstabelle %s', PName_Kin, acttabfile_csv);
+      warning('Zu Kinematik "%s" gibt es keine Aktuierungstabelle %s', PName_Kin, acttabfile_csv);
       return
     end
     ActTab_i = readtable(acttabfile_csv, 'NumHeaderLines', 1);
@@ -226,7 +241,7 @@ for iFG = 1:size(EEFG_update,1)
     PName_k = ActTab.Name{k};
     % Finde die aktuierte PKM in der Kinematik-Tabelle
     I_k = find(strcmp(KinTab.Name, PName_k(1:end-2)));
-    assert(length(I_k)==1, sprintf('Kein eindeutiger Eintrag für %s in Kinematik-DB', PName_k(1:end-2)));
+    assert(length(I_k)==1, sprintf('Kein eindeutiger Eintrag für "%s" in Kinematik-DB', PName_k(1:end-2)));
     SName_TechJoint = KinTab.Beinkette_Tech{I_k};
     % Einzelne technische Gelenke durchgehen und zählen
     TechJointNumbersInChain = zeros(1,6);
