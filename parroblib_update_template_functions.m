@@ -13,6 +13,7 @@
 
 function parroblib_update_template_functions(Names, verbosity)
 orig_state = warning('off', 'all'); % Warnungen temporär unterdrücken
+assert(isa(Names, 'cell'), 'Variable "Names" muss cell-Array sein');
 %% Prüfe Eingabe
 if nargin < 1 || isempty(Names) % keine Eingabe einer Liste. Nehme alle.
   % Stelle Liste aller Roboter zusammen
@@ -61,14 +62,14 @@ for ii = III'
     PName_Legs, 'tpl');
   mexfilelist = dir(fullfile(tpl_dir, '*_mex.mex*'));
   mfilelist = dir(fullfile(tpl_dir, '*.m'));
+  if isempty(mfilelist) && isempty(mexfilelist)
+    % Nichts zu prüfen. Es gibt keine mex-Dateien
+    continue
+  end
   % Füge Dummy-Einträge hinzu für invkin_ser-Funktion
   mexfilelist(length(mexfilelist)+1).name = 'invkin_ser_mex';
   mfilelist(length(mfilelist)+1).name = 'invkin_ser';
   filelist = [mfilelist;mexfilelist];
-  if isempty(filelist)
-    % Nichts zu prüfen. Es gibt keine mex-Dateien
-    continue
-  end
   if verbosity
     fprintf('Prüfe PKM %d/%d (%s) (%d mex-Dateien und %d m-Dateien liegen in tpl-Ordner %s)\n', ...
       find(III==ii), length(III), PName_Kin, length(mexfilelist), length(mfilelist), tpl_dir)
@@ -106,11 +107,20 @@ for ii = III'
         end
         try
           s = struct('n_max', 1, 'retry_limit', -1); % keine Ausführung
-          [~,~,~,Stats]=RP.invkin2(zeros(6,1), rand(RP.NJ,3), s);
+          q0 = rand(RP.NJ,3);
+          [~,~,~,Stats]=RP.invkin2(zeros(6,1), q0, s);
           if Stats.version < fileversions.pkm_invkin % hier wird die aktuelle Version eingetragen
             error('Version der Datei ist zu alt (%d). Aktuell %d', ...
               Stats.version, fileversions.pkm_invkin);
           end
+          % Debug: Prüfe ob Kinematik übereinstimmt
+%           x0 = RP.fkineEE_traj(q0(:,1)')';
+%           [q1,Phi1] = RP.invkin2(x0, q0(:,1), struct('retry_limit', 0, ...
+%             'n_max', 20));
+%           if any(abs(q0(1:RP.Leg(1).NJ,1)-q1(1:RP.Leg(1).NJ))>1e-6) || ...
+%               any(abs(Phi1(1:sum(RP.I_EE_Task)))>1e-6)
+%             error('InvKin und DirKin stimmen nicht überein');
+%           end
         catch err
           recompile = true;
         end
