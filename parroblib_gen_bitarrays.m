@@ -59,7 +59,7 @@ for iFG = 1:size(EEFG_update,1)
   kintabfile_csv = fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list.csv']);
   if ~exist(kintabfile_csv, 'file')
     warning('Datei %s existiert nicht. Sollte aber im Repo enthalten sein.', kintabfile_csv);
-    return
+    continue % trotzdem mit anderen FG weitermachen. Sowieso getrennte Tabellen.
   end
   % Tabelle lesen (und dabei Überschriften nachbessern)
   KinTab = readtable(kintabfile_csv, 'NumHeaderLines', 2);
@@ -145,13 +145,14 @@ for iFG = 1:size(EEFG_update,1)
   end
   PName_Legs_unique = unique(PName_Legs_all);
   %% Aktuierungs-Tabelle auslesen
+  ActTab = [];
   for i = 1:length(PName_Legs_unique)
     PName_Legs = PName_Legs_unique{i};
     acttabfile_csv = fullfile(repopath, ['sym_', EEstr], PName_Legs, 'actuation.csv');
     if ~exist(acttabfile_csv, 'file')
       % Diese Aktuierung zu der Kinematik ist noch nicht gespeichert / generiert.
       warning('Zu Kinematik "%s" gibt es keine Aktuierungstabelle %s', PName_Kin, acttabfile_csv);
-      return
+      continue
     end
     ActTab_i = readtable(acttabfile_csv, 'NumHeaderLines', 1);
     ActTab_i_headers = readtable(acttabfile_csv, 'PreserveVariableNames', ...
@@ -227,13 +228,16 @@ for iFG = 1:size(EEFG_update,1)
       ActTab_i.Rankloss_Platform = ranklosscoll;
     end
     % Stapele die einzelnen Tabellen
-    if i == 1
+    if isempty(ActTab) % Anfang muss nicht bei i=1 sein, wenn Daten fehlen
       ActTab = ActTab_i;
     else
       ActTab = [ActTab;ActTab_i]; %#ok<AGROW>
     end
   end
-  
+  if isempty(ActTab)
+    warning('Keine einzige Aktuierungstabelle für FG %s', EEstr)
+    continue; % Nächster FG
+  end
   %% Tabelle nachbearbeiten: Zusätzliche Informationen eintragen
   MaxIdxActJoint = NaN(length(ActTab.Name),1);
   MaxIdxActTechJoint = NaN(length(ActTab.Name),1);
