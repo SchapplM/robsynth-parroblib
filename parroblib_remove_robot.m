@@ -8,7 +8,9 @@
 %   Name des Roboters in der Datenbank. Optionen:
 %   * PName_Kin (nur Kinematik, ohne Endung für Aktuierung; z.B. "P3RPR1G1P1")
 %   * PName_Act (Kinematik mit Aktuierung; z.B. "P3RPR1G1P1A2")
-%   Je nachdem welche Art von Name übergeben wird, wird der Eintrag gelöscht
+%   Je nachdem welche Art von Name übergeben wird, wird der Eintrag
+%   gelöscht. Wenn eine Kinematik gelöscht werden soll, werden auch alle
+%   zugehörigen Aktuierungen gelöscht.
 % nofiledelete (optional)
 %   true: Keine Dateien (mit generiertem Code) löschen. Nur umbenennen.
 %   false: Dateien werden gelöscht (Standard)
@@ -121,12 +123,11 @@ if Name_Typ == 1
   delete(kintabfile_copy);
 end
 %% Tabelle für Aktuierung öffnen und Zeile entfernen
-if Name_Typ == 2 || Name_Typ == 1
-  acttabfile = fullfile(repopath, ['sym_', EEstr], PName_Legs, 'actuation.csv');
-  acttabfile_copy = [acttabfile, '.copy']; % Kopie der Tabelle zur Bearbeitung
-
-  fid = fopen(acttabfile, 'r');
-  if fid == -1
+acttabfile = fullfile(repopath, ['sym_', EEstr], PName_Legs, 'actuation.csv');
+acttabfile_copy = [acttabfile, '.copy']; % Kopie der Tabelle zur Bearbeitung
+fid = fopen(acttabfile, 'r');
+if Name_Typ == 2 || Name_Typ == 1 && fid ~=  -1
+  if fid == -1 % Wird nur geprüft, falls Typ=2.
     warning('Tabelle %s konnte nicht geöffnet werden', acttabfile);
     success = false;
     return
@@ -155,7 +156,11 @@ if Name_Typ == 2 || Name_Typ == 1
   end
   fclose(fid);
   fclose(fidc);
-  if ~found
+  if ~found && Name_Typ == 2
+    % Nur wenn eine Aktuierung gezielt entfernt werden soll, muss diese
+    % auch da sein. Wenn eine allgemeine Kinematik entfernt werden soll,
+    % kann die Aktuierung dazu bereits gelöscht worden sein. (Rekursiver
+    % Aufruf)
     success = false;
     warning('Zu löschendes Modell %s nicht in %s gefunden', PName_Input, acttabfile);
     return
