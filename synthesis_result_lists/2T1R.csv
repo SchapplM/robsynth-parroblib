@@ -1,8 +1,8 @@
 Beinkette;Anzahl_Beinketten;G_Methode;P_Methode;Status;Anzahl_Akt
-S3PPR1;3;1;1;0;2
-S3PRP1;3;1;1;0;2
+S3PPR1;3;1;1;1;0
+S3PRP1;3;1;1;1;0
 S3PRR1;3;1;1;0;2
-S3RPP1;3;1;1;0;2
+S3RPP1;3;1;1;1;0
 S3RPR1;3;1;1;0;2
 S3RRP1;3;1;1;0;2
 S3RRR1;3;1;1;0;2
