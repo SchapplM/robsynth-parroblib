@@ -7,11 +7,14 @@
 %   Falls leer gelassen: Alle.
 % verbosity
 %   Grad der Textausgabe (0=aus, 1=Fortschritt)
+% ignore_mex
+%   Bei true werden die mex-Dateien ignoriert und nur M-Funktionen
+%   aktualisiert. Standard: false
 
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2021-04
 % (C) Institut für Mechatronische Systeme, Leibniz Universität Hannover
 
-function parroblib_update_template_functions(Names, verbosity)
+function parroblib_update_template_functions(Names, verbosity, ignore_mex)
 orig_state = warning('off', 'all'); % Warnungen temporär unterdrücken
 assert(isa(Names, 'cell'), 'Variable "Names" muss cell-Array sein');
 %% Prüfe Eingabe
@@ -28,6 +31,9 @@ if nargin < 1 || isempty(Names) % keine Eingabe einer Liste. Nehme alle.
 end
 if nargin < 2
   verbosity = 0;
+end
+if nargin < 3
+  ignore_mex = false;
 end
 %% Bestimme aktuelle Version der jeweiligen Vorlagen-Funktion
 filelist = {'pkm_invkin.m.template', 'pkm_invkin3.m.template', ...
@@ -69,7 +75,11 @@ for ii = III'
   % Füge Dummy-Einträge hinzu für invkin_ser-Funktion
   mexfilelist(length(mexfilelist)+1).name = 'invkin_ser_mex';
   mfilelist(length(mfilelist)+1).name = 'invkin_ser';
-  filelist = [mfilelist;mexfilelist];
+  if ignore_mex
+    filelist = mfilelist;
+  else
+    filelist = [mfilelist;mexfilelist];
+  end
   if verbosity
     fprintf('Prüfe PKM %d/%d (%s) (%d mex-Dateien und %d m-Dateien liegen in tpl-Ordner %s)\n', ...
       find(III==ii), length(III), PName_Kin, length(mexfilelist), length(mfilelist), tpl_dir)
@@ -212,7 +222,7 @@ for ii = III'
           else
             % Funktion für SerRob-Klasse neu generieren. Fehler kommt bei
             % Dummy-Eintrag (invkin_ser) daher.
-            serroblib_update_template_functions(LEG_Names(1), verbosity);
+            serroblib_update_template_functions(LEG_Names(1), verbosity, ignore_mex);
             % Funktions-Handles neu eintragen. Wenn SerRob-InvKin beim
             % ersten Versuch fehlte, sonst keine Aktualisierung.
             RP.fill_fcn_handles(RP_mex_status, false);
