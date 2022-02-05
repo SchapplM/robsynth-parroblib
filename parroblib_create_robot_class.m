@@ -117,6 +117,8 @@ elseif any(Coupling(2) == [1,2,3])
   p_platform_all = p_platform;
 elseif any(Coupling(2) == [4,5,6])
   p_platform_all = [p_platform; p_platform/2];
+elseif Coupling(2) == 7
+  p_platform_all = p_platform;
 elseif Coupling(2) == 8
   p_platform_all = [p_platform; 0];
 else
