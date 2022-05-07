@@ -183,8 +183,11 @@ for ii = III'
         if ~RP_mex_status % markiere die Datei als vorhanden (ohne Mex)
           files_found.fkine_coll = true;
         end
+        Tc_stack_cls = RP.fkine_coll(zeros(RP.NJ,1));
         try
-          RP.fkine_coll2(zeros(RP.NJ,1));
+          Tc_stack_tpl = RP.fkine_coll2(zeros(RP.NJ,1));
+          assert(all(size(Tc_stack_cls)==size(Tc_stack_tpl)), ...
+            'Dimension der Ausgabe von fkine_coll stimmt nicht');
         catch err
           recompile = true;
         end
