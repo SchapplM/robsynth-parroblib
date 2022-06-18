@@ -73,8 +73,8 @@ for ii = III'
     continue
   end
   % Füge Dummy-Einträge hinzu für invkin_ser-Funktion
-  mexfilelist(length(mexfilelist)+1).name = 'invkin_ser_mex';
-  mfilelist(length(mfilelist)+1).name = 'invkin_ser';
+  mexfilelist(length(mexfilelist)+1,1).name = 'invkin_ser_mex';
+  mfilelist(length(mfilelist)+1,1).name = 'invkin_ser';
   if ignore_mex
     filelist = mfilelist;
   else
