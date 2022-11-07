@@ -24,12 +24,12 @@
 %   columns: x-, y-, z-coordinates
 % 
 % Output:
-% MPV [13x1]
+% MPV [15x1]
 %   base parameter vector (minimal parameter vector)
 
 % Quelle: HybrDyn-Toolbox
-% Datum: 2020-08-06 19:59
-% Revision: 8f4ff0ee124033641e65b154ac60823cef59ef1f (2020-07-05)
+% Datum: 2022-11-04 17:05
+% Revision: e482436b586c4f286726c907c195760c5ac72455 (2022-11-03)
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
@@ -51,14 +51,12 @@ assert(isreal(koppelP) && all(size(koppelP) == [3 3]), ...
 
 %% Symbolic Calculation
 % From minimal_parameter_parrob_matlab.m
-t1238 = Ifges(3,1) - Ifges(3,2);
-t1232 = sin(pkin(5));
-t1233 = cos(pkin(5));
-t1237 = t1232 * t1233;
-t1230 = t1232 ^ 2;
-t1231 = t1233 ^ 2;
-t1236 = t1231 - t1230;
-t1235 = Ifges(3,4) * t1237;
-t1234 = t1233 * mrSges(3,1) - t1232 * mrSges(3,2);
-t1 = [t1230 * Ifges(3,1) + t1231 * Ifges(3,2) + Ifges(2,2) + Ifges(1,3) + 0.2e1 * t1235; mrSges(1,1); mrSges(1,2) - mrSges(2,3); t1238 * t1236 + Ifges(2,1) - Ifges(2,2) - 0.4e1 * t1235; t1236 * Ifges(3,4) + t1238 * t1237 + Ifges(2,4); t1233 * Ifges(3,5) - t1232 * Ifges(3,6) + Ifges(2,5); t1232 * Ifges(3,5) + t1233 * Ifges(3,6) + Ifges(2,6); 0.2e1 * pkin(1) * t1234 + Ifges(2,3) + Ifges(3,3); mrSges(2,1) + t1234; t1232 * mrSges(3,1) + t1233 * mrSges(3,2) + mrSges(2,2); mrSges(3,3); m(3); m(4);];
+t1782 = Ifges(3,1) - Ifges(3,2);
+t1780 = sin(pkin(5));
+t1781 = cos(pkin(5));
+t1785 = t1780 * t1781;
+t1779 = t1781 ^ 2;
+t1784 = t1782 * t1779;
+t1783 = Ifges(3,4) * t1785;
+t1 = [Ifges(3,1) + Ifges(2,2) + Ifges(1,3) + 0.2e1 * t1783 - t1784; mrSges(1,1); mrSges(1,2) - mrSges(2,3); Ifges(2,1) - Ifges(2,2) - 0.4e1 * t1783 + 0.2e1 * t1784 - t1782; 0.2e1 * t1779 * Ifges(3,4) + t1782 * t1785 + Ifges(2,4) - Ifges(3,4); Ifges(3,5) * t1781 - t1780 * Ifges(3,6) + Ifges(2,5); Ifges(3,5) * t1780 + t1781 * Ifges(3,6) + Ifges(2,6); Ifges(2,3) + Ifges(3,3); mrSges(2,1); mrSges(2,2); mrSges(3,1); mrSges(3,2); mrSges(3,3); m(3); m(4);];
 MPV  = t1;

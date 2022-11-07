@@ -1,4 +1,4 @@
-% Calculate vector of centrifugal and coriolis load on the joints for
+% Calculate vector of centrifugal and Coriolis load for parallel robot
 % P3RRPRR1V1G2A0
 % Use Code from Maple symbolic Code Generation
 %
@@ -42,8 +42,8 @@
 %   in platform coordinates
 
 % Quelle: HybrDyn-Toolbox
-% Datum: 2020-08-06 19:34
-% Revision: 8f4ff0ee124033641e65b154ac60823cef59ef1f (2020-07-05)
+% Datum: 2022-11-04 17:08
+% Revision: e482436b586c4f286726c907c195760c5ac72455 (2022-11-03)
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
@@ -74,9 +74,9 @@ assert(isreal(koppelP) && all(size(koppelP) == [3 3]), ...
 %% Symbolic Calculation
 % From coriolisvec_para_plfcoord_par2_matlab.m
 % OptimizationMode: 2
-% StartTime: 2020-08-06 19:33:54
-% EndTime: 2020-08-06 19:33:55
-% DurationCPUTime: 1.14s
+% StartTime: 2022-11-04 17:08:04
+% EndTime: 2022-11-04 17:08:05
+% DurationCPUTime: 1.04s
 % Computational Cost: add. (5292->171), mult. (5799->333), div. (2331->7), fcn. (5733->18), ass. (0->145)
 t528 = (pkin(1) * m(3));
 t527 = -2 * mrSges(3,3);
@@ -110,7 +110,7 @@ t456 = sin(qJ(2,3));
 t457 = sin(qJ(1,3));
 t507 = t457 * t462;
 t411 = -t432 * t507 + t456 * t435;
-t414 = t456 * t432 + t435 * t507;
+t414 = t432 * t456 + t435 * t507;
 t450 = pkin(3) + qJ(3,3);
 t439 = 0.1e1 / t450;
 t463 = cos(qJ(1,3));
@@ -121,7 +121,7 @@ t458 = sin(qJ(2,2));
 t459 = sin(qJ(1,2));
 t504 = t459 * t464;
 t412 = -t433 * t504 + t458 * t436;
-t415 = t458 * t433 + t436 * t504;
+t415 = t433 * t458 + t436 * t504;
 t451 = pkin(3) + qJ(3,2);
 t440 = 0.1e1 / t451;
 t465 = cos(qJ(1,2));
@@ -131,7 +131,7 @@ t460 = sin(qJ(2,1));
 t461 = sin(qJ(1,1));
 t501 = t461 * t466;
 t413 = -t434 * t501 + t460 * t437;
-t416 = t460 * t434 + t437 * t501;
+t416 = t434 * t460 + t437 * t501;
 t452 = pkin(3) + qJ(3,1);
 t441 = 0.1e1 / t452;
 t467 = cos(qJ(1,1));
@@ -177,12 +177,12 @@ t372 = (-t471 * t399 * t443 + (-t384 * t500 + 0.2e1 * t381) * t384) * t439;
 t425 = mrSges(3,2) * qJ(3,3) + t516;
 t438 = mrSges(3,1) + t528;
 t483 = -pkin(1) * mrSges(3,3) - t517;
-t405 = -(-t438 * qJ(3,3) + t483) * t456 + t462 * t425;
+t405 = -(-t438 * qJ(3,3) + t483) * t456 + t425 * t462;
 t420 = -t456 * mrSges(3,2) + t438 * t462;
 t429 = mrSges(3,3) + t519;
 t492 = t443 * t515;
 t493 = -Ifges(1,3) + t518;
-t497 = (t509 * t522 - t423 * t442 + ((t527 - t519) * qJ(3,3)) + t493) * t372 - t405 * t492 + t420 * t363 - 0.4e1 * t384 * t402 * t512 - (t384 * t456 * t523 + (qJ(3,3) * mrSges(3,1) + t429 * pkin(1) + t517) * t402) * t402 * t462 + t425 * t515 + (t381 * t429 + t428 * t402) * t526;
+t497 = (t509 * t522 - t423 * t442 + ((t527 - t519) * qJ(3,3)) + t493) * t372 - t405 * t492 + t420 * t363 - 0.4e1 * t384 * t402 * t512 - (t384 * t456 * t523 + t402 * (qJ(3,3) * mrSges(3,1) + t429 * pkin(1) + t517)) * t402 * t462 + t425 * t515 + (t381 * t429 + t428 * t402) * t526;
 t474 = -t451 * t465 + t459 * t499;
 t394 = -t474 * t433 + t436 * t505;
 t397 = t433 * t505 + t474 * t436;
@@ -191,11 +191,11 @@ t382 = (t394 * t469 + t397 * t470 + t418 * t468) * t440;
 t364 = (-t448 * t400 + ((-t448 * t444 - t451 ^ 2) * t385 + (t403 * t458 * t451 + t382 * t464) * t494) * t385) * t440;
 t373 = (-t471 * t400 * t445 + (-t385 * t499 + 0.2e1 * t382) * t385) * t440;
 t426 = mrSges(3,2) * qJ(3,2) + t516;
-t406 = -(-t438 * qJ(3,2) + t483) * t458 + t464 * t426;
+t406 = -(-t438 * qJ(3,2) + t483) * t458 + t426 * t464;
 t421 = -t458 * mrSges(3,2) + t438 * t464;
 t430 = mrSges(3,3) + t520;
 t491 = t445 * t514;
-t496 = (t506 * t522 - t423 * t444 + ((t527 - t520) * qJ(3,2)) + t493) * t373 - t406 * t491 + t421 * t364 - 0.4e1 * t385 * t403 * t511 - (t385 * t458 * t523 + (qJ(3,2) * mrSges(3,1) + t430 * pkin(1) + t517) * t403) * t403 * t464 + t426 * t514 + (t382 * t430 + t428 * t403) * t525;
+t496 = (t506 * t522 - t423 * t444 + ((t527 - t520) * qJ(3,2)) + t493) * t373 - t406 * t491 + t421 * t364 - 0.4e1 * t385 * t403 * t511 - (t385 * t458 * t523 + t403 * (qJ(3,2) * mrSges(3,1) + t430 * pkin(1) + t517)) * t403 * t464 + t426 * t514 + (t382 * t430 + t428 * t403) * t525;
 t473 = -t452 * t467 + t461 * t498;
 t395 = -t473 * t434 + t437 * t502;
 t398 = t434 * t502 + t473 * t437;
@@ -204,11 +204,11 @@ t383 = (t395 * t469 + t398 * t470 + t419 * t468) * t441;
 t365 = (-t448 * t401 + ((-t448 * t446 - t452 ^ 2) * t386 + (t404 * t460 * t452 + t383 * t466) * t494) * t386) * t441;
 t374 = (-t471 * t401 * t447 + (-t386 * t498 + 0.2e1 * t383) * t386) * t441;
 t427 = mrSges(3,2) * qJ(3,1) + t516;
-t407 = -(-t438 * qJ(3,1) + t483) * t460 + t466 * t427;
+t407 = -(-t438 * qJ(3,1) + t483) * t460 + t427 * t466;
 t422 = -t460 * mrSges(3,2) + t438 * t466;
 t431 = mrSges(3,3) + t521;
 t490 = t447 * t513;
-t495 = (t503 * t522 - t423 * t446 + ((t527 - t521) * qJ(3,1)) + t493) * t374 - t407 * t490 + t422 * t365 - 0.4e1 * t386 * t404 * t510 - (t386 * t460 * t523 + (qJ(3,1) * mrSges(3,1) + t431 * pkin(1) + t517) * t404) * t404 * t466 + t427 * t513 + (t383 * t431 + t428 * t404) * t524;
+t495 = (t503 * t522 - t423 * t446 + ((t527 - t521) * qJ(3,1)) + t493) * t374 - t407 * t490 + t422 * t365 - 0.4e1 * t386 * t404 * t510 - (t386 * t460 * t523 + t404 * (qJ(3,1) * mrSges(3,1) + t431 * pkin(1) + t517)) * t404 * t466 + t427 * t513 + (t383 * t431 + t428 * t404) * t524;
 t489 = t497 * t443;
 t488 = t496 * t445;
 t487 = t495 * t447;

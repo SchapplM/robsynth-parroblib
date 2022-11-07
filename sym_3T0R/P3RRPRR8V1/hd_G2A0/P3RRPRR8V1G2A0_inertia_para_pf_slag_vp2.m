@@ -39,8 +39,8 @@
 %   inertia matrix in task space
 
 % Quelle: HybrDyn-Toolbox
-% Datum: 2020-08-06 19:59
-% Revision: 8f4ff0ee124033641e65b154ac60823cef59ef1f (2020-07-05)
+% Datum: 2022-11-04 17:05
+% Revision: e482436b586c4f286726c907c195760c5ac72455 (2022-11-03)
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
@@ -69,9 +69,9 @@ assert(isreal(koppelP) && all(size(koppelP) == [3 3]), ...
 %% Symbolic Calculation
 % From inertia_para_plfcoord_par2_matlab.m
 % OptimizationMode: 2
-% StartTime: 2020-08-06 19:59:15
-% EndTime: 2020-08-06 19:59:16
-% DurationCPUTime: 0.99s
+% StartTime: 2022-11-04 17:04:25
+% EndTime: 2022-11-04 17:04:26
+% DurationCPUTime: 0.95s
 % Computational Cost: add. (2682->207), mult. (4131->345), div. (294->9), fcn. (3012->23), ass. (0->159)
 t493 = m(3) * pkin(1);
 t492 = 2 * mrSges(3,3);
@@ -98,7 +98,7 @@ t460 = t410 * t487;
 t397 = t418 * pkin(2) + pkin(1);
 t465 = t407 * t397;
 t468 = t397 * t410;
-t362 = (-t427 * t465 + t460) * t432 + t426 * (t427 * t457 + t468);
+t362 = (-t427 * t465 + t460) * t432 + (t427 * t457 + t468) * t426;
 t441 = t397 * t432 - t426 * t487;
 t382 = 0.1e1 / t441;
 t483 = t362 * t382;
@@ -112,7 +112,7 @@ t411 = cos(t424);
 t459 = t411 * t487;
 t464 = t408 * t397;
 t467 = t397 * t411;
-t363 = (-t429 * t464 + t459) * t434 + t428 * (t429 * t456 + t467);
+t363 = (-t429 * t464 + t459) * t434 + (t429 * t456 + t467) * t428;
 t440 = t397 * t434 - t428 * t487;
 t383 = 0.1e1 / t440;
 t482 = t363 * t383;
@@ -126,7 +126,7 @@ t412 = cos(t425);
 t458 = t412 * t487;
 t463 = t409 * t397;
 t466 = t397 * t412;
-t364 = (-t431 * t463 + t458) * t436 + t430 * (t431 * t455 + t466);
+t364 = (-t431 * t463 + t458) * t436 + (t431 * t455 + t466) * t430;
 t439 = t397 * t436 - t430 * t487;
 t384 = 0.1e1 / t439;
 t481 = t364 * t384;
@@ -198,12 +198,12 @@ t377 = -t437 * t421 + t439 * t431;
 t376 = -t435 * t420 + t440 * t429;
 t375 = -t433 * t419 + t441 * t427;
 t371 = 0.2e1 * t395 + (t461 + 0.4e1 * t485) * t418 - Ifges(2,1) + Ifges(2,2) + t462 - t422;
-t361 = -t377 * t409 + t387 * t412;
-t360 = t377 * t412 + t387 * t409;
-t359 = -t376 * t408 + t386 * t411;
-t358 = t376 * t411 + t386 * t408;
-t357 = -t375 * t407 + t385 * t410;
-t356 = t375 * t410 + t385 * t407;
+t361 = -t377 * t409 + t412 * t387;
+t360 = t377 * t412 + t409 * t387;
+t359 = -t376 * t408 + t411 * t386;
+t358 = t376 * t411 + t408 * t386;
+t357 = -t375 * t407 + t410 * t385;
+t356 = t375 * t410 + t407 * t385;
 t355 = (m(3) * t381 + t374 * t437) * t416;
 t354 = (m(3) * t380 + t373 * t435) * t415;
 t353 = (m(3) * t379 + t372 * t433) * t414;

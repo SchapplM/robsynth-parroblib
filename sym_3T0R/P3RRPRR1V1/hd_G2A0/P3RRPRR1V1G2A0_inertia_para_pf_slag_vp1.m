@@ -39,8 +39,8 @@
 %   inertia matrix in task space
 
 % Quelle: HybrDyn-Toolbox
-% Datum: 2020-08-06 19:34
-% Revision: 8f4ff0ee124033641e65b154ac60823cef59ef1f (2020-07-05)
+% Datum: 2022-11-04 17:08
+% Revision: e482436b586c4f286726c907c195760c5ac72455 (2022-11-03)
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
@@ -69,9 +69,9 @@ assert(isreal(koppelP) && all(size(koppelP) == [3 3]), ...
 %% Symbolic Calculation
 % From inertia_para_plfcoord_par1_matlab.m
 % OptimizationMode: 2
-% StartTime: 2020-08-06 19:33:48
-% EndTime: 2020-08-06 19:33:48
-% DurationCPUTime: 0.78s
+% StartTime: 2022-11-04 17:07:58
+% EndTime: 2022-11-04 17:07:59
+% DurationCPUTime: 0.68s
 % Computational Cost: add. (2184->174), mult. (2649->325), div. (342->7), fcn. (1164->24), ass. (0->150)
 t418 = m(2) / 0.2e1;
 t417 = -Icges(2,1) / 0.2e1 - Icges(3,1) / 0.2e1;
@@ -85,15 +85,15 @@ t358 = rSges(2,1) ^ 2;
 t412 = -(rSges(3,2) + t346) * (rSges(3,2) - t346) * m(3) / 0.2e1 + (-t356 + t358) * t418 + t416 + t417;
 t334 = sin(qJ(2,3));
 t340 = cos(qJ(2,3));
-t305 = -t334 * rSges(3,2) + t346 * t340;
+t305 = -rSges(3,2) * t334 + t340 * t346;
 t411 = m(3) * t305;
 t336 = sin(qJ(2,2));
 t342 = cos(qJ(2,2));
-t306 = -t336 * rSges(3,2) + t346 * t342;
+t306 = -rSges(3,2) * t336 + t342 * t346;
 t410 = m(3) * t306;
 t338 = sin(qJ(2,1));
 t344 = cos(qJ(2,1));
-t307 = -t338 * rSges(3,2) + t346 * t344;
+t307 = -rSges(3,2) * t338 + t344 * t346;
 t409 = m(3) * t307;
 t328 = pkin(3) + qJ(3,3);
 t317 = 0.1e1 / t328;
@@ -123,13 +123,13 @@ t400 = t286 * t319;
 t399 = t286 * t324;
 t365 = rSges(3,2) ^ 2 + (pkin(1) ^ 2) + ((2 * pkin(1) + rSges(3,1)) * rSges(3,1));
 t373 = t356 + t358;
-t398 = (t373 * m(2) + t365 * m(3) + Icges(2,3) + Icges(3,3)) * t324;
+t398 = (m(2) * t373 + m(3) * t365 + Icges(2,3) + Icges(3,3)) * t324;
 t331 = legFrame(3,2);
 t310 = sin(t331);
 t313 = cos(t331);
 t335 = sin(qJ(1,3));
 t381 = t335 * t340;
-t295 = -t310 * t381 + t334 * t313;
+t295 = -t310 * t381 + t313 * t334;
 t321 = 0.1e1 / t340;
 t397 = t295 * t321;
 t332 = legFrame(2,2);
@@ -137,7 +137,7 @@ t311 = sin(t332);
 t314 = cos(t332);
 t337 = sin(qJ(1,2));
 t379 = t337 * t342;
-t296 = -t311 * t379 + t336 * t314;
+t296 = -t311 * t379 + t314 * t336;
 t322 = 0.1e1 / t342;
 t396 = t296 * t322;
 t333 = legFrame(1,2);
@@ -145,14 +145,14 @@ t312 = sin(t333);
 t315 = cos(t333);
 t339 = sin(qJ(1,1));
 t377 = t339 * t344;
-t297 = -t312 * t377 + t338 * t315;
+t297 = -t312 * t377 + t315 * t338;
 t323 = 0.1e1 / t344;
 t395 = t297 * t323;
-t298 = t334 * t310 + t313 * t381;
+t298 = t310 * t334 + t313 * t381;
 t394 = t298 * t321;
-t299 = t336 * t311 + t314 * t379;
+t299 = t311 * t336 + t314 * t379;
 t393 = t299 * t322;
-t300 = t338 * t312 + t315 * t377;
+t300 = t312 * t338 + t315 * t377;
 t392 = t300 * t323;
 t391 = t305 * t321;
 t390 = t306 * t322;
@@ -186,15 +186,15 @@ t354 = 0.2e1 * qJ(2,1);
 t353 = 0.2e1 * qJ(2,2);
 t352 = 0.2e1 * qJ(2,3);
 t304 = -m(2) * rSges(2,1) * rSges(2,2) - rSges(3,2) * t405 + Icges(2,4) + Icges(3,4);
-t303 = t339 * t330 + t345 * t374;
-t302 = t337 * t329 + t343 * t375;
-t301 = t335 * t328 + t341 * t376;
-t292 = t312 * t378 + t361 * t315;
-t291 = t311 * t380 + t362 * t314;
-t290 = t310 * t382 + t363 * t313;
-t289 = -t361 * t312 + t315 * t378;
-t288 = -t362 * t311 + t314 * t380;
-t287 = -t363 * t310 + t313 * t382;
+t303 = t330 * t339 + t345 * t374;
+t302 = t329 * t337 + t343 * t375;
+t301 = t328 * t335 + t341 * t376;
+t292 = t312 * t378 + t315 * t361;
+t291 = t311 * t380 + t314 * t362;
+t290 = t310 * t382 + t313 * t363;
+t289 = -t312 * t361 + t315 * t378;
+t288 = -t311 * t362 + t314 * t380;
+t287 = -t310 * t363 + t313 * t382;
 t283 = (-t307 * t345 + t303) * t406;
 t282 = (-t306 * t343 + t302) * t407;
 t281 = (-t305 * t341 + t301) * t408;

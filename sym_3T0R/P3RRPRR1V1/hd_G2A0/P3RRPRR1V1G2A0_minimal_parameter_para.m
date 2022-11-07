@@ -24,12 +24,12 @@
 %   columns: x-, y-, z-coordinates
 % 
 % Output:
-% MPV [13x1]
+% MPV [15x1]
 %   base parameter vector (minimal parameter vector)
 
 % Quelle: HybrDyn-Toolbox
-% Datum: 2020-08-06 19:34
-% Revision: 8f4ff0ee124033641e65b154ac60823cef59ef1f (2020-07-05)
+% Datum: 2022-11-04 17:08
+% Revision: e482436b586c4f286726c907c195760c5ac72455 (2022-11-03)
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
@@ -51,5 +51,5 @@ assert(isreal(koppelP) && all(size(koppelP) == [3 3]), ...
 
 %% Symbolic Calculation
 % From minimal_parameter_parrob_matlab.m
-t1 = [Ifges(1,3) + Ifges(2,2) + Ifges(3,2); mrSges(1,1); mrSges(1,2) - mrSges(2,3); Ifges(2,1) + Ifges(3,1) - Ifges(2,2) - Ifges(3,2); Ifges(2,4) + Ifges(3,4); Ifges(2,5) + Ifges(3,5); Ifges(2,6) + Ifges(3,6); 2 * mrSges(3,1) * pkin(1) + Ifges(2,3) + Ifges(3,3); mrSges(2,1) + mrSges(3,1); mrSges(2,2) + mrSges(3,2); mrSges(3,3); m(3); m(4);];
+t1 = [Ifges(2,2) + Ifges(3,2) + Ifges(1,3); mrSges(1,1); mrSges(1,2) - mrSges(2,3); Ifges(2,1) + Ifges(3,1) - Ifges(2,2) - Ifges(3,2); Ifges(2,4) + Ifges(3,4); Ifges(2,5) + Ifges(3,5); Ifges(2,6) + Ifges(3,6); Ifges(2,3) + Ifges(3,3); mrSges(2,1); mrSges(2,2); mrSges(3,1); mrSges(3,2); mrSges(3,3); m(3); m(4);];
 MPV  = t1;

@@ -24,12 +24,12 @@
 %   columns: x-, y-, z-coordinates
 % 
 % Output:
-% MPV [13x1]
+% MPV [15x1]
 %   base parameter vector (minimal parameter vector)
 
 % Quelle: HybrDyn-Toolbox
-% Datum: 2020-08-06 21:04
-% Revision: 8f4ff0ee124033641e65b154ac60823cef59ef1f (2020-07-05)
+% Datum: 2022-11-07 13:12
+% Revision: e482436b586c4f286726c907c195760c5ac72455 (2022-11-03)
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
@@ -51,14 +51,12 @@ assert(isreal(koppelP) && all(size(koppelP) == [3 3]), ...
 
 %% Symbolic Calculation
 % From minimal_parameter_parrob_matlab.m
-t1527 = Ifges(3,1) - Ifges(3,2);
-t1521 = sin(pkin(7));
-t1522 = cos(pkin(7));
-t1526 = t1521 * t1522;
-t1519 = t1521 ^ 2;
-t1520 = t1522 ^ 2;
-t1525 = t1520 - t1519;
-t1524 = Ifges(3,4) * t1526;
-t1523 = t1522 * mrSges(3,1) - t1521 * mrSges(3,2);
-t1 = [Ifges(1,3) + Ifges(2,2) + t1519 * Ifges(3,1) + 0.2e1 * t1524 + t1520 * Ifges(3,2) + (2 * pkin(5) * mrSges(2,3)) + ((pkin(1) ^ 2 + pkin(5) ^ 2) * m(2)); m(2) * pkin(1) + mrSges(1,1); -m(2) * pkin(5) + mrSges(1,2) - mrSges(2,3); t1527 * t1525 + Ifges(2,1) - Ifges(2,2) - 0.4e1 * t1524; t1525 * Ifges(3,4) + t1527 * t1526 + Ifges(2,4); t1522 * Ifges(3,5) - t1521 * Ifges(3,6) + Ifges(2,5); t1521 * Ifges(3,5) + t1522 * Ifges(3,6) + Ifges(2,6); 0.2e1 * pkin(2) * t1523 + Ifges(2,3) + Ifges(3,3); mrSges(2,1) + t1523; t1521 * mrSges(3,1) + t1522 * mrSges(3,2) + mrSges(2,2); mrSges(3,3); m(3); m(4);];
+t1943 = Ifges(3,1) - Ifges(3,2);
+t1941 = sin(pkin(7));
+t1942 = cos(pkin(7));
+t1946 = t1941 * t1942;
+t1940 = t1942 ^ 2;
+t1945 = t1943 * t1940;
+t1944 = Ifges(3,4) * t1946;
+t1 = [-t1945 + 0.2e1 * t1944 + Ifges(3,1) + ((pkin(1) ^ 2 + pkin(5) ^ 2) * m(2)) + (2 * pkin(5) * mrSges(2,3)) + Ifges(2,2) + Ifges(1,3); m(2) * pkin(1) + mrSges(1,1); -m(2) * pkin(5) + mrSges(1,2) - mrSges(2,3); Ifges(2,1) - Ifges(2,2) - 0.4e1 * t1944 + 0.2e1 * t1945 - t1943; 0.2e1 * t1940 * Ifges(3,4) + t1943 * t1946 + Ifges(2,4) - Ifges(3,4); Ifges(3,5) * t1942 - t1941 * Ifges(3,6) + Ifges(2,5); Ifges(3,5) * t1941 + t1942 * Ifges(3,6) + Ifges(2,6); Ifges(2,3) + Ifges(3,3); mrSges(2,1); mrSges(2,2); mrSges(3,1); mrSges(3,2); mrSges(3,3); m(3); m(4);];
 MPV  = t1;

@@ -39,8 +39,8 @@
 %   inertia matrix in task space
 
 % Quelle: HybrDyn-Toolbox
-% Datum: 2020-08-06 19:34
-% Revision: 8f4ff0ee124033641e65b154ac60823cef59ef1f (2020-07-05)
+% Datum: 2022-11-04 17:08
+% Revision: e482436b586c4f286726c907c195760c5ac72455 (2022-11-03)
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
@@ -69,9 +69,9 @@ assert(isreal(koppelP) && all(size(koppelP) == [3 3]), ...
 %% Symbolic Calculation
 % From inertia_para_plfcoord_par2_matlab.m
 % OptimizationMode: 2
-% StartTime: 2020-08-06 19:33:53
-% EndTime: 2020-08-06 19:33:54
-% DurationCPUTime: 0.73s
+% StartTime: 2022-11-04 17:08:04
+% EndTime: 2022-11-04 17:08:04
+% DurationCPUTime: 0.56s
 % Computational Cost: add. (1542->154), mult. (1635->302), div. (342->7), fcn. (1191->18), ass. (0->131)
 t356 = (pkin(1) * m(3));
 t355 = 2 * mrSges(3,3);
@@ -82,7 +82,7 @@ t280 = (-mrSges(3,1) - t356);
 t295 = sin(qJ(2,3));
 t301 = cos(qJ(2,3));
 t312 = -pkin(1) * mrSges(3,3) + Ifges(2,5) + Ifges(3,5);
-t256 = (t280 * qJ(3,3) + t312) * t295 - t301 * (mrSges(3,2) * qJ(3,3) + t352);
+t256 = (t280 * qJ(3,3) + t312) * t295 - (mrSges(3,2) * qJ(3,3) + t352) * t301;
 t289 = pkin(3) + qJ(3,3);
 t281 = 1 / t289;
 t351 = t256 * t281;
@@ -91,14 +91,14 @@ t288 = 1 / t307;
 t350 = t256 * t288;
 t297 = sin(qJ(2,2));
 t303 = cos(qJ(2,2));
-t257 = (t280 * qJ(3,2) + t312) * t297 - t303 * (mrSges(3,2) * qJ(3,2) + t352);
+t257 = (t280 * qJ(3,2) + t312) * t297 - (mrSges(3,2) * qJ(3,2) + t352) * t303;
 t290 = pkin(3) + qJ(3,2);
 t282 = 1 / t290;
 t349 = t257 * t282;
 t348 = t257 * t288;
 t299 = sin(qJ(2,1));
 t305 = cos(qJ(2,1));
-t258 = (t280 * qJ(3,1) + t312) * t299 - t305 * (mrSges(3,2) * qJ(3,1) + t352);
+t258 = (t280 * qJ(3,1) + t312) * t299 - (mrSges(3,2) * qJ(3,1) + t352) * t305;
 t291 = pkin(3) + qJ(3,1);
 t283 = 1 / t291;
 t347 = t258 * t283;
@@ -127,11 +127,11 @@ t324 = t300 * t305;
 t261 = -t276 * t324 + t299 * t279;
 t287 = 0.1e1 / t305;
 t343 = t261 * t287;
-t262 = t295 * t274 + t277 * t328;
+t262 = t274 * t295 + t277 * t328;
 t342 = t262 * t285;
-t263 = t297 * t275 + t278 * t326;
+t263 = t275 * t297 + t278 * t326;
 t341 = t263 * t286;
-t264 = t299 * t276 + t279 * t324;
+t264 = t276 * t299 + t279 * t324;
 t340 = t264 * t287;
 t268 = t295 * mrSges(3,2) + t280 * t301;
 t339 = t268 * t285;
