@@ -121,6 +121,8 @@ elseif Coupling(2) == 7
   p_platform_all = p_platform;
 elseif Coupling(2) == 8
   p_platform_all = [p_platform; 0];
+elseif Coupling(2) == 9 % konisch
+  p_platform_all = [p_platform; 0];
 else
   error('Plattform-Methode %d nicht definiert', Coupling(2));
 end
