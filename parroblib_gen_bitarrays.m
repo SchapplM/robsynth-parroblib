@@ -62,22 +62,7 @@ for iFG = 1:size(EEFG_update,1)
     continue % trotzdem mit anderen FG weitermachen. Sowieso getrennte Tabellen.
   end
   % Tabelle lesen (und dabei Überschriften nachbessern)
-  KinTab = readtable(kintabfile_csv, 'NumHeaderLines', 2);
-  KinTab_headers = readtable(kintabfile_csv, 'PreserveVariableNames', true);
-  varnames_kin = KinTab_headers.Properties.VariableNames;
-  varnames_kin{1} = 'Name'; % doppelte Überschriftszeile funktioniert ...
-  varnames_kin{2} = 'Beinkette'; % ... nicht gut mit readtable
-  KinTab.Properties.VariableNames = varnames_kin;
-  % Fasse die EE-FG-Spalten zusammen
-  EEFG = NaN(size(KinTab,1), 6);
-  for i = 1:6
-    EEFG(:,i) = KinTab.(varnames_kin{end-6+i});
-  end
-  % Lösche die Überflüssigen Spalten und erstelle eine neue
-  KinTab = removevars(KinTab, varnames_kin(end-5:end));
-  KinTab = addvars(KinTab, EEFG);
-  KinTab.Properties.VariableNames(end) = {'EEFG'};
-
+  KinTab = readtable(kintabfile_csv, 'Delimiter', ';');
   % Entferne Zeilen, die ungültige Daten enthalten. Darf eigentlich gar
   % nicht vorkommen. Mögliche Ursache: Fehler bei Tabellenüberschriften
   I_valid = true(size(KinTab,1),1);
@@ -91,6 +76,16 @@ for iFG = 1:size(EEFG_update,1)
     end
   end
   KinTab = KinTab(I_valid,:);
+  % Formatiere die Spalte zu den Gelenk-Parallelitäten wieder als Zahlen
+  KinTab.Gelenkgruppen(strcmp(KinTab.Gelenkgruppen,'?')) = {NaN};
+  for i = 1:size(KinTab,1)
+    if isnan(KinTab.Gelenkgruppen{i}), continue; end
+    [~, match] = regexp(KinTab.Gelenkgruppen{i}, '(\d)', 'tokens', 'match');
+    if isempty(match)
+      warning('unbekannter Eintrag für Nr. %d (%s)', i, KinTab.Name{i});
+    end
+    KinTab.Gelenkgruppen{i} = str2double(match);
+  end
   
   % Füge zusätzliche Spalten hinzu, die nicht in der CSV-Datei der PKM-
   % Datenbank stehen (da die Informationen indirekt in der SerRobLib sind).

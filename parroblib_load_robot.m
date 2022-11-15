@@ -125,6 +125,7 @@ EEstr = ''; % Platzhalter, wird im folgenden belegt.
 for jj = 1:size(EEFG_Ges,1)
   if sum(EEFG_Ges(jj,:)) ~= NLEG, continue; end % PKM-FG passen nicht zu Beinketten
   EEstr = sprintf('%dT%dR', sum(EEFG_Ges(jj,1:3)), sum(EEFG_Ges(jj,4:6)));
+  EE_dof0 = EEFG_Ges(jj,:); % Wird nach Fund nicht mehr überschrieben
   % Ergebnis: Tabellenzeile csvline_kin für den gesuchten Roboter
   kintabfile = fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list.csv']);
   fid = fopen(kintabfile);
@@ -152,7 +153,7 @@ for jj = 1:size(EEFG_Ges,1)
   if found
     break; % In aktueller Tabelle gefunden. Abbruch.
   end
-end
+end % for jj (EEFG_Ges)
 if ~found
   error('Roboter %s wurde nicht in der Tabelle %s gefunden.', PName_Kin, kintabfile);
 end
@@ -165,11 +166,7 @@ for i = 1:NLEG
   LEG_Names{i} = LEG_Names{1};
 end
 
-%% EE-FG abspeichern
-% EE-FG sind in Kinematik-Tabelle enthalten
-for i = 1:6
-  EE_dof0(i) = str2double(csvline_kin{2+i});
-end
+%% Abschluss
 if Modus == 1
   % Nur Kinematik-Tabelle öffnen. Geht dann etwas schneller.
   return
