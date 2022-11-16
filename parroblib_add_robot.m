@@ -78,7 +78,7 @@ if ~found(1) % Für diese Kinematik gibt es noch keinen Eintrag
   newrow.Properties.VariableNames = T.Properties.VariableNames;
   T = [T;newrow];
   % Prüfen
-  assert(length(strcmp(T.Name, PName_Kin))==1, sprintf('Kinematik %s nicht eindeutig in Tabelle', PName_Kin));
+  assert(sum(strcmp(T.Name, PName_Kin))==1, sprintf('Kinematik %s nicht eindeutig in Tabelle', PName_Kin));
   % Daten alphabetisch sortieren
   T_sort = sortrows(T,1);
   % Tabelle neu schreiben
