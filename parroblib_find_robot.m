@@ -65,7 +65,7 @@ for jj = 1:size(EEFG_Ges,1)
     if isempty(csvline) || strcmp(csvline{1}, '')
       continue
     end
-    if length(csvline) ~= 8
+    if length(csvline) ~= 3
       % warning('Zeile %s sieht ungültig aus', tline);
       continue % nicht genug Spalten: Ungültiger Datensatz oder Überschrift
     end

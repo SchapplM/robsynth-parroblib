@@ -49,13 +49,16 @@
 %      2: "o" - nur 90°
 %      3: "b" - 0° oder 90°
 %      4: "a" - Alle Werte möglich.
+% JointParallelity
+%   Information zur Parallelität der Gelenke der Beinkette.
+%   Bsp.: [1 1 2 3 3]; erste beide Gelenke und letzte beide sind parallel
 
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2018-12
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
 function [NLEG, LEG_Names, Actuation, Coupling, ActNr, symrob, EE_dof0, ...
-  PName_Kin, PName_Legs, AdditionalInfo_Akt, StructuralDHParam] = ...
-  parroblib_load_robot(Name, Modus)
+  PName_Kin, PName_Legs, AdditionalInfo_Akt, StructuralDHParam, ...
+  JointParallelity] = parroblib_load_robot(Name, Modus)
 %% Initialisierung
 if nargin < 2
   Modus = 2;
@@ -122,54 +125,36 @@ EEFG_Ges = logical(...
   [1 1 0 0 0 0; 1 1 0 0 0 1; 1 1 1 0 0 0;  1 1 1 0 0 1; ...
    1 1 1 1 1 0; 1 1 1 1 1 1]);
 EEstr = ''; % Platzhalter, wird im folgenden belegt.
+found = false;
 for jj = 1:size(EEFG_Ges,1)
   if sum(EEFG_Ges(jj,:)) ~= NLEG, continue; end % PKM-FG passen nicht zu Beinketten
   EEstr = sprintf('%dT%dR', sum(EEFG_Ges(jj,1:3)), sum(EEFG_Ges(jj,4:6)));
+  EE_dof0 = EEFG_Ges(jj,:); % Wird nach Fund nicht mehr überschrieben
   % Ergebnis: Tabellenzeile csvline_kin für den gesuchten Roboter
-  kintabfile = fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list.csv']);
-  fid = fopen(kintabfile);
-  if fid == -1
-    error('Datei %s existiert nicht. Sollte aber im Repo enthalten sein.', kintabfile);
+  kintabmatfile = fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list_kin.mat']);
+  
+  if ~exist(kintabmatfile, 'file')
+    error('Datei %s existiert nicht. Aufruf von parroblib_gen_bitarrays notwendig.', kintabmatfile);
   end
-  % Tabelle zeilenweise durchgehen
-  tline = fgetl(fid);
-  found = false;
-  while ischar(tline) && ~isempty(tline)
-    % Spaltenweise als Cell-Array
-    csvline = strsplit(tline, ';');
-    tline = fgetl(fid); % nächste Zeile
-    if isempty(csvline) || strcmp(csvline{1}, '')
-      continue
-    end
-    if strcmp(csvline{1}, PName_Kin)
-      % gefunden
-      csvline_kin = csvline;
-      found = true;
-      break;
-    end
-  end
-  fclose(fid);
+  % Tabelle laden
+  tmp = load(kintabmatfile);
+  KinTab = tmp.KinTab;
+  if any(strcmp(KinTab.Name, PName_Kin)), found = true; end
   if found
     break; % In aktueller Tabelle gefunden. Abbruch.
   end
-end
+end % for jj (EEFG_Ges)
 if ~found
   error('Roboter %s wurde nicht in der Tabelle %s gefunden.', PName_Kin, kintabfile);
 end
 
 %% Ausgabe für Kinematik speichern
-LEG_Names = csvline_kin(2);
-symrob = true; % TOOD: Berücksichtigung nicht-kinematisch-symmetrischer PKM
-% identische Beinketten nochmal in die Variable schreiben
-for i = 1:NLEG
-  LEG_Names{i} = LEG_Names{1};
-end
+I_KinTab = strcmp(KinTab.Name, PName_Kin);
+% Annahme: Symmetrische PKM
+LEG_Names = repmat(KinTab.Beinkette(I_KinTab), 1, NLEG);
+JointParallelity = KinTab.Gelenkgruppen{I_KinTab};
 
-%% EE-FG abspeichern
-% EE-FG sind in Kinematik-Tabelle enthalten
-for i = 1:6
-  EE_dof0(i) = str2double(csvline_kin{2+i});
-end
+%% Abschluss
 if Modus == 1
   % Nur Kinematik-Tabelle öffnen. Geht dann etwas schneller.
   return

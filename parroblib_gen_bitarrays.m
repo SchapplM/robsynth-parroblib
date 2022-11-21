@@ -17,6 +17,9 @@
 %   EEFG [1x6]
 %     Einträge mit 1/0, je nachdem welcher EE-FG bewegt werden kann. FG
 %     werden im Basis-KS gezählt (Plattform-Geschw. und -winkelgeschw.)
+% parrob_list_kin.mat
+%   Enthält alle Dateiinhalte von sym_xTyR_list_kin.mat für alle x/y.
+%   
 % symxleg_list_act.mat (x=Anzahl Beinketten aus Eingabe). Enthält Variable
 % ActTab. Entspricht actuation.csv in den Unterordnern. Matlab-Tabelle:
 %   Name
@@ -41,10 +44,14 @@
 % (C) Institut für Mechatronische Systeme, Leibniz Universität Hannover
 
 function parroblib_gen_bitarrays(EEFG_update)
+complete_update = false; % Merker, ob Gesamt-Datei erstellt werden soll
 if nargin == 0
   EEFG_update = logical(... % Aktualisiere alle Roboter
     [1 1 0 0 0 0; 1 1 0 0 0 1; 1 1 1 0 0 0;  1 1 1 0 0 1; ...
      1 1 1 1 1 0; 1 1 1 1 1 1]);
+end
+if size(EEFG_update,1) == 6
+  complete_update = true; % Erstelle auch eine Datei für eine Gesamt-Datenbank
 end
 if size(EEFG_update,2)~=6
   error('Eingabe EEFG_update muss 0/1-Matrix mit 6 Spalten sein');
@@ -53,6 +60,7 @@ end
 repopath=fileparts(which('parroblib_path_init.m'));
 serroblibpath=fileparts(which('serroblib_path_init.m'));
 SerRob_DB_all = load(fullfile(serroblibpath, 'serrob_list.mat'));
+KinTab_All = {};
 for iFG = 1:size(EEFG_update,1)
   EEstr = sprintf('%dT%dR', sum(EEFG_update(iFG,1:3)), sum(EEFG_update(iFG,4:6)));
   %% Kinematik-Tabelle durchsuchen
@@ -62,22 +70,7 @@ for iFG = 1:size(EEFG_update,1)
     continue % trotzdem mit anderen FG weitermachen. Sowieso getrennte Tabellen.
   end
   % Tabelle lesen (und dabei Überschriften nachbessern)
-  KinTab = readtable(kintabfile_csv, 'NumHeaderLines', 2);
-  KinTab_headers = readtable(kintabfile_csv, 'PreserveVariableNames', true);
-  varnames_kin = KinTab_headers.Properties.VariableNames;
-  varnames_kin{1} = 'Name'; % doppelte Überschriftszeile funktioniert ...
-  varnames_kin{2} = 'Beinkette'; % ... nicht gut mit readtable
-  KinTab.Properties.VariableNames = varnames_kin;
-  % Fasse die EE-FG-Spalten zusammen
-  EEFG = NaN(size(KinTab,1), 6);
-  for i = 1:6
-    EEFG(:,i) = KinTab.(varnames_kin{end-6+i});
-  end
-  % Lösche die Überflüssigen Spalten und erstelle eine neue
-  KinTab = removevars(KinTab, varnames_kin(end-5:end));
-  KinTab = addvars(KinTab, EEFG);
-  KinTab.Properties.VariableNames(end) = {'EEFG'};
-
+  KinTab = readtable(kintabfile_csv, 'Delimiter', ';');
   % Entferne Zeilen, die ungültige Daten enthalten. Darf eigentlich gar
   % nicht vorkommen. Mögliche Ursache: Fehler bei Tabellenüberschriften
   I_valid = true(size(KinTab,1),1);
@@ -91,6 +84,16 @@ for iFG = 1:size(EEFG_update,1)
     end
   end
   KinTab = KinTab(I_valid,:);
+  % Formatiere die Spalte zu den Gelenk-Parallelitäten wieder als Zahlen
+  KinTab.Gelenkgruppen(strcmp(KinTab.Gelenkgruppen,'?')) = {NaN};
+  for i = 1:size(KinTab,1)
+    if isnan(KinTab.Gelenkgruppen{i}), continue; end
+    [~, match] = regexp(KinTab.Gelenkgruppen{i}, '(\d)', 'tokens', 'match');
+    if isempty(match)
+      warning('unbekannter Eintrag für Nr. %d (%s)', i, KinTab.Name{i});
+    end
+    KinTab.Gelenkgruppen{i} = str2double(match);
+  end
   
   % Füge zusätzliche Spalten hinzu, die nicht in der CSV-Datei der PKM-
   % Datenbank stehen (da die Informationen indirekt in der SerRobLib sind).
@@ -122,6 +125,17 @@ for iFG = 1:size(EEFG_update,1)
   end
   if write_new_kin
     save(kintabfile_mat, 'KinTab');
+  end
+  if complete_update
+    KinTab_EEcol = KinTab;
+    KinTab_EEcol = addvars(KinTab, repmat(EEFG_update(iFG,:), size(KinTab,1), 1));
+    KinTab_EEcol.Properties.VariableNames(end) = {'EEFG'};
+    % Füge Spalte mit EE-FG hinzu
+    if isempty(KinTab_All)
+      KinTab_All = KinTab_EEcol;
+    else
+      KinTab_All = [KinTab_All; KinTab_EEcol]; %#ok<AGROW> 
+    end
   end
   %% Menge der PKM reduzieren (G-/P-Nummer wieder entfernen)
   PName_Legs_all = {};
@@ -294,4 +308,20 @@ for iFG = 1:size(EEFG_update,1)
   if write_new_act
     save(acttabfile_mat, 'ActTab');
   end
+end
+%% Schreibe Gesamt-Tabelle neu
+kintaballfile_mat = fullfile(repopath, 'parrob_list_kin.mat');
+write_new_kin_all = false;
+if exist(kintaballfile_mat, 'file')
+  tmp = load(kintaballfile_mat);
+  KinTab_All_old = tmp.KinTab;
+  if ~isequaln(KinTab_All, KinTab_All_old)
+    write_new_kin_all = true; % Dateiinhalt wird sich ändern. Schreibe neu.
+  end
+else
+  write_new_kin_all = true; % Schreibe mat-Datei neu, sie existiert noch nicht
+end
+if write_new_kin_all
+  KinTab = KinTab_All;
+  save(kintaballfile_mat, 'KinTab');
 end

@@ -64,61 +64,25 @@ end
 % Es wird auf jeden Fall ein neuer Eintrag erstellt.
 new = true;
 %% Erstelle neuen Eintrag: Kinematik-Tabelle
-if ~found(1)
-  % Für diese Kinematik gibt es noch keinen Eintrag
+if ~found(1) % Für diese Kinematik gibt es noch keinen Eintrag
   kintabfile = fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list.csv']);
-  kintabtmp1file = fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list.tmp1.csv']);
-  kintabtmp2file = fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list.tmp2.csv']);
-  % Kopfzeilendatei erstellen (Temp-Datei zum Kopieren)
-  mkdirs(fileparts(kintabfile));
-  csvline_head1 = {'Name','Beinkette','EE-FG (Basis-KS)','','','','',''};
-  csvline_head2 = {'','','vx0','vy0','vz0','wx0','wy0','wz0'};
-  % String aus Cell-Array erzeugen
-  line_head1 = csvline_head1{1};
-  line_head2 = csvline_head2{1};
-  for i = 2:length(csvline_head1)
-    line_head1 = sprintf('%s;%s', line_head1, csvline_head1{i});
-    line_head2 = sprintf('%s;%s', line_head2, csvline_head2{i});
-  end
-  % Kopfzeile in csv-Tabelle schreiben
-  fid = fopen(kintabtmp1file, 'w');
-  fwrite(fid, [line_head1, newline]);
-  fwrite(fid, [line_head2, newline]);
-  fclose(fid);
   % Namen der Kinematik-Struktur generieren
   % Namensschema PxRRPRyyGuuPvv
   PName_Kin = sprintf('P%d%sG%dP%d',NLEG,LEG_Names{1}(3:end),Coupling(1),Coupling(2));
-  
   % Roboterstruktur an Tabelle anhängen
-  csvline_robkin = {PName_Kin, LEG_Names{1}};
-  % Spalten für EE-Freiheitsgrade
-  c=2;
-  for i = 1:6
-    c = c+1; 
-    if ~isempty(EEdof0)
-      csvline_robkin{c} = EEdof0(i);
-    else
-      csvline_robkin{c} = 0; % Setze FG auf Null. Wenn alle 0 sind, ist der unbekannte Status gekennzeichnet.
-    end
-  end
+  csvline_robkin = {PName_Kin, LEG_Names{1}, '?'}; % Zeile für Tabelle
   % Tabelle in Matlab öffnen
-  T = readtable(kintabfile, 'NumHeaderLines', 2, 'Delimiter', ';');
+  T = readtable(kintabfile, 'Delimiter', ';');
   % Zeile ans Ende der temporären Datentabelle einfügen
   newrow = cell2table(csvline_robkin);
   newrow.Properties.VariableNames = T.Properties.VariableNames;
   T = [T;newrow];
+  % Prüfen
+  assert(sum(strcmp(T.Name, PName_Kin))==1, sprintf('Kinematik %s nicht eindeutig in Tabelle', PName_Kin));
   % Daten alphabetisch sortieren
   T_sort = sortrows(T,1);
-  % Tabelle temporär schreiben
-  writetable(T_sort, kintabtmp2file, 'WriteVariableNames', 0, 'Delimiter', ';');
-  % Beide Dateien (Kopfzeilen und Daten) kombinieren
-  fid = fopen(kintabtmp1file, 'a');
-  fwrite(fid, fileread(kintabtmp2file));
-  fclose(fid);
-  % Kopieren der temporären Dateien und löschen
-  copyfile(kintabtmp1file, kintabfile);
-  delete(kintabtmp1file);
-  delete(kintabtmp2file);
+  % Tabelle neu schreiben
+  writetable(T_sort, kintabfile, 'Delimiter', ';');
 else
   % Roboter ist in Kinematik-Tabelle, aber noch nicht in
   % Aktuierungs-Tabelle
