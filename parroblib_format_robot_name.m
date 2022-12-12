@@ -37,10 +37,13 @@ if Modus == 1
     end
   end
   % Entferne nicht belegte Nummern
-  for j = 1:max(pgroups)
+  j = 1;
+  while j <= max(pgroups)
     if ~any(pgroups==j) % reduziere alle folgenden Nummern um 1
       pgroups(pgroups>j) = pgroups(pgroups>j) - 1;
+      continue; % Diese Nummer nochmal prüfen
     end
+    j = j + 1;
   end
   % Setze die Markierungen entsprechend der Gruppen
   for j = 1:NLegJ
