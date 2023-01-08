@@ -152,7 +152,7 @@ for ii = III'
         end
         try
           s = struct('n_max', 1, 'retry_limit', -1); % Keine Durchführung des Algorithmus
-          [~,~,~,Stats] = RP.invkin4(zeros(6,1), rand(RP.NJ,3), s);
+          [~,~,~,Stats,~] = RP.invkin4(zeros(6,1), rand(RP.NJ,3), s);
           if Stats.version < fileversions.pkm_invkin3 % hier wird die aktuelle Version eingetragen
             error('Version der Datei ist zu alt (%d). Aktuell: %d', ...
               Stats.version, fileversions.pkm_invkin3);
