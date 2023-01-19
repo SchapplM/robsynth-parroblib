@@ -8,12 +8,18 @@
 %   1=Latex, Akzente über Buchstaben
 %   2=Technische Gelenke der Beinkette ("UPS" statt "RRPRRR")
 %   3=Gelenkkette ohne Aktuierung ("RRPRRR")
+%   4=Technische Gelenke der Beinkette ("6-UPS", mit Unterstrich für Aktuierung)
+% MathMode:
+%   true: Kompatibel zum Latex-Formel-Modus
 
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2022-11
 % (C) Institut für Mechatronische Systeme, Leibniz Universität Hannover
 
-function FormatName = parroblib_format_robot_name(RobName, Modus)
+function FormatName = parroblib_format_robot_name(RobName, Modus, MathMode)
 FormatName = '';
+if nargin < 3
+  MathMode = false;
+end
 %% Daten für Kinematik laden
 repopath=fileparts(which('parroblib_path_init.m'));
 [NLEG, LEG_Names, Actuation, ~, ~, ~, EE_dof0, ...
@@ -70,18 +76,45 @@ if Modus == 1
     Chain_StructNameAct = [Chain_StructNameAct, newsymbol]; %#ok<AGROW>
   end
   FormatName = sprintf('%d-%s', NLEG, Chain_StructNameAct);
+  if MathMode % gibt sonst manchmal Probleme in Latex
+    FormatName = strrep(FormatName, '\`', '\grave ');
+    FormatName = strrep(FormatName, '\''', '\grave ');
+  end
 end
 %% Zeichenkette für technische Gelenke einer Beinkette
-if Modus == 2
+if Modus == 2 || Modus == 4
   EEstr = sprintf('%dT%dR', sum(EE_dof0(1:3)), sum(EE_dof0(4:6)));
   kintabmatfile = fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list_kin.mat']);
   tmp = load(kintabmatfile);
   KinTab = tmp.KinTab;
   SName_TechJoint = KinTab.Beinkette_Tech{strcmp(KinTab.Name, PName_Kin)};
-  FormatName = SName_TechJoint;
+  if Modus == 2
+    FormatName = SName_TechJoint;
+  elseif Modus == 4
+    FormatName = sprintf('%d-', NLEG);
+    j = 0; % Zähler für Gelenk-FG-Nummer
+    for k = 1:length(SName_TechJoint) % Zähler für technisches Gelenk
+      switch SName_TechJoint(k)
+        case 'R'
+          j = j + 1;
+        case 'P'
+          j = j + 1;
+        case 'U'
+          j = j + 2;
+        case 'S'
+          j = j + 3;
+        otherwise
+          error('Fall nicht definiert');
+      end
+      if any(Actuation{1} == j)
+        FormatName = [FormatName, '\underline']; %#ok<AGROW>
+      end
+      FormatName = [FormatName, sprintf('{%s}', SName_TechJoint(k))]; %#ok<AGROW> 
+    end
+  end
 end
 %% Zeichenkette für Gelenkkette des Beins ohne Aktuierung
-if Modus ==3
+if Modus == 3
   FormatName = Chain_Name(3:3+NLegJ-1);
 end
 %% Ende
