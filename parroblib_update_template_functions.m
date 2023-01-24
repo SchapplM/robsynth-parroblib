@@ -110,6 +110,13 @@ for ii = III'
       recompile = false;
       % Einzelne Fälle für die mex-Dateien durchgehen und jeweils
       % Dummy-Aufruf der Funktionen, um Syntax-Fehler aufzudecken.
+      if contains(filelist(kk).name, 'fkineEE_traj_mex')
+        try
+          RP.fkineEE2_traj(zeros(1,RP.NJ), zeros(1,RP.NJ), zeros(1,RP.NJ));
+        catch err
+          recompile = true;
+        end
+      end
       if contains(filelist(kk).name, 'invkin_mex') || ...
           contains(filelist(kk).name, 'invkin.m')
         if ~RP_mex_status % markiere die Datei als vorhanden (ohne Mex)
