@@ -145,7 +145,7 @@ for jj = 1:size(EEFG_Ges,1)
   end
 end % for jj (EEFG_Ges)
 if ~found
-  error('Roboter %s wurde nicht in der Tabelle %s gefunden.', PName_Kin, kintabfile);
+  error('Roboter %s wurde nicht in der Tabelle %s gefunden.', PName_Kin, kintabmatfile);
 end
 
 %% Ausgabe für Kinematik speichern
