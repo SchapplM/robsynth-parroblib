@@ -19,6 +19,7 @@
 %   7=Unbehandelter Fall (Fehler)
 %   8=Kugelgelenk-Isomorphismus (Gestell- oder Plattform-Koppelgelenk)
 %   9=Gelöscht.
+%   10=Beinkette ist singulär, keine IK-Lösung
 % Rangerfolg: 
 %   0: Rangverlust in Jacobi-Matrix. PKM verliert FG und funktioniert nicht.
 %   1: Kein Rangverlust in Jacobi-Matrix. Gültige PKM.
