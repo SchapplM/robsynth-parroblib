@@ -5,6 +5,10 @@
 %   Array mit EE-FG, für die neu generiert werden soll. Zeilenweise FG im
 %   Format [1 1 0 0 0 1]
 % 
+% Ausgabe:
+% KinTab_All (optional)
+%   Tabelle mit Kinematik-Eigenschaften aller PKM in der Datenbank
+% 
 % Schreibt Dateien:
 % sym_xTyR_list_kin.mat (x,y aus EEFG aus Eingabe). Enthält Variable
 % KinTab. Entspricht symxleg_list.csv. Matlab-Tabelle mit Feldern:
@@ -43,7 +47,7 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2020-11
 % (C) Institut für Mechatronische Systeme, Leibniz Universität Hannover
 
-function parroblib_gen_bitarrays(EEFG_update)
+function KinTab_All = parroblib_gen_bitarrays(EEFG_update)
 complete_update = false; % Merker, ob Gesamt-Datei erstellt werden soll
 if nargin == 0
   EEFG_update = logical(... % Aktualisiere alle Roboter
@@ -312,7 +316,7 @@ end
 %% Schreibe Gesamt-Tabelle neu
 kintaballfile_mat = fullfile(repopath, 'parrob_list_kin.mat');
 write_new_kin_all = false;
-if exist(kintaballfile_mat, 'file')
+if exist(kintaballfile_mat, 'file') && ~isempty(KinTab_All)
   tmp = load(kintaballfile_mat);
   KinTab_All_old = tmp.KinTab;
   if ~isequaln(KinTab_All, KinTab_All_old)
