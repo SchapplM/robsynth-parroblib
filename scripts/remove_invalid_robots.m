@@ -28,7 +28,7 @@ end
 
 %% Suche auch doppelte Aktuierungs-Nummern kann fälschlicherweise auftreten
 PKM_List_invalid = {};
-for j = 2%1:size(EEFG_Ges,1)
+for j = 1:size(EEFG_Ges,1)
   fprintf('Prüfe PKM mit FG %dT%dR\n', sum(EEFG_Ges(j,1:3)), sum(EEFG_Ges(j,4:6)));
   EEstr = sprintf('%dT%dR', sum(EEFG_Ges(j,1:3)), sum(EEFG_Ges(j,4:6)));
   acttabfile=fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list_act.mat']);
