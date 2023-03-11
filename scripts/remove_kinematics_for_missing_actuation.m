@@ -7,7 +7,6 @@
 clc
 clear
 
-
 repopath=fileparts(which('parroblib_path_init.m'));
 
 EEFG_Ges = logical(...
@@ -22,7 +21,7 @@ for j = 1:size(EEFG_Ges,1)
         i, PNames_Kin{i});
       success = parroblib_remove_robot(PNames_Kin{i});
       if ~success
-        error('Fehler beim Löschen von %s', PNames_Kin{j});
+        error('Fehler beim Löschen von %s', PNames_Kin{i});
       end
     end
   end
