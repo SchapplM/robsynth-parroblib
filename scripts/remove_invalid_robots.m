@@ -75,11 +75,17 @@ end
 return
 fprintf('Lösche %d PKM:\n', length(PKM_List_invalid));
 disp(PKM_List_invalid);
-for i = 1:length(PKM_List_invalid)
-  fprintf('Lösche %d/%d: %s\n', i, length(PKM_List_invalid), PKM_List_invalid{i});
-  success = parroblib_remove_robot(PKM_List_invalid{i});
-  if ~success
-    error('Fehler beim Löschen von %s', PKM_List_invalid{i});
+for NLEG = 1:6 % gehe die Einträge gemäß der Anzahl Beinketten durch
+  % Finde alle Einträge zu dieser Anzahl Beinketten
+  II = find(~cellfun(@isempty, regexp(PKM_List_invalid, sprintf('(^P%d)', NLEG), 'match')));
+  for i = 1:length(II)
+    fprintf('Lösche %d/%d: %s\n', i, length(II), PKM_List_invalid{II(i)});
+    success = parroblib_remove_robot(PKM_List_invalid{II(i)}, false, ...
+      i==length(II)); % nur beim letzten CSV aktualisieren
+    if ~success
+      continue
+      error('Fehler beim Löschen von %s', PKM_List_invalid{i});
+    end
   end
 end
 parroblib_gen_bitarrays();

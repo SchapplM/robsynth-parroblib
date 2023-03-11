@@ -14,6 +14,9 @@
 % nofiledelete (optional)
 %   true: Keine Dateien (mit generiertem Code) löschen. Nur umbenennen.
 %   false: Dateien werden gelöscht (Standard)
+% writecsv (optional)
+%   true: Die Änderung wird auch in der Kinematik-CSV-Datei übernommen
+%   false: Änderung wird dort nicht übernommen (geht schneller, für Batch-Betrieb)
 % 
 % Ausgabe:
 % success
@@ -24,10 +27,13 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2019-02
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
-function success = parroblib_remove_robot(PName_Input, nofiledelete)
+function success = parroblib_remove_robot(PName_Input, nofiledelete, writecsv)
 
 if nargin < 2
   nofiledelete = false;
+end
+if nargin < 3
+  writecsv = true;
 end
 if ~isa(PName_Input, 'char')
   error('Der Datentyp von PName_Input muss char sein!');
@@ -73,54 +79,31 @@ EEstr = ''; % Platzhalter, wird im folgenden belegt.
 for jj = 1:size(EEFG_Ges,1)
   if sum(EEFG_Ges(jj,:)) ~= NLEG, continue; end % PKM-FG passen nicht zu Beinketten
   EEstr = sprintf('%dT%dR', sum(EEFG_Ges(jj,1:3)), sum(EEFG_Ges(jj,4:6)));
-  kintabfile=fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list_kin.mat']);
-  if ~exist(kintabfile, 'file')
-    error('Datei %s existiert nicht. parroblib_gen_bitarrays ausführen!', kintabfile);
+  kintabfile_mat=fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list_kin.mat']);
+  if ~exist(kintabfile_mat, 'file')
+    error('Datei %s existiert nicht. parroblib_gen_bitarrays ausführen!', kintabfile_mat);
   end
-  tmp = load(kintabfile);
-  KinTab = tmp.KinTab;
-  if any(strcmp(KinTab.Name, PName_Kin))
+  tmp = load(kintabfile_mat);
+  KinTab_alt = tmp.KinTab;
+  if any(strcmp(KinTab_alt.Name, PName_Kin))
     break; % Der Roboter ist in der aktuellen Tabelle. Variable EEstr wird übernommen
   end
 end
-  
 
+% Roboter aus Tabelle löschen
 if Name_Typ == 1
-  kintabfile = fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list.csv']);
-  kintabfile_copy = [kintabfile, '.copy']; % Kopie der Tabelle zur Bearbeitung
-
-  fid = fopen(kintabfile, 'r');
-  if fid == -1
-    warning('Tabelle %s konnte nicht geöffnet werden', kintabfile);
+  KinTab = KinTab_alt(~strcmp(KinTab_alt.Name,PName_Input), :);
+  if size(KinTab,1) ~= size(KinTab_alt,1)-1
     success = false;
+    warning('Zu löschendes Modell %s nicht in %s gefunden', PName_Input, kintabfile_mat);
     return
   end
-  fidc = fopen(kintabfile_copy, 'w');
-  tline = fgetl(fid);
-  found = false;
-  while ischar(tline) && ~isempty(tline)
-    % Spaltenweise als Cell-Array
-    csvline = strsplit(tline, ';', 'CollapseDelimiters', false);
-    if strcmp(csvline{1}, PName_Input)
-      % Zu löschenden Roboter gefunden. Diese Zeile nicht in Dateikopie schreiben
-      found = true;
-    else
-      % Zeile in die Dateikopie schreiben
-      fwrite(fidc, [tline, newline()]);
-    end
-    tline = fgetl(fid); % nächste Zeile
+  % Modifizierte Tabelle wieder speichern (CSV und mat)
+  if writecsv % dauert recht lange. Im Batch-Betrieb kann das am Ende einmal gemacht werden.
+    kintabfile_csv = strrep(kintabfile_mat, '.mat', '.csv');
+    writetable(KinTab, kintabfile_csv, 'Delimiter', ';');
   end
-  fclose(fid);
-  fclose(fidc);
-  if ~found
-    success = false;
-    warning('Zu löschendes Modell %s nicht in %s gefunden', PName_Input, kintabfile);
-    return
-  end
-  % Modifizierte Tabelle zurückkopieren
-  copyfile(kintabfile_copy, kintabfile);
-  % Kopie-Tabelle löschen
-  delete(kintabfile_copy);
+  save(kintabfile_mat, 'KinTab');
 end
 %% Tabelle für Aktuierung öffnen und Zeile entfernen
 acttabfile = fullfile(repopath, ['sym_', EEstr], PName_Legs, 'actuation.csv');
@@ -220,7 +203,7 @@ if Name_Typ == 1
   PName_Dir = fullfile(repopath, ['sym_', EEstr], PName_Legs);
   PName_DirContent = dir(fullfile(PName_Dir, '*'));
   PName_DirContent=PName_DirContent(~ismember({PName_DirContent.name},{'.','..'}));
-  if isempty(PName_DirContent)
+  if isempty(PName_DirContent) && isfolder(fullfile(PName_Dir))
     rmpath_genpath(fullfile(PName_Dir));
     rmdir(fullfile(PName_Dir));
   end
