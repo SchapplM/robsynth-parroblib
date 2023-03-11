@@ -14,9 +14,6 @@
 % nofiledelete (optional)
 %   true: Keine Dateien (mit generiertem Code) löschen. Nur umbenennen.
 %   false: Dateien werden gelöscht (Standard)
-% writecsv (optional)
-%   true: Die Änderung wird auch in der Kinematik-CSV-Datei übernommen
-%   false: Änderung wird dort nicht übernommen (geht schneller, für Batch-Betrieb)
 % 
 % Ausgabe:
 % success
@@ -27,13 +24,10 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2019-02
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
-function success = parroblib_remove_robot(PName_Input, nofiledelete, writecsv)
+function success = parroblib_remove_robot(PName_Input, nofiledelete)
 
 if nargin < 2
   nofiledelete = false;
-end
-if nargin < 3
-  writecsv = true;
 end
 if ~isa(PName_Input, 'char')
   error('Der Datentyp von PName_Input muss char sein!');
@@ -76,6 +70,7 @@ EEFG_Ges = logical(...
   [1 1 0 0 0 0; 1 1 0 0 0 1; 1 1 1 0 0 0;  1 1 1 0 0 1; ...
    1 1 1 1 1 0; 1 1 1 1 1 1]);
 EEstr = ''; % Platzhalter, wird im folgenden belegt.
+% Suche in der durch gen_bitarrays aufbereiteten Tabelle
 for jj = 1:size(EEFG_Ges,1)
   if sum(EEFG_Ges(jj,:)) ~= NLEG, continue; end % PKM-FG passen nicht zu Beinketten
   EEstr = sprintf('%dT%dR', sum(EEFG_Ges(jj,1:3)), sum(EEFG_Ges(jj,4:6)));
@@ -89,20 +84,20 @@ for jj = 1:size(EEFG_Ges,1)
     break; % Der Roboter ist in der aktuellen Tabelle. Variable EEstr wird übernommen
   end
 end
-
-% Roboter aus Tabelle löschen
+% Roboter aus eigentlicher Kinematik-Tabelle löschen
 if Name_Typ == 1
-  KinTab = KinTab_alt(~strcmp(KinTab_alt.Name,PName_Input), :);
-  if size(KinTab,1) ~= size(KinTab_alt,1)-1
+  kintabfile2_csv=fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list.csv']);
+  KinTab2 = readtable(kintabfile2_csv, 'Delimiter', ';');
+  KinTab2_neu = KinTab2(~strcmp(KinTab2.Name,PName_Input), :);
+  if size(KinTab2_neu,1) ~= size(KinTab2,1)-1
     success = false;
-    warning('Zu löschendes Modell %s nicht in %s gefunden', PName_Input, kintabfile_mat);
+    warning('Zu löschendes Modell %s nicht in %s gefunden', PName_Input, kintabfile2_csv);
     return
   end
   % Modifizierte Tabelle wieder speichern (CSV und mat)
-  if writecsv % dauert recht lange. Im Batch-Betrieb kann das am Ende einmal gemacht werden.
-    kintabfile_csv = strrep(kintabfile_mat, '.mat', '.csv');
-    writetable(KinTab, kintabfile_csv, 'Delimiter', ';');
-  end
+  writetable(KinTab2_neu, kintabfile2_csv, 'Delimiter', ';');
+  % Kinematik-Tabelle im mat-Format (aus gen_bitarrays) auch modifiziert speichern
+  KinTab = KinTab_alt(~strcmp(KinTab_alt.Name,PName_Input), :);
   save(kintabfile_mat, 'KinTab');
 end
 %% Tabelle für Aktuierung öffnen und Zeile entfernen
