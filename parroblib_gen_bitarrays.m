@@ -263,6 +263,10 @@ for iFG = 1:size(EEFG_update,1)
     PName_k = ActTab.Name{k};
     % Finde die aktuierte PKM in der Kinematik-Tabelle
     I_k = find(strcmp(KinTab.Name, PName_k(1:end-2)));
+    if isempty(I_k)
+      warning('Kein Eintrag in Kinematik-Tabelle für %s. Überspringe', PName_k(1:end-2));
+      continue
+    end
     assert(length(I_k)==1, sprintf('Kein eindeutiger Eintrag für "%s" in Kinematik-DB', PName_k(1:end-2)));
     SName_TechJoint = KinTab.Beinkette_Tech{I_k};
     % Einzelne technische Gelenke durchgehen und zählen
