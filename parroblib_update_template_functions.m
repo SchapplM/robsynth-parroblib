@@ -47,7 +47,13 @@ for i = 1:length(filelist)
   [tokens,~] = regexp(fileread(fullfile(kinematics_dir, filelist{i})), ...
     '''version'', (\d+)', 'tokens', 'match');
   key = filelist{i}(1:end-11); % Entferne Endung .m.template
-  fileversions.(key) = str2double(tokens{1}{1});
+  if isempty(tokens) % Tritt evtl. bei Dateisystemfehler auf
+    warning('Versionsnummer nicht in Datei %s gefunden. Unerwartet.');
+    fileversions.(key) = 0; % Dadurch wird eine Neugenerierung erzwungen.
+  else
+    fileversions.(key) = str2double(tokens{1}{1});
+  end
+  
 end
 
 %% Gehe alle Dateien durch und prüfe die Version
