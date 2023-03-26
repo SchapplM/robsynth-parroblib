@@ -70,57 +70,35 @@ EEFG_Ges = logical(...
   [1 1 0 0 0 0; 1 1 0 0 0 1; 1 1 1 0 0 0;  1 1 1 0 0 1; ...
    1 1 1 1 1 0; 1 1 1 1 1 1]);
 EEstr = ''; % Platzhalter, wird im folgenden belegt.
+% Suche in der durch gen_bitarrays aufbereiteten Tabelle
 for jj = 1:size(EEFG_Ges,1)
   if sum(EEFG_Ges(jj,:)) ~= NLEG, continue; end % PKM-FG passen nicht zu Beinketten
   EEstr = sprintf('%dT%dR', sum(EEFG_Ges(jj,1:3)), sum(EEFG_Ges(jj,4:6)));
-  kintabfile=fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list_kin.mat']);
-  if ~exist(kintabfile, 'file')
-    error('Datei %s existiert nicht. parroblib_gen_bitarrays ausführen!', kintabfile);
+  kintabfile_mat=fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list_kin.mat']);
+  if ~exist(kintabfile_mat, 'file')
+    error('Datei %s existiert nicht. parroblib_gen_bitarrays ausführen!', kintabfile_mat);
   end
-  tmp = load(kintabfile);
-  KinTab = tmp.KinTab;
-  if any(strcmp(KinTab.Name, PName_Kin))
+  tmp = load(kintabfile_mat);
+  KinTab_alt = tmp.KinTab;
+  if any(strcmp(KinTab_alt.Name, PName_Kin))
     break; % Der Roboter ist in der aktuellen Tabelle. Variable EEstr wird übernommen
   end
 end
-  
-
+% Roboter aus eigentlicher Kinematik-Tabelle löschen
 if Name_Typ == 1
-  kintabfile = fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list.csv']);
-  kintabfile_copy = [kintabfile, '.copy']; % Kopie der Tabelle zur Bearbeitung
-
-  fid = fopen(kintabfile, 'r');
-  if fid == -1
-    warning('Tabelle %s konnte nicht geöffnet werden', kintabfile);
+  kintabfile2_csv=fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list.csv']);
+  KinTab2 = readtable(kintabfile2_csv, 'Delimiter', ';');
+  KinTab2_neu = KinTab2(~strcmp(KinTab2.Name,PName_Input), :);
+  if size(KinTab2_neu,1) ~= size(KinTab2,1)-1
     success = false;
+    warning('Zu löschendes Modell %s nicht in %s gefunden', PName_Input, kintabfile2_csv);
     return
   end
-  fidc = fopen(kintabfile_copy, 'w');
-  tline = fgetl(fid);
-  found = false;
-  while ischar(tline) && ~isempty(tline)
-    % Spaltenweise als Cell-Array
-    csvline = strsplit(tline, ';', 'CollapseDelimiters', false);
-    if strcmp(csvline{1}, PName_Input)
-      % Zu löschenden Roboter gefunden. Diese Zeile nicht in Dateikopie schreiben
-      found = true;
-    else
-      % Zeile in die Dateikopie schreiben
-      fwrite(fidc, [tline, newline()]);
-    end
-    tline = fgetl(fid); % nächste Zeile
-  end
-  fclose(fid);
-  fclose(fidc);
-  if ~found
-    success = false;
-    warning('Zu löschendes Modell %s nicht in %s gefunden', PName_Input, kintabfile);
-    return
-  end
-  % Modifizierte Tabelle zurückkopieren
-  copyfile(kintabfile_copy, kintabfile);
-  % Kopie-Tabelle löschen
-  delete(kintabfile_copy);
+  % Modifizierte Tabelle wieder speichern (CSV und mat)
+  writetable(KinTab2_neu, kintabfile2_csv, 'Delimiter', ';');
+  % Kinematik-Tabelle im mat-Format (aus gen_bitarrays) auch modifiziert speichern
+  KinTab = KinTab_alt(~strcmp(KinTab_alt.Name,PName_Input), :);
+  save(kintabfile_mat, 'KinTab');
 end
 %% Tabelle für Aktuierung öffnen und Zeile entfernen
 acttabfile = fullfile(repopath, ['sym_', EEstr], PName_Legs, 'actuation.csv');
@@ -220,7 +198,7 @@ if Name_Typ == 1
   PName_Dir = fullfile(repopath, ['sym_', EEstr], PName_Legs);
   PName_DirContent = dir(fullfile(PName_Dir, '*'));
   PName_DirContent=PName_DirContent(~ismember({PName_DirContent.name},{'.','..'}));
-  if isempty(PName_DirContent)
+  if isempty(PName_DirContent) && isfolder(fullfile(PName_Dir))
     rmpath_genpath(fullfile(PName_Dir));
     rmdir(fullfile(PName_Dir));
   end
