@@ -52,7 +52,7 @@ for i_FG = 1:size(EEFG_Ges,1)
     end
     fprintf('Untersuche PKM %s\n', PName);
     %% Roboter Initialisieren
-    R = parroblib_create_robot_class(PName, 1, 0.3);
+    R = parroblib_create_robot_class(PName, '', 1, 0.3);
     % Initialisierung der Funktionen: Kompilierte Funktionen nehmen
     files_missing = R.fill_fcn_handles(false, false);
     % Prüfe, ob die Dynamik-Implementierung in symbolischer Form vorliegt

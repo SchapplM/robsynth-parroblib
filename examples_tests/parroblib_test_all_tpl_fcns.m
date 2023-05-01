@@ -63,7 +63,7 @@ for i_FG = 1:size(EEFG_Ges,1)
     parroblib_create_template_functions({PNames_Kin{ii}},~tpl_fcn_neu,recompile_mex); %#ok<CCAT1>
 
     %% Roboter Initialisieren
-    R = parroblib_create_robot_class(PName, 1, 0.3);
+    R = parroblib_create_robot_class(PName, '', 1, 0.3);
     % Initialisierung der Funktionen: Kompilierte Funktionen nehmen
     R.fill_fcn_handles(false, false); % true, true
 

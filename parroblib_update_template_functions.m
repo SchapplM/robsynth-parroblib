@@ -91,7 +91,7 @@ for ii = III'
       find(III==ii), length(III), PName_Kin, length(mexfilelist), length(mfilelist), tpl_dir)
   end
   % Initialisiere Matlab-Klasse und setze auf Nutzung von M-Funktionen
-  RP = parroblib_create_robot_class(PName, 1, 0.3);
+  RP = parroblib_create_robot_class(PName, '', 1, 0.3);
   % Zufallswerte für Parameter setzen. Sonst kommen NaN-Fehler und
   % überdecken die Syntax-Fehler
   for i = 1:RP.NLEG % Test-Werte sind nicht symmetrisch. Ist aber egal.

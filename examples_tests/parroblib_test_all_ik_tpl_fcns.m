@@ -82,7 +82,7 @@ for allow_rankloss = [false, true]
     [~, LEG_Names, ~, ~, ~, ~, ~, PName_Kin, PName_Legs, AdditionalInfo_Akt] = parroblib_load_robot(PName);
     paramfile_robot = fullfile(tmpdir_params, sprintf('%s_params.mat', PName));
     fprintf('Untersuche PKM %s\n', PName);
-    RP = parroblib_create_robot_class(PName, 1, 0.3);
+    RP = parroblib_create_robot_class(PName, '', 1, 0.3);
     % Erzeuge IK-Funktionen der Beinkette neu (automatische Auswahl des
     % Varianten-Modells, falls notwendig)
     serroblib_create_template_functions({LEG_Names{1}},  ~tpl_fcn_neu,false); %#ok<CCAT1>

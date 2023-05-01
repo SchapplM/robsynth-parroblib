@@ -53,7 +53,7 @@ Alle Informationen der Roboterbibliothek liegen in csv-Dateien (Trennzeichen: Se
 
 #### Liste der Robotermodelle für eine Gelenkfolge
 
-Die Datei `symxleg/symxleg_list.csv` enthält eine Liste aller symmetrischer Robotermodelle mit x Beinen.
+Die Datei `sym_aTbR/sym_aTbR_list.csv` enthält eine Liste aller symmetrischer Robotermodelle mit a translatorischen und b rotatorischen Plattform-FG.
 Der Kinematik-Name des Roboters ergibt sich aus
 
 * P: Kennzeichnung für parallele Roboter,
@@ -71,10 +71,15 @@ Der Teil RRPRRyyy(Vzzz) des Namens entspricht den Systemen aus der Bibliothek se
 
 #### Liste der möglichen Aktuierungen für ein Robotermodell
 
-Die Datei `symxleg/PxRRRRRRyyyyy/actuation.csv` enthält mögliche Aktuierungen für die Gelenke der Grundstruktur des Robotermodells. Jede kinematische Struktur kann unterschiedliche Aktuierungen haben, die dann einen anderen Roboter ergibt.
+Die Datei `sym_aTbR/PxRRRRRRyyyyy/actuation.csv` enthält mögliche Aktuierungen für die Gelenke der Grundstruktur des Robotermodells. Jede kinematische Struktur kann unterschiedliche Aktuierungen haben, die dann einen anderen Roboter ergibt.
 In der Tabelle sind die Namen der aktuierten Roboter abgelegt, die den Namen der Kinematik mit dem Zusatz A1, A2, ... tragen.
+
+#### Liste der Roboterparameter für ein Robotermodell (models.csv)
+
+Die Datei `sym_aTbR/PxRRRRRRyyyyy/models.csv` enthält mögliche Roboterparameter für ein parametriertes Robotermodell. 
+Die Spaltenüberschriften entsprechen den einzelnen Parametern aus der Struktur- und Maßsynthese.
 
 ### Matlab-Code
 
-Matlab-Funktionen für jeden Roboter liegen im Ordner `symxleg/PxRRRRRRyyyyy/hd_GuuPvvAzz`.
+Matlab-Funktionen für jeden Roboter liegen im Ordner `sym_aTbR/PxRRRRRRyyyyy/hd_GuuPvvAzz`.
 Wobei die Dynamik-Funktionen auf die Plattform bezogen im Ordner A0 liegen, in dem die Aktuierung der Gelenk noch keine Rolle spielt. In den Ordnern mit Kennung der Aktuierung (A1, A2, ...) liegen Matlab-Funktionen, die sich auf diese eine mögliche Aktuierung beziehen.

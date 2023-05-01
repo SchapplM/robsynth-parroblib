@@ -3,6 +3,8 @@
 % Eingabe:
 % Name
 %   Name des PKM-Robotermodells nach dem Schema "PxRRRyyGuuPvvAzz"
+% RobName
+%   Name der Roboterparameter entsprechend der Tabelle models.csv
 % p_Base
 %   Parameter der Gestell-Koppelpunkte. Z.B. Radius des Kreises.
 %   Siehe ParRob/align_base_coupling
@@ -30,16 +32,18 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2018-12
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
-function RP = parroblib_create_robot_class(Name, p_Base, p_platform, phi_RS_EE)
+function RP = parroblib_create_robot_class(Name, RobName, p_Base, p_platform, phi_RS_EE)
 
-if nargin < 4
+if nargin < 5
   phi_RS_EE = [];
 end
 assert(isa(Name,'char'), 'Eingabe Name muss Name als char sein');
+assert(isa(RobName,'char') || isempty(RobName), ...
+  'Eingabe Roboter-Modellname muss Name als char sein');
 
 %% Daten laden
 
-[NLEG,LEG_Names,Actuation,Coupling,~,~, EE_dof0]=parroblib_load_robot(Name);
+[NLEG,LEG_Names,Actuation,Coupling,~,~,EE_dof0,~,PName_Legs]=parroblib_load_robot(Name);
 
 %% Instanz der seriellen Roboterklasse erstellen
 % TODO: Nicht-symmetrische PKM fehlen noch
@@ -74,8 +78,44 @@ SName_TechJoint = fliplr(regexprep(num2str(l.AdditionalInfo(I_robot,7)), ...
     {'1','2','3','4','5'}, {'R','P','C','U','S'}));
 RS.set_techjoints(SName_TechJoint);
 
+%% Parameter-Zahlenwerte setzen (falls Robotermodell geladen wird)
+if ~isempty(RobName)
+  pardat = fullfile(fileparts(which('parroblib_path_init.m')), ...
+    sprintf('sym_%dT%dR', sum(EE_dof0(1:3)), sum(EE_dof0(4:6))), PName_Legs, 'models.csv');
+  assert(exist(pardat, 'file'), sprintf('Parameter-Datei existiert nicht: %s', pardat));
+  ParTable = readtable(pardat, 'Delimiter', ';');
+  unitmult_angle = pi/180; % Angaben in Tabelle in Grad. Umrechnung in Radiant
+  unitmult_dist = 1/1000; % Angaben in Millimeter
+  % Überschreibe die PKM-Parameter aus der Eingabe
+  I = strcmp(ParTable.Name, RobName);
+  assert(sum(I)==1, sprintf(['Name %s wurde nicht eindeutig in Tabelle ' ...
+    'gefunden: %s'], RobName, pardat));
+  p_Base_tmp = [unitmult_dist*ParTable.base_radius(I); ...
+                unitmult_dist*ParTable.base_morph_pairdist(I)];
+  p_Base = p_Base_tmp(~isnan(p_Base_tmp));
+  p_platform_tmp = [unitmult_dist*ParTable.platform_radius(I); ...
+                    unitmult_dist*ParTable.platform_morph_pairdist(I)];
+  p_platform = p_platform_tmp(~isnan(p_platform_tmp));
+  % Setze die DH-Parameter für die Beinkette
+  pkin_neu = RS.pkin;
+  for i = 1:length(RS.pkin_names)
+    VarColName = sprintf('pkin_%s', RS.pkin_names{i});
+    if ~any(strcmp(ParTable.Properties.VariableNames, VarColName))
+      TabCol_i = 0; % Parameter ist in Tabelle nicht definiert. Daher wohl Null.
+    else
+      if any(contains(VarColName, {'_alpha', '_theta'}))
+        unitmult_i = unitmult_angle;
+      else
+        unitmult_i = unitmult_dist;
+      end
+      TabCol_i = unitmult_i * ParTable.(sprintf('pkin_%s', RS.pkin_names{i}));
+    end
+    pkin_neu(i) = TabCol_i(I);
+  end
+  % Eintragen der neuen Kinematikparameter
+  RS.update_mdh(pkin_neu);
+end
 %% Instanz der parallelen Roboterklasse erstellen
-
 parroblib_addtopath({Name})
 
 RP = ParRob(Name);
