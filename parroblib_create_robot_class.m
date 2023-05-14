@@ -114,6 +114,19 @@ if ~isempty(RobName)
   end
   % Eintragen der neuen Kinematikparameter
   RS.update_mdh(pkin_neu);
+  % Setze die Gelenkwinkelgrenzen
+  qlim = RS.qlim;
+  for i = 1:RS.NQJ
+    if any(RS.MDH.sigma(i) == 0)
+      unitmult_i = unitmult_angle;
+    else
+      unitmult_i = unitmult_dist;
+    end
+    qmin_tab = ParTable.(sprintf('q%dmin',i));
+    qmax_tab = ParTable.(sprintf('q%dmax',i));
+    qlim(i,:) = unitmult_i * [qmin_tab(I), qmax_tab(I)];
+  end
+  RS.update_qlim(qlim);
 end
 %% Instanz der parallelen Roboterklasse erstellen
 parroblib_addtopath({Name})

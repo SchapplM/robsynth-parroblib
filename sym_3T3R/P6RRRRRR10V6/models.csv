@@ -1,2 +1,2 @@
-Name;pkin_a2;pkin_alpha2;pkin_d2;pkin_a4;pkin_alpha4;pkin_d4;base_radius;base_morph_pairdist;platform_radius;platform_morph_pairdist
-P6RRRRRR10V6G6P4A1_TUBS_Hexa2;240;90;0;564;90;0;360;103.2;51.96;103.2
+Name;pkin_a2;pkin_alpha2;pkin_d2;pkin_a4;pkin_alpha4;pkin_d4;base_radius;base_morph_pairdist;platform_radius;platform_morph_pairdist;q1min;q1max;q2min;q2max;q3min;q3max;q4min;q4max;q5min;q5max;q6min;q6max
+P6RRRRRR10V6G6P4A1_TUBS_Hexa2;240;90;0;564;90;0;360;103.2;51.96;103.2;0;150;-360;360;-360;360;-360;360;-360;360;-360;360
