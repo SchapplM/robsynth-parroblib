@@ -29,7 +29,8 @@ NLegJ = str2double(Chain_Name(2));
 %% Zeichenkette für Parallelität generieren. Siehe Kong/Gosselin 2007, S.10
 if Modus == 1
   if isnan(JointParallelity)
-    warning('Keine Parallelität der Gelenke in Datenbank angegeben. Namensbestimmung unmöglich.')
+    warning(sprintf(['%s: Keine Parallelität der Gelenke in Datenbank ', ...
+      'angegeben. Namensbestimmung unmöglich.']), RobName)
     return
   end
   % Variablen mit Latex-Code für Roboter-Namen
