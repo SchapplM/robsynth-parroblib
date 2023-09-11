@@ -101,7 +101,7 @@ function_list_copy_robotics = {...
   {'kinematics', 'constr4gradD_rr.m'},...
   {'kinematics', 'constr4gradD_x.m'}};
 
-mkdirs(fullfile(repopath, sprintf('template_functions')))
+mkdirs(fullfile(repopath, sprintf('template_functions')));
 rtp = fileparts(which('robotics_toolbox_path_init.m'));
 if isempty(rtp)
   warning('Die Robotik-Toolbox muss im Pfad sein (siehe README.MD)');
