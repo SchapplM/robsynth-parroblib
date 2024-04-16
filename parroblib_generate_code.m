@@ -61,7 +61,13 @@ for i = 1:length(Names)
   end
   
   % Pfad zur Maple-Dynamik-Toolbox (muss im Repo abgelegt werden; s.o.)
-  mrp = maplerepo_path();
+  mrp = fileparts(which('hybrdyn_path_init.m'));
+  if ispc()
+    [~, mrp_wsl] = system(sprintf('wsl wslpath -u "%s"', mrp));
+      mrp_wsl = strtrim(mrp_wsl);
+  else
+    mrp_wsl = mrp;
+  end
   
   % Maple-Toolbox-Eingabe laden (wurde an anderer Stelle erzeugt)
   % (durch parroblib_generate_mapleinput.m)
@@ -153,23 +159,32 @@ for i = 1:length(Names)
     mkdirs(fileparts(mapleinputfile_A0));
     copyfile(mapleinputfile, mapleinputfile_A0);
     % Allgemeiner Fall heißt "A0", ursprünglich eingegebener Fall heißt "A1"
-    system(sprintf('sed -i "s/%s/%s/g" %s', n, n_A0, mapleinputfile_A0 ));
+    if ispc() % Führe den Befehl in WSL aus (mit angepasstem Pfad)
+      [~, mapleinputfile_A0_wsl] = system(sprintf('wsl wslpath -u "%s"', mapleinputfile_A0));
+      mapleinputfile_A0_wsl = strtrim(mapleinputfile_A0_wsl);
+      WSL_prefix = 'wsl ';
+    else % Normale Unix-Shell
+      WSL_prefix = '';
+      mapleinputfile_A0_wsl = mapleinputfile_A0;
+    end
+    system_wsl(sprintf('sed -i "s/%s/%s/g" "%s"', n, n_A0, mapleinputfile_A0_wsl));
+
     % aktiviere den Export der Dynamik-Funktionen
-    system(sprintf('sed -i "s/codeexport_invdyn := false:/codeexport_invdyn := true:/g" %s', ...
-      mapleinputfile_A0 ));
+    system_wsl(sprintf('sed -i "s/codeexport_invdyn := false:/codeexport_invdyn := true:/g" %s', ...
+      mapleinputfile_A0_wsl ));
     
     % Reduziere den Optimierungsgrad bei der Code-Generierung, da es sonst
     % für 6FG-Systeme zu lange dauert
     if NLEG == 6
-      system(sprintf('sed -i "s/codegen_opt := 2:/codegen_opt := 1:/g" %s', ...
-        mapleinputfile_A0 ));
+      system_wsl(sprintf('sed -i "s/codegen_opt := 2:/codegen_opt := 1:/g" %s', ...
+        mapleinputfile_A0_wsl ));
     end
 
     % Definition kopieren und Code-Erstellung starten. Alle Tests für PKM
     % dort durchführen
     copyfile(mapleinputfile_A0, fullfile(mrp, 'robot_codegen_definitions', 'robot_env_par') );
     fprintf('Starte Dynamik-Code-Generierung %d/%d für %s\n', i, length(Names), n_A0);
-    system( sprintf('cd %s && ./robot_codegen_start.sh --fixb_only --parrob --not_gen_serial', mrp) );
+    system_wsl( sprintf('cd %s && ./robot_codegen_start.sh --fixb_only --parrob --not_gen_serial', mrp_wsl) );
     
     % generierten Code zurückkopieren (alle .m-Dateien)
     for f = dir(fullfile(outputdir_tb_par_A0, '*.m'))'
@@ -193,7 +208,8 @@ for i = 1:length(Names)
   % Beinketten; das wurde oben schon gemacht). Daher auch Tests
   % deaktivieren (die Dynamik wird für diesen Roboter nicht generiert)
   fprintf('Starte Kinematik Code-Generierung %d/%d für %s\n', i, length(Names), n);
-  system( sprintf('cd %s && ./robot_codegen_start.sh --fixb_only --parrob --not_gen_serial --notest --kinematics_only', mrp) );
+  system_wsl( sprintf(['cd %s && ./robot_codegen_start.sh --fixb_only ' ...
+    '--parrob --not_gen_serial --notest --kinematics_only'], mrp_wsl) );
   
   % generierten Code zurückkopieren (alle .m-Dateien)
   for f = dir(fullfile(outputdir_tb_par, '*.m'))'
@@ -215,4 +231,24 @@ for i = 1:length(Names)
   if exist(minparfile, 'file')
     delete(minparfile);
   end
+end
+end
+
+function system_wsl(cmd)
+  % Betriebssystem-unabhängiger Aufruf von Befehlen: Windows-Linux-Subsystem
+  % Ermöglicht den Systemaufruf aus Windows und Linux
+  % Vorher: Wechseln in Verzeichnis aus Matlab heraus
+  %
+  % Eingabe:
+  % cmd:
+  %  Befehl, der in der Konsole (WSL oder Unix-Terminal) werden soll.
+  %  Im Befehl enthaltene Pfade müssen unter Windows ins WSL-Schema
+  %  umgewandelt werden
+  if ispc() % Führe den Befehl in WSL aus (mit angepasstem Pfad)
+    WSL_prefix = 'wsl ';
+    cmd = strrep(cmd, '&&', ';'); % && wird von Windows-Shell gefangen
+  else % Normale Unix-Shell
+    WSL_prefix = '';
+  end
+  system([WSL_prefix, cmd]);
 end
