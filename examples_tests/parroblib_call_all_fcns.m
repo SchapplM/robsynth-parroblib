@@ -31,7 +31,7 @@ else
   FiltList = {};
 end
 if usr_testselection
-  FiltList = {'P3RRR1G1P1', 'P3PRRRR8V2G1P2', 'P4PRRRR8V1G3P1', 'P6RRPRRR14V4G7P4'};
+  FiltList = {'P3RRR1G1P1', 'P3PRRRR8V2G1P2', 'P4PRRRR8V1G3P1', 'P6RRPRRR14V4G7P4', 'P6RRRRRR10V6G6P1A1'};
 end
 for i_FG = 1:size(EEFG_Ges,1)
   EE_FG = EEFG_Ges(i_FG,:);
@@ -121,10 +121,10 @@ for i_FG = 1:size(EEFG_Ges,1)
       % Prüfe Dynamikparameter mit Regressorform
       if ~any(contains(files_missing, 'para_pf_mdp'))
         R.DynPar.mode = 4;
-        Mx4 = R.inertia_platform(Q_test(i,:)', X_test(i,:)');
-        Cx4 = R.coriolisvec_platform(Q_test(i,:)', X_test(i,:)', XD_test(i,:)');
-        Gx4 = R.gravload_platform(Q_test(i,:)', X_test(i,:)');
-        Fx4 = R.invdyn_platform(Q_test(i,:)', X_test(i,:)', XD_test(i,:)', XDD_test(i,:)');
+        [Mx4, Mx4reg] = R.inertia_platform(Q_test(i,:)', X_test(i,:)');
+        [Cx4, Cx4reg] = R.coriolisvec_platform(Q_test(i,:)', X_test(i,:)', XD_test(i,:)');
+        [Gx4, Gx4reg] = R.gravload_platform(Q_test(i,:)', X_test(i,:)');
+        [Fx4, Fx4reg] = R.invdyn_platform(Q_test(i,:)', X_test(i,:)', XD_test(i,:)', XDD_test(i,:)');
         test_G4_abs = Gx1-Gx4;
         test_C4_abs = Cx1-Cx4;
         test_F4_abs = Fx1-Fx4;
@@ -132,6 +132,10 @@ for i_FG = 1:size(EEFG_Ges,1)
         test_C4_rel = test_C4_abs ./ Cx1;
         test_G4_rel = test_G4_abs ./ Gx1;
         test_F4_rel = test_F4_abs ./ Fx1;
+        test_G4_reg = Gx4reg*R.DynPar.mpv_sym-Gx4;
+        test_C4_reg = Cx4reg*R.DynPar.mpv_sym-Cx4;
+        test_F4_reg = Fx4reg*R.DynPar.mpv_sym-Fx4;
+        test_M4_reg = reshape(Mx4reg*R.DynPar.mpv_sym, R.NLEG, R.NLEG)' - Mx4;
       end
       try
         assert(all(abs(test_G_abs)<1e-8) | all(abs(test_G_rel)<1e-8), ...
@@ -153,6 +157,10 @@ for i_FG = 1:size(EEFG_Ges,1)
           assert(all(abs(test_F4_abs)<1e-8) | all(abs(test_F4_rel)<1e-8), ...
             'Inversynamik-Kraft stimmt nicht zwischen DynPar Methode 1 und 4');
           assert(all(abs(test_M4_abs(:))<1e-8), 'Massenmatrix stimmt nicht zwischen DynPar Methode 1 und 4');
+          assert(all(abs(test_F4_reg)<1e-8), 'Inversynamik-Regressor stimmt nicht');
+          assert(all(abs(test_C4_reg)<1e-8), 'Coriolis-Regressor stimmt nicht');
+          assert(all(abs(test_G4_reg)<1e-8), 'Gravitationslast-Regressor stimmt nicht');
+          assert(all(abs(test_M4_reg(:))<1e-8), 'Massenmatrix-Regressor stimmt nicht');
         end
       catch err
         warning('parrob:fcnfail', 'Fehler in generiertem Code für %s: %s. Neu-Generierung notwendig.', PName, err.message);
