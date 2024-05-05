@@ -153,7 +153,9 @@ for i = 1:length(Names)
   mapleinputfile_A0=fullfile(repopath, ['sym_', EEstr], PName_Legs, ...
     sprintf('hd_G%dA0', G_num), sprintf('robot_env_par_%s', n_A0));
   outputdir_local_A0 = fileparts(mapleinputfile_A0);
-  if ActNr == 1 && ... % Nur Generierung, wenn noch kein Code vorhanden:
+  % Hier kann noch nicht robust verhindert werden, dass für mehrere
+  % Aktuierungen die Dynamik mehrfach für A0 generiert wird (bei force_par)
+  if  ... % Nur Generierung, wenn noch kein Code vorhanden oder erzwungen:
       (force_par || ~force_par && length(dir(fullfile(outputdir_local_A0, '*.m'))) < 10) % im A0-Ordner sind mehr Dateien
     % Namen des Roboters in A0-Definition nachbearbeiten
     mkdirs(fileparts(mapleinputfile_A0));
@@ -169,8 +171,18 @@ for i = 1:length(Names)
     end
     system_wsl(sprintf('sed -i "s/%s/%s/g" "%s"', n, n_A0, mapleinputfile_A0_wsl));
 
-    % aktiviere den Export der Dynamik-Funktionen
-    system_wsl(sprintf('sed -i "s/codeexport_invdyn := false:/codeexport_invdyn := true:/g" %s', ...
+    % aktiviere den Export der Dynamik-Funktionen. Die Definitionsdatei
+    % überschreibt die Einstellungen in den Arbeitsblättern, da sie später
+    % geladen wird. Daher darf hier das false nur auskommentiert werden.
+    % Würde "true" stattdessen gesetzt, würde parallel mehrfach das gleiche
+    % gemacht werden.
+    system_wsl(sprintf('sed -i "s/codeexport_invdyn := false:/# codeexport_invdyn := false:/g" %s', ...
+      mapleinputfile_A0_wsl ));
+    system_wsl(sprintf('sed -i "s/codeexport_corvec := false:/# codeexport_corvec := false:/g" %s', ...
+      mapleinputfile_A0_wsl ));
+    system_wsl(sprintf('sed -i "s/codeexport_grav := false:/# codeexport_grav := false:/g" %s', ...
+      mapleinputfile_A0_wsl ));
+    system_wsl(sprintf('sed -i "s/codeexport_inertia := false:/# codeexport_inertia := false:/g" %s', ...
       mapleinputfile_A0_wsl ));
     
     % Reduziere den Optimierungsgrad bei der Code-Generierung, da es sonst
@@ -184,7 +196,7 @@ for i = 1:length(Names)
     % dort durchführen
     copyfile(mapleinputfile_A0, fullfile(mrp, 'robot_codegen_definitions', 'robot_env_par') );
     fprintf('Starte Dynamik-Code-Generierung %d/%d für %s\n', i, length(Names), n_A0);
-    system_wsl( sprintf('cd %s && ./robot_codegen_start.sh --fixb_only --parrob --not_gen_serial', mrp_wsl) );
+    system_wsl( sprintf('cd %s && ./robot_codegen_start.sh --fixb_only --parrob --parallel --not_gen_serial', mrp_wsl) );
     
     % generierten Code zurückkopieren (alle .m-Dateien)
     for f = dir(fullfile(outputdir_tb_par_A0, '*.m'))'
@@ -220,9 +232,16 @@ for i = 1:length(Names)
   % Für die verschiedenen Aktuierungen wird die Dynamik dann nur noch
   % aufgerufen. Ändere die Funktionsaufrufe in den Funktionsdateien
   for f = dir(fullfile(outputdir_local, '*.m'))'
+    if ispc()
+      [~, filename_wsl] = system(sprintf('wsl wslpath -u "%s"', ...
+        fullfile(outputdir_local, f.name)));
+        filename_wsl = strtrim(filename_wsl);
+    else
+      filename_wsl = fullfile(outputdir_local, f.name);
+    end
     % Funktionsaufruf der inversen Dynamik auf A0 beziehen
-    system(sprintf('sed -i "s/%s_invdyn_para_pf/%s_invdyn_para_pf/g" %s', ...
-      n, n_A0, fullfile(outputdir_local, f.name) ));
+    system_wsl(sprintf('sed -i "s/%s_invdyn_para_pf/%s_invdyn_para_pf/g" %s', ...
+      n, n_A0, filename_wsl ));
   end
   % Dateien löschen, die für alle Aktuierungsvarianten gleich sind, aber
   % trotzdem doppelt erzeugt werden könnten.

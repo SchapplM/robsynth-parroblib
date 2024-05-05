@@ -108,15 +108,22 @@ for i = 1:length(Names)
   fprintf(fid, ', xyz]):\n');
   % Wähle standardmäßig den maximalen Optimierungsgrad.
   fprintf(fid, 'codegen_opt := 2:\n');
-    
+  % Zum Testen: Vereinfachungen für Dynamik und Regressor deaktivieren
+  % fprintf(fid, 'simplify_options:=Vector(10,-1):\n');
+  % fprintf(fid, 'simplify_options(9):=0: # Bei Dynamik nicht vereinfachen\n');
+  % fprintf(fid, 'simplify_options(10):=0: # Bei Regressor nicht vereinfachen\n');
+  
   
   % Generierung der Dynamik nur für erstes Aktuierungs-Modell jeder PKM:
   % Die Dynamik in Plattform-Koordinaten ist immer gleich und die
   % Dynamik-Berechnung in Antriebs-Koordinaten wird numerisch mit Jacobi
-  % berechnet. Nur die Jacobi wird dann noch neu berechnet
+  % berechnet. Nur die Jacobi wird dann noch neu berechnet.
   % Hier wird die Generierung standardmäßig deaktiviert und in
   % parroblib_generate_code.m einmal aktiviert und mit Kennung "A0"
   % gespeichert.
   fprintf(fid, 'codeexport_invdyn := false:\n');
+  fprintf(fid, 'codeexport_corvec := false:\n');
+  fprintf(fid, 'codeexport_grav := false:\n');
+  fprintf(fid, 'codeexport_inertia := false:\n');
   fclose(fid);
 end
