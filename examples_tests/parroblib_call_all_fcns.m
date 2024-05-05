@@ -118,7 +118,26 @@ for i_FG = 1:size(EEFG_Ges,1)
       test_C_rel = test_C_abs ./ Cx2;
       test_G_rel = test_G_abs ./ Gx2;
       test_F_rel = test_F_abs ./ Fx2;
-      % Prüfe Dynamikparameter mit Regressorform
+      % Prüfe Dynamikparameter mit Inertialparameter-Regressorform
+      if ~any(contains(files_missing, 'reg2'))
+        R.DynPar.mode = 3;
+        [Mx3, Mx3reg] = R.inertia_platform(Q_test(i,:)', X_test(i,:)');
+        [Cx3, Cx3reg] = R.coriolisvec_platform(Q_test(i,:)', X_test(i,:)', XD_test(i,:)');
+        [Gx3, Gx3reg] = R.gravload_platform(Q_test(i,:)', X_test(i,:)');
+        [Fx3, Fx3reg] = R.invdyn_platform(Q_test(i,:)', X_test(i,:)', XD_test(i,:)', XDD_test(i,:)');
+        test_G3_abs = Gx1-Gx3;
+        test_C3_abs = Cx1-Cx3;
+        test_F3_abs = Fx1-Fx3;
+        test_M3_abs = Mx1-Mx3;
+        test_C3_rel = test_C3_abs ./ Cx1;
+        test_G3_rel = test_G3_abs ./ Gx1;
+        test_F3_rel = test_F3_abs ./ Fx1;
+        test_G3_reg = Gx3reg*R.DynPar.ipv_sym-Gx3;
+        test_C3_reg = Cx3reg*R.DynPar.ipv_sym-Cx3;
+        test_F3_reg = Fx3reg*R.DynPar.ipv_sym-Fx3;
+        test_M3_reg = reshape(Mx3reg*R.DynPar.ipv_sym, R.NLEG, R.NLEG)' - Mx3;
+      end
+      % Prüfe Dynamikparameter mit Minimalparameter-Regressorform
       if ~any(contains(files_missing, 'para_pf_mdp'))
         R.DynPar.mode = 4;
         [Mx4, Mx4reg] = R.inertia_platform(Q_test(i,:)', X_test(i,:)');
@@ -149,6 +168,19 @@ for i_FG = 1:size(EEFG_Ges,1)
 %         assert(~all(test_C_abs==0), 'Alle Einträge in C-Termen exakt identisch zwischen DynPar Methode 1 und 2. Unlogisch, da Rundungsfehler vorliegen müssen.')
 %         assert(~all(test_F_abs==0), 'Alle Einträge in F-Termen exakt identisch zwischen DynPar Methode 1 und 2. Unlogisch, da Rundungsfehler vorliegen müssen.')
 %         assert(~all(test_M_abs(:)==0), 'Alle Einträge in M-Termen exakt identisch zwischen DynPar Methode 1 und 2. Unlogisch, da Rundungsfehler vorliegen müssen.')
+        if ~any(contains(files_missing, 'reg2'))
+          assert(all(abs(test_G3_abs)<1e-8) | all(abs(test_G3_rel)<1e-8), ...
+            'Gravitationsmoment stimmt nicht zwischen DynPar Methode 1 und 3');
+          assert(all(abs(test_C3_abs)<1e-8) | all(abs(test_C3_rel)<1e-8), ...
+            'Coriolismoment stimmt nicht zwischen DynPar Methode 1 und 3');
+          assert(all(abs(test_F3_abs)<1e-8) | all(abs(test_F3_rel)<1e-8), ...
+            'Inversynamik-Kraft stimmt nicht zwischen DynPar Methode 1 und 3');
+          assert(all(abs(test_M3_abs(:))<1e-8), 'Massenmatrix stimmt nicht zwischen DynPar Methode 1 und 3');
+          assert(all(abs(test_F3_reg)<1e-8), 'Inversynamik-Regressor stimmt nicht');
+          assert(all(abs(test_C3_reg)<1e-8), 'Coriolis-Regressor stimmt nicht');
+          assert(all(abs(test_G3_reg)<1e-8), 'Gravitationslast-Regressor stimmt nicht');
+          assert(all(abs(test_M3_reg(:))<1e-8), 'Massenmatrix-Regressor stimmt nicht');
+        end
         if ~any(contains(files_missing, 'para_pf_mdp'))
           assert(all(abs(test_G4_abs)<1e-8) | all(abs(test_G4_rel)<1e-8), ...
             'Gravitationsmoment stimmt nicht zwischen DynPar Methode 1 und 4');
