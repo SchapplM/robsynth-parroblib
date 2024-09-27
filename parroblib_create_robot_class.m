@@ -174,7 +174,7 @@ elseif Coupling(2) == 7
   p_platform_all = p_platform;
 elseif Coupling(2) == 8
   p_platform_all = [p_platform; 0];
-elseif Coupling(2) == 9 % konisch
+elseif any(Coupling(2) == [9 10]) % konisch (=vertikal/geneigt) und tangential/geneigt
   p_platform_all = [p_platform; 0];
 else
   error('Plattform-Methode %d nicht definiert', Coupling(2));
