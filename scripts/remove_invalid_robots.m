@@ -1,4 +1,10 @@
 % Entferne PKM, die ungültig sind, z.B. weil die Angabe "Rangverlust" fehlt
+% Die Abschnitte in diesem Skript werden manuell ausgeführt, da das Löschen
+% von Einträgen aus der Datenbank eine sensible Aufgabe ist.
+% 
+% Es gibt mehrere Abschnitte, in denen nach verschiedenen Kriterien
+% ungültige PKM gesucht werden. Am Ende werden diese dann gelöscht (manuell
+% ausgelöst)
 
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2019-06
 % (C) Institut für Mechatronische Systeme, Leibniz Universität Hannover
@@ -71,6 +77,43 @@ for j = 1:size(EEFG_Ges,1)
   end % for ii
 end
 
+%% Suche nach Einträgen, die sich zwischen Synthesedatenbank und Aktuierung unterscheiden
+PKM_List_invalid = {};
+for j = 1:size(EEFG_Ges,1)
+  fprintf('Prüfe PKM mit FG %dT%dR\n', sum(EEFG_Ges(j,1:3)), sum(EEFG_Ges(j,4:6)));
+  EEstr = sprintf('%dT%dR', sum(EEFG_Ges(j,1:3)), sum(EEFG_Ges(j,4:6)));
+  synthrestable = readtable( ...
+    fullfile(repopath,'synthesis_result_lists',[EEstr,'.csv']), ...
+    'ReadVariableNames', true);
+  synthrestable_var = readtable( ...
+    fullfile(repopath,'synthesis_result_lists',[EEstr,'_var.csv']), ...
+    'ReadVariableNames', true);
+  if ~isempty(synthrestable_var)
+    synthrestable = [synthrestable; synthrestable_var]; %#ok<AGROW>
+  end
+  acttabfile=fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list_act.mat']);
+  tmp = load(acttabfile); % siehe parroblib_gen_bitarrays
+  ActTab = tmp.ActTab;
+  for ii_act = 1:size(ActTab,1)
+    [NLEG, LEG_Names_array, ~, Coupling] = parroblib_load_robot(ActTab.Name{ii_act}, 0);
+    I_name = strcmp(table2cell(synthrestable(:,1)), LEG_Names_array{1});
+    I_coupl = table2array(synthrestable(:,3))==Coupling(1) & ...
+              table2array(synthrestable(:,4))==Coupling(2);
+    i_restab = find(I_name & I_coupl);
+    if isempty(i_restab)
+      Status_restab = 6; % Werte als "nicht geprüft"
+    elseif length(i_restab) > 1
+      error('Doppelter Eintrag in CSV-Tabelle für %s', PNameGP);
+    else
+      Status_restab = table2array(synthrestable(i_restab,5));
+    end
+    if Status_restab ~= 0
+      fprintf('Ungültiges Struktursynthese-Ergebnis: %s hat Code %d\n', ...
+        ActTab.Name{ii_act}, Status_restab);
+      PKM_List_invalid = [PKM_List_invalid(:)', ActTab.Name{ii_act}];
+    end
+  end
+end
 %% Änderungen übernehmen
 return
 fprintf('Lösche %d PKM:\n', length(PKM_List_invalid));
