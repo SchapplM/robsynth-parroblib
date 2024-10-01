@@ -73,7 +73,7 @@ for jj = 1:size(EEFG_Ges,1)
     if ~strcmp(csvline{2}, LEG_Names{1})
       continue
     end
-    if ~contains(csvline{1}, sprintf('G%dP%d', Coupling(1), Coupling(2)))
+    if ~strcmp(csvline{1}, sprintf('P%d%sG%dP%d', NLEG, LEG_Names{1}(3:end), Coupling(1), Coupling(2)))
       continue
     end
     % Bis hier hin gekommen: Roboter-Kinematik wurde gefunden
@@ -121,7 +121,7 @@ while ischar(tline) && ~isempty(tline)
     warning('Zeile %s... sieht ungültig aus (Länge: %d)', csvline{1}, length(csvline));
     continue % nicht genug Spalten: Ungültiger Datensatz oder Überschrift
   end
-  if ~contains(csvline(1), PName_Kin)
+  if ~contains(csvline(1), [PName_Kin, 'A'])
     continue % Kinematik in Aktuierungs-Tabelle ist andere G-/P-Nummer
   end
   % Vergleich der Tabellenzeile mit den Eingabedaten
