@@ -111,7 +111,21 @@ for iFG = 1:size(EEFG_update,1)
   end
   KinTab = addvars(KinTab, Beinkette_Tech);
   KinTab.Properties.VariableNames(end) = {'Beinkette_Tech'};
-  
+  %% Sortiere die Tabelle mit aufsteigenden Nummern
+  % Sonst kommt nach 1 die 10 bei den Beinketten-Modellnummern.
+  expression_kin = 'P(\d)([RP]+)(\d+)[V]?(\d*)G(\d+)P(\d+)';
+  [tokens_kin, ~] = regexp(KinTab.Name,expression_kin,'tokens','match');
+  KinTabNameTab = cell2table(cell(size(KinTab,1),6), 'VariableNames', ...
+      {'NLEG', 'Chain', 'ChainNum', 'Var', 'G', 'P'});
+  for i = 1:size(KinTab,1)
+    row_i_str = tokens_kin{i}{1};
+    if isempty(row_i_str{4}), row_i_str{4} = '0'; end % sonst NaN und Sortierung falsch.
+    KinTabNameTab{i,:} = {str2double(row_i_str{1}), row_i_str{2}, ...
+      str2double(row_i_str{3}), str2double(row_i_str{4}), str2double(row_i_str{5}), ...
+      str2double(row_i_str{6})};
+  end
+  [~,I] = sortrows(KinTabNameTab);
+  KinTab = KinTab(I,:);
   %% Kinematik-Tabelle speichern
   % Prüfe, ob die aktuell ausgelesene CSV-Datei der gleiche Stand ist wie
   % die binär einzulesende Datei
@@ -130,6 +144,7 @@ for iFG = 1:size(EEFG_update,1)
   if write_new_kin
     save(kintabfile_mat, 'KinTab');
   end
+  % Eintragen in Gesamt-Tabelle
   if complete_update
     KinTab_EEcol = KinTab;
     KinTab_EEcol = addvars(KinTab, repmat(EEFG_update(iFG,:), size(KinTab,1), 1));
@@ -161,7 +176,7 @@ for iFG = 1:size(EEFG_update,1)
     end
     PName_Legs_all = [PName_Legs_all, PName_Legs]; %#ok<AGROW>
   end
-  PName_Legs_unique = unique(PName_Legs_all);
+  PName_Legs_unique = unique(PName_Legs_all, 'stable');
   %% Aktuierungs-Tabelle auslesen
   ActTab = [];
   for i = 1:length(PName_Legs_unique)
@@ -317,6 +332,7 @@ for iFG = 1:size(EEFG_update,1)
     save(acttabfile_mat, 'ActTab');
   end
 end
+
 %% Schreibe Gesamt-Tabelle neu
 kintaballfile_mat = fullfile(repopath, 'parrob_list_kin.mat');
 write_new_kin_all = false;
