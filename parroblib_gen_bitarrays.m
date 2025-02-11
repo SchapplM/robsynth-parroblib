@@ -203,13 +203,30 @@ for iFG = 1:size(EEFG_update,1)
     % Überschriften aktualisieren
     varnames_act{end-1} = 'Rankloss_Platform'; % Matlab-Konform ohne Leerzeichen
     ActTab_i.Properties.VariableNames = varnames_act;
-
+    % Bei nicht voll-parallelen PKM müssen Dummy-Spalten für die Aktuierung
+    % hinzugefügt werden, damit die Tabelle mit der von voll-parallelen
+    % kombinierbar ist. Trage dort NaN ein.
+    NLEG_max = sum(EEFG_update(iFG,:)); % Annahme: keine Antriebsredundanz, etc. in Datenbank
+    NLEG_i = str2double(PName_Legs(2));
+    [tokens] = regexp(varnames_act,'Aktuierung Bein (\d)','tokens');
+    legactcols_pos = find(~cellfun(@isempty,tokens));
+    Num_joints = legactcols_pos(2)-legactcols_pos(1);
+    for jj = NLEG_i+1:NLEG_max
+      ActTab_i = addvars(ActTab_i, NaN(size(ActTab_i,1),1), ...
+        'Before', legactcols_pos(1)+(jj-1)*Num_joints);
+      ActTab_i.Properties.VariableNames(legactcols_pos(1)+(jj-1)*Num_joints) = ...
+        {sprintf('Aktuierung Bein %d', jj)};
+      for jj2 = 2:Num_joints
+        ActTab_i = addvars(ActTab_i, NaN(size(ActTab_i,1),1), ...
+          'Before', legactcols_pos(1)+(jj-1)*Num_joints+jj2-1);
+      end
+    end
+    varnames_act = ActTab_i.Properties.VariableNames;
     % Einzelne Spalten mit 0/1 Inhalt für die Aktuierung zusammenfassen.
     % Dazu Spaltenüberschriften interpretieren. Siehe actuation.csv.
     ileg = 0;
     ilegj = 0;
-    NLEG = sum(EEFG_update(iFG,:)); % Annahme: keine Antriebsredundanz, etc.
-    vargroups_leg_acts = cell(NLEG,1);
+    vargroups_leg_acts = cell(NLEG_max,1);
     for jj = 1:length(varnames_act)
       [tokens] = regexp(varnames_act{jj},'Aktuierung Bein (\d)','tokens');
       isactcol = false;
@@ -226,7 +243,7 @@ for iFG = 1:size(EEFG_update,1)
       end
     end
     % Füge neue Spalten am Ende hinzu, die die Aktuierung direkt beinhalten
-    for ileg = NLEG:-1:1
+    for ileg = NLEG_max:-1:1
       legactinfo = [];
       for jj = 1:length(vargroups_leg_acts{ileg})
         % Lese Spalte aus und hänge an

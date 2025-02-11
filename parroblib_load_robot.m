@@ -12,6 +12,9 @@
 %      Informationen)
 %   1: Kinematik-Tabelle öffnen
 %   2: Alle Informationen. Längerer Lesezugriff
+% EEFG_Ges
+%   Array mit (zeilenweise 1x6 logical) möglichen EE-FG zur Vorgabe, in
+%   welchen Tabellen der Roboter gesucht wird.
 % 
 % Ausgabe:
 % NLEG [1x1]
@@ -58,7 +61,7 @@
 
 function [NLEG, LEG_Names, Actuation, Coupling, ActNr, symrob, EE_dof0, ...
   PName_Kin, PName_Legs, AdditionalInfo_Akt, StructuralDHParam, ...
-  JointParallelity] = parroblib_load_robot(Name, Modus)
+  JointParallelity] = parroblib_load_robot(Name, Modus, EEFG_Ges)
 %% Initialisierung
 if nargin < 2
   Modus = 2;
@@ -121,13 +124,17 @@ end
 %% csv-Tabelle öffnen: Kinematik
 % Da Anzahl Beinketten gegeben ist, aber die PKM nach FG gespeichert sind,
 % müssen mehrere Tabellen durchsucht werden.
-EEFG_Ges = logical(...
-  [1 1 0 0 0 0; 1 1 0 0 0 1; 1 1 1 0 0 0;  1 1 1 0 0 1; ...
-   1 1 1 1 1 0; 1 1 1 1 1 1]);
+if nargin < 3
+  EEFG_Ges = logical(...
+    [1 1 0 0 0 0; 1 1 0 0 0 1; 1 1 1 0 0 0;  1 1 1 0 0 1; ...
+     1 1 1 1 1 0; 1 1 1 1 1 1]);
+end
 EEstr = ''; % Platzhalter, wird im folgenden belegt.
 found = false;
 for jj = 1:size(EEFG_Ges,1)
-  if sum(EEFG_Ges(jj,:)) ~= NLEG, continue; end % PKM-FG passen nicht zu Beinketten
+  % Bei voll-parallelen Robotern ist die Anzahl der Beinketten die Anzahl
+  % der FG. Gilt nicht mehr in Datenbank.
+  % if sum(EEFG_Ges(jj,:)) ~= NLEG, continue; end % PKM-FG passen nicht zu Beinketten
   EEstr = sprintf('%dT%dR', sum(EEFG_Ges(jj,1:3)), sum(EEFG_Ges(jj,4:6)));
   EE_dof0 = EEFG_Ges(jj,:); % Wird nach Fund nicht mehr überschrieben
   % Ergebnis: Tabellenzeile csvline_kin für den gesuchten Roboter
