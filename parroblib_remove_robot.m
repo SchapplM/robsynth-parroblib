@@ -14,6 +14,8 @@
 % nofiledelete (optional)
 %   true: Keine Dateien (mit generiertem Code) löschen. Nur umbenennen.
 %   false: Dateien werden gelöscht (Standard)
+% EE_FG (optional)
+%   End-Effektor-Freiheitsgrade in Form von bspw. [1 1 1 0 0 0] für 3T0R
 % 
 % Ausgabe:
 % success
@@ -24,7 +26,7 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2019-02
 % (C) Institut für Mechatronische Systeme, Universität Hannover
 
-function success = parroblib_remove_robot(PName_Input, nofiledelete)
+function success = parroblib_remove_robot(PName_Input, nofiledelete, EE_FG)
 
 if nargin < 2
   nofiledelete = false;
@@ -66,23 +68,33 @@ NLEG = str2double(res{1});
 
 %% Tabelle für Kinematik öffnen und Zeile entfernen
 % Prüfen, in welcher Tabelle der Roboter ist
-EEFG_Ges = logical(...
-  [1 1 0 0 0 0; 1 1 0 0 0 1; 1 1 1 0 0 0;  1 1 1 0 0 1; ...
-   1 1 1 1 1 0; 1 1 1 1 1 1]);
 EEstr = ''; % Platzhalter, wird im folgenden belegt.
 % Suche in der durch gen_bitarrays aufbereiteten Tabelle
+if nargin >= 3 % Benutze nur die vorgegebenen EE-FG
+  assert(all(size(EE_FG)==[1 6]), 'Eingabe EE_FG muss 1x6 sein');
+  EEFG_Ges = EE_FG;
+else
+  % Suche in allen Tabellen
+  EEFG_Ges = logical(...
+    [1 1 0 0 0 0; 1 1 0 0 0 1; 1 1 1 0 0 0;  1 1 1 0 0 1; ...
+     1 1 1 1 1 0; 1 1 1 1 1 1]);
+end
+robot_found = false;
 for jj = 1:size(EEFG_Ges,1)
-  if sum(EEFG_Ges(jj,:)) ~= NLEG, continue; end % PKM-FG passen nicht zu Beinketten
   EEstr = sprintf('%dT%dR', sum(EEFG_Ges(jj,1:3)), sum(EEFG_Ges(jj,4:6)));
   kintabfile_mat=fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list_kin.mat']);
   if ~exist(kintabfile_mat, 'file')
-    error('Datei %s existiert nicht. parroblib_gen_bitarrays ausführen!', kintabfile_mat);
+    continue
   end
   tmp = load(kintabfile_mat);
   KinTab_alt = tmp.KinTab;
   if any(strcmp(KinTab_alt.Name, PName_Kin))
+    robot_found = true;
     break; % Der Roboter ist in der aktuellen Tabelle. Variable EEstr wird übernommen
   end
+end
+if ~robot_found
+  error('Für PKM %s keine Kinematik-Datei gefunden. parroblib_gen_bitarrays ausführen!', PName_Input);
 end
 % Roboter aus eigentlicher Kinematik-Tabelle löschen
 if Name_Typ == 1
