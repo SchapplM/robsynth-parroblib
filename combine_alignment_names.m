@@ -26,9 +26,9 @@ I_P7 = GP_list(:,2) == 7; % Indizes mit P7
 G_P7 = unique(GP_list(I_P7,1)); % Dazugehörige G-Nummern
 I_del = false(size(GP_list,1),1); % zu löschende Einträge
 for ii = G_P7(:)'
-  if sum(GP_list(:,1)==G_P7) > 1
+  if sum(GP_list(:,1)==ii) > 1
     % Für diese G-Nummer gibt es mehrere P-Nummern, eine davon P7
-    I_del(I_P7 & GP_list(:,1)==G_P7) = true; % Entferne P7-Eintrag
+    I_del(I_P7 & GP_list(:,1)==ii) = true; % Entferne P7-Eintrag
   end
 end
 if any(I_del)
