@@ -7,7 +7,7 @@ clc
 clear
 
 % serroblib_gen_bitarrays
-% parroblib_gen_bitarrays
+% parroblib_gen_bitarrays()
 
 % Seriellroboter-Datenbank auslesen
 serroblibpath=fileparts(which('serroblib_path_init.m'));
@@ -138,12 +138,15 @@ for i_FG = 1:size(EEFG_Ges,1)
   
   % Filtere die Kinematiken (ohne Aktuierung) nach Anzahl technischer
   % Gelenke
+  sum_mechanismen = 0;
   for ntj = min(LegNumTechJoints):max(LegNumTechJoints)
     I_kin_ntj = LegNumTechJoints == ntj;
     fprintf('%d Mechanismen mit %d technischen Gelenken pro Beinkette\n', sum(I_kin_ntj), ntj);
+    sum_mechanismen = sum_mechanismen + sum(I_kin_ntj);
     % PNames_Kin_TechJoints(I_kin_ntj)
     % PNames_Kin(I_kin_ntj)
   end
+  fprintf('In Summe also %d Mechanismen mit verschiedenen Anzahlen technischer Gelenke in den Beinketten.\n', sum_mechanismen);
   % Gebe die Anzahl der allgemein aktuierbaren PKM an
   I_act_var = LegChainIsVariant(I_KinAct)==1;
   % Filtere dabei die Nummer des aktuierten Gelenks (gezählte technische
