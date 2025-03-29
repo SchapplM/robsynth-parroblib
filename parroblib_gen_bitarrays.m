@@ -14,6 +14,8 @@
 % KinTab. Entspricht symxleg_list.csv. Matlab-Tabelle mit Feldern:
 %   Name
 %     Name der PKM-Kinematik (mit Koppelgelenk): "P6PRRRRR1G1P5"
+%   NLEG
+%     Anzahl der Beinketten
 %   Beinkette
 %     Name der seriellen Beinkette (siehe serroblib): "S6PRRRRR1"
 %   Beinkette_Tech
@@ -113,6 +115,9 @@ for iFG = 1:size(EEFG_update,1)
   end
   KinTab = addvars(KinTab, Beinkette_Tech);
   KinTab.Properties.VariableNames(end) = {'Beinkette_Tech'};
+  NLEG_all = NaN(size(KinTab,1),1);
+  KinTab = addvars(KinTab, NLEG_all);
+  KinTab.Properties.VariableNames(end) = {'NLEG'};
   %% Sortiere die Tabelle mit aufsteigenden Nummern
   % Sonst kommt nach 1 die 10 bei den Beinketten-Modellnummern.
   expression_kin = 'P(\d)([RP]+)(\d+)[V]?(\d*)G(\d+)P(\d+)';
@@ -125,6 +130,7 @@ for iFG = 1:size(EEFG_update,1)
     KinTabNameTab{i,:} = {str2double(row_i_str{1}), row_i_str{2}, ...
       str2double(row_i_str{3}), str2double(row_i_str{4}), str2double(row_i_str{5}), ...
       str2double(row_i_str{6})};
+    KinTab.NLEG(i) = str2double(row_i_str{1});
   end
   [~,I] = sortrows(KinTabNameTab);
   KinTab = KinTab(I,:);
