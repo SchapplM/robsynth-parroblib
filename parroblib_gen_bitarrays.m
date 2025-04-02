@@ -74,7 +74,9 @@ for iFG = 1:size(EEFG_update,1)
     continue % trotzdem mit anderen FG weitermachen. Sowieso getrennte Tabellen.
   end
   % Tabelle lesen (und dabei Überschriften nachbessern)
-  KinTab = readtable(kintabfile_csv, 'Delimiter', ';');
+  opts = detectImportOptions(kintabfile_csv, 'Delimiter', ';');
+  opts.VariableTypes(:) = {'char'}; % Bei drei Gelenken sonst 1-2-2 als Datum interpretiert
+  KinTab = readtable(kintabfile_csv, opts);
   % Entferne Zeilen, die ungültige Daten enthalten. Darf eigentlich gar
   % nicht vorkommen. Mögliche Ursache: Fehler bei Tabellenüberschriften
   I_valid = true(size(KinTab,1),1);
