@@ -34,7 +34,9 @@ EEstr = sprintf('%dT%dR', sum(EEdof0(1:3)), sum(EEdof0(4:6)));
 %% Durchsuche die Kinematik-Tabelle und ändere die entsprechende Zeile
 if ~isempty(p.Results.joint_parallelity)
   kintabfile = fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list.csv']);
-  T = readtable(kintabfile, 'Delimiter', ';');
+  opts = detectImportOptions(kintabfile, 'Delimiter', ';');
+  opts.VariableTypes(:) = {'char'}; % Bei drei Gelenken sonst 1-2-2 als Datum interpretiert
+  T = readtable(kintabfile, opts);
   assert(all(size(p.Results.joint_parallelity) <= [1 6]), 'Dimension der Eingabe joint_parallelity stimmt nicht');
   T.Gelenkgruppen{strcmp(T.Name, PName_Kin)} = strrep(disp_array( ...
     p.Results.joint_parallelity, '%d'), ', ', '-'); % Format: 1-1-2-2-3

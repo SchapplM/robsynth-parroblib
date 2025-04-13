@@ -20,6 +20,20 @@ function [GP_compr_str, GP_str] = combine_alignment_names(GP_list)
 GP_compr_str = '';
 GP_str = '';
 if isempty(GP_list), return; end
+% Die Methode P7 ist redundant zu anderen Methoden für die gleiche Gestell-
+% anordnung (entspricht dann dem gleichen Fall)
+I_P7 = GP_list(:,2) == 7; % Indizes mit P7
+G_P7 = unique(GP_list(I_P7,1)); % Dazugehörige G-Nummern
+I_del = false(size(GP_list,1),1); % zu löschende Einträge
+for ii = G_P7(:)'
+  if sum(GP_list(:,1)==ii) > 1
+    % Für diese G-Nummer gibt es mehrere P-Nummern, eine davon P7
+    I_del(I_P7 & GP_list(:,1)==ii) = true; % Entferne P7-Eintrag
+  end
+end
+if any(I_del)
+  GP_list = GP_list(~I_del,:);
+end
 % Erzeuge einen einzelnen Ausdruck für die GP-Varianten
 % durch multiplikative Verknüpfung symbolischer Variablen
 tmp = 0;
