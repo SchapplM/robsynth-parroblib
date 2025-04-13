@@ -4,6 +4,8 @@
 % Eingabe:
 % SName:
 %   Name der seriellen Führungskette (symmetrische PKM)
+% NLEG:
+%   Anzahl der identischen Beinketten
 % Coupling [1x2]:
 %   Nummern der Gestell- und Plattform-Koppelpunkt-Varianten
 % EE_FG0:
@@ -31,7 +33,7 @@
 % Moritz Schappler, moritz.schappler@imes.uni-hannover.de, 2019-07
 % (C) Institut für Mechatronische Systeme, Leibniz Universität Hannover
 
-function parroblib_update_csv(SName, Coupling, EE_FG0, Status, Rangerfolg)
+function parroblib_update_csv(SName, NLEG, Coupling, EE_FG0, Status, Rangerfolg)
 
 %% Initialisierung
 if nargin <= 4
@@ -56,14 +58,15 @@ if isempty(SName)
   fprintf('Keine Beinkette gegeben. Aufruf nur zum Erstellen der CSV. Abbruch.\n');
   return
 end
-NLEG = sum(EE_FG0);
+
 %% PKM in csv-Datei eingeben
 T = readtable(csvtable, 'ReadVariableNames', true);
 % Passenden Index der Eingabedaten in der Tabelle herausfinden
 I_name = strcmp(table2cell(T(:,1)), SName);
 I_coupl = table2array(T(:,3))==Coupling(1) & ...
           table2array(T(:,4))==Coupling(2);
-i = find(I_name&I_coupl);
+I_numlegs = table2array(T(:,2))==NLEG;
+i = find(I_name&I_coupl&I_numlegs);
 if length(i) > 1
   error('Inkonsistenz in Tabelle %s. Eintrag doppelt: %s, %d, %d', csvtable, ...
     SName, Coupling(1), Coupling(2));
@@ -126,8 +129,9 @@ NewRow = cell2table({SName, NLEG, Coupling(1),Coupling(2),Status,Rangerfolg});
 % Überschriften für Zeilen-Tabelle setzen, damit Tabellen kombinierbar werden
 NewRow.Properties.VariableNames = T.Properties.VariableNames;
 T_new = [T;NewRow];
-% Tabelle sortieren und speichern
-T_sort = sortrows(T_new,[1 3 4]);
+% Tabelle sortieren und speichern (Nach Anzahl Beinketten, dann
+% Beinketten-Typ, dann Koppelgelenk-Anordnung)
+T_sort = sortrows(T_new,[2 1 3 4]);
 writetable(T_sort,csvtable, 'Delimiter', ';');
 
 end

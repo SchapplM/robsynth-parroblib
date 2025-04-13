@@ -49,7 +49,9 @@ EEFG_Ges = logical(...
 EEstr = ''; % Platzhalter, wird im folgenden belegt.
 PName_Kin = '';
 for jj = 1:size(EEFG_Ges,1)
-  if sum(EEFG_Ges(jj,:)) ~= NLEG, continue; end % PKM-FG passen nicht zu Beinketten
+  % Bei voll-parallelen Robotern ist die Anzahl der Beinketten die Anzahl
+  % der FG. Gilt nicht mehr in Datenbank.
+  % if sum(EEFG_Ges(jj,:)) ~= NLEG, continue; end % PKM-FG passen nicht zu Beinketten
   EEstr = sprintf('%dT%dR', sum(EEFG_Ges(jj,1:3)), sum(EEFG_Ges(jj,4:6)));
   kintabfile = fullfile(repopath, ['sym_', EEstr], ['sym_',EEstr,'_list.csv']);
   fid = fopen(kintabfile);
